@@ -35,6 +35,7 @@ Date: 2026-06-11
 | `tools/scripts/stable/clean-sandbox.ps1` | stable-with-approval | yes, dry-run first | 清理运行态，`-Apply` 需要明确授权 |
 | `tools/scripts/stable/test-project-registry.ps1` | stable | yes | P12.2 本地项目 registry 只读校验工具 |
 | `tools/scripts/stable/test-harness-governance.ps1` | stable | yes | P12.3 Harness Root 治理自检工具，默认 dry-run |
+| `tools/scripts/stable/publish-harness-agent-branch.ps1` | stable-with-approval | yes, agent branch only | Harness Root Git 初始化、提交和推送工具；拒绝主分支写入，SSH/remote 信息通过参数或环境变量提供 |
 | `tools/scripts/historical/run-java-smoke.ps1` | historical | no | 历史 smoke 脚本，不作为稳定门面 |
 | `tools/scripts/historical/run-real-java-smoke.ps1` | historical-restricted | no | 真实项目历史验证脚本，涉及真实 settings 和外部项目 |
 | `tools/scripts/runtime/hermes-wecom-generic-java-prompt.md` | prompt-candidate | no | 后续 P6/P10 可重写为 adapter 示例 |

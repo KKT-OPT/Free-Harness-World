@@ -171,6 +171,34 @@ Safety:
 - does not read Maven settings XML, auth files, credential bodies or raw runtime logs;
 - invokes `test-project-registry.ps1` as the registry sub-check.
 
+### `tools/scripts/stable/publish-harness-agent-branch.ps1`
+
+Purpose:
+
+- initialize or verify the Harness Root Git repository;
+- keep `main` or another base branch read-only for agent workflows;
+- create, commit and push an agent-owned branch;
+- support SSH-based GitHub access through `GIT_SSH_COMMAND` without hardcoding local SSH paths.
+
+Key inputs:
+
+| Parameter | Meaning |
+|---|---|
+| `-Mode` | `status`, `init`, `commit`, `push`, or `commit-and-push`. |
+| `-RemoteUrl` | Remote URL supplied by user or `HARNESS_GIT_REMOTE_URL`. |
+| `-BaseBranch` | User-owned base branch, default `main`. |
+| `-AgentBranch` | Agent-owned branch, default `agent-git`. |
+| `-GitSshCommand` | Optional SSH command or `GIT_SSH_COMMAND`; value must stay local-only. |
+| `-CommitMessage` | Commit message for agent branch updates. |
+
+Safety:
+
+- refuses to operate on the base branch;
+- runs governance self-check before commit unless explicitly skipped;
+- checks staged content for concrete local paths and credential-like assignments;
+- uses `GIT_TERMINAL_PROMPT=0` to avoid hanging on HTTPS credential prompts;
+- does not store GitHub account, SSH config path or credential values in tracked docs.
+
 ## Historical Or Restricted Scripts
 
 | Script | Status | Reason |
