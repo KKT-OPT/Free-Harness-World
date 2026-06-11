@@ -203,7 +203,9 @@ function Invoke-LoggedCommand {
     Add-Log "ARGS: $($CommandArgs -join ' ')"
 
     Push-Location $Cwd
+    $previousErrorActionPreference = $ErrorActionPreference
     try {
+        $ErrorActionPreference = 'Continue'
         & $Exe @CommandArgs 2>&1 | ForEach-Object {
             $line = $_.ToString()
             Add-Content -LiteralPath $Log -Value $line -Encoding UTF8
@@ -212,6 +214,7 @@ function Invoke-LoggedCommand {
         $exitCode = $LASTEXITCODE
     }
     finally {
+        $ErrorActionPreference = $previousErrorActionPreference
         Pop-Location
     }
 
@@ -237,6 +240,7 @@ try {
     if (-not $LocalRepo) { $LocalRepo = Expand-AgentPath $profileValues.localRepository }
 
     Assert-PathExists $ProjectRoot 'Project root'
+    $ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
     Assert-PathExists (Join-Path $ProjectRoot 'pom.xml') 'Project pom.xml'
     if ($Module) {
         Assert-PathExists (Join-Path $ProjectRoot "$Module\pom.xml") 'Module pom.xml'

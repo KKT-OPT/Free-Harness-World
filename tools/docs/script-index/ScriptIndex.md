@@ -90,6 +90,8 @@ Safety:
 
 - passes settings path to Maven but does not parse settings XML;
 - generated classpath and argument files are runtime evidence;
+- captures stderr output as log evidence without treating warning-only stderr as a task failure when the process exit code is successful;
+- resolves project-relative classpath roots before running the main class;
 - tracked docs may record log/status paths and safe summary fields only.
 
 ### `tools/scripts/stable/clean-sandbox.ps1`

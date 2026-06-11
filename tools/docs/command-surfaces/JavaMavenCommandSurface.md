@@ -80,6 +80,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\tools\scripts
 - 执行 main class；
 - 输出 status JSON 和 log path。
 
+真实项目验证中，agent 应优先使用本工具运行 main class 或 E2E program。不要在默认 workflow 中手工拼接 classpath；若工具不满足项目需要，应先修复或扩展稳定工具，再记录 workflow evidence。
+
 ### 2.4 Cleanup Runtime Evidence
 
 ```powershell
