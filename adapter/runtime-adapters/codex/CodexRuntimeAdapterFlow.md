@@ -1,0 +1,101 @@
+﻿# Codex Runtime Adapter Flow
+
+Status: active-contract
+Version: v0.1.1-post-p11-cleanup
+Date: 2026-06-09
+
+## 1. Purpose
+
+This document defines how Codex consumes Harness Root for managed project automation.
+
+Codex remains an external agent runtime. Harness provides entry rules, routing, task evidence requirements, stable tools, and governance constraints.
+
+## 2. Entry Prompt
+
+When Codex starts a non-simple Harness task, it should orient from:
+
+```text
+HARNESS_ROOT = <HARNESS_ROOT>
+Read AGENTS.md, harness/INDEX.md, harness/PLANS.md,
+then read task-relevant Harness docs and project entry documents.
+```
+
+Codex must not require a runtime-specific project fact format. Project identity and validation routing come from Harness project assets.
+
+## 3. Flow
+
+1. Read root entry:
+   - `AGENTS.md`
+   - `harness/INDEX.md`
+   - `harness/PLANS.md`
+2. Build a Task Brief from the user's natural-language prompt.
+3. Resolve `projectId` from the prompt, registry example, project profile, or project entry.
+4. Read project entry:
+   - `projects/<project-id>/AGENTS.md`
+   - `projects/<project-id>/docs/project/ProjectIndex.md`
+5. Create or update workflow evidence under:
+
+```text
+projects/<project-id>/docs/project/workflow/<task-id>.md
+```
+
+6. Execute through stable Harness tool surfaces when tools are needed.
+7. Record validation result with redacted evidence paths.
+8. Return the Common Task Result Contract.
+
+## 4. Workflow Evidence Requirements
+
+Codex workflow evidence must include:
+
+- Task Brief;
+- Harness Run Card;
+- readiness check;
+- execution plan;
+- execution record;
+- validation summary;
+- acceptance state;
+- governance candidates.
+
+Runtime-specific details may be recorded in the Harness Run Card when useful, but they must not be copied into project facts.
+
+## 5. Stable Tool Use
+
+For Java/Maven validation, Codex should use:
+
+```text
+tools/docs/command-surfaces/JavaMavenCommandSurface.md
+tools/scripts/stable/invoke-maven-project.ps1
+tools/scripts/stable/invoke-java-main.ps1
+```
+
+Codex must not inline private settings, credential material, or unredacted command output into tracked docs.
+
+## 6. Result Contract
+
+Codex final replies must follow:
+
+```text
+adapter/result-contracts/CommonTaskResultContract.md
+```
+
+For this runtime, the contract usually sets:
+
+```yaml
+runtime: codex
+channel: codex
+```
+
+## 7. P10 Acceptance Mapping
+
+| P10 Criterion | Codex Flow |
+|---|---|
+| Codex can use same root entry and project registry | Starts at `AGENTS.md`, `harness/INDEX.md`, `harness/PLANS.md`, then project entry. |
+| Comparable workflow evidence | Writes under `projects/<project-id>/docs/project/workflow/`. |
+| User replies include result, evidence paths, next action | Uses Common Task Result Contract. |
+| Runtime details do not leak into project facts | Runtime details stay in Run Card/result, not facts. |
+
+## 8. P10 Scope Boundary
+
+P10 defines the Codex adapter flow and contract. It does not prove that the full Harness framework is production-complete.
+
+P11 later completed controlled framework closeout. Remaining production hardening, real-project onboarding, RAG tooling, live gateway validation, stronger isolation and unified CLI work belong to the Post-P11 / P12 plan in `harness/PLANS.md`.

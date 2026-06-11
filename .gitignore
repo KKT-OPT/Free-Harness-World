@@ -1,0 +1,43 @@
+# Harness runtime and local-only state
+/var/
+
+# User-local configuration may contain private paths, settings, auth hints or profile ids.
+/user/settings/
+/user/github/
+/user/auth/
+/user/git/
+/user/identity/
+/user/registry/*.local.json
+/user/registry/*.private.json
+/user/**/*.secret.*
+/user/**/*.auth.*
+
+# Transitional old local config paths should not re-enter Git.
+/settings/
+/config/local/*.local.json
+/config/local/*.private.json
+
+# Sandbox-managed external runtimes and downloaded tools.
+/tools/external/
+
+# Managed project work copies are separate repositories from the Harness Root repo.
+/projects/*/
+!/projects/.gitkeep
+
+# Obsidian runtime/editor state is not a Harness fact source.
+/.obsidian/workspace.json
+/.obsidian/workspace-mobile.json
+/.obsidian/workspaces.json
+/.obsidian/graph.json
+/.obsidian/plugins/**/main.js
+/.obsidian/plugins/**/styles.css
+/.obsidian/plugins/**/obsidian_askpass.sh
+
+# Common generated outputs
+target/
+build/
+dist/
+out/
+.gradle/
+.idea/
+*.log

@@ -1,0 +1,78 @@
+profileId: offline-markitdown-rapidocr-whisper
+status: example
+purpose: offline-structured-ingestion
+
+network: disabled
+llmApiRequired: false
+cloudLlmApisAllowed: false
+credentialPassthroughAllowed: false
+
+documentConverter: markitdown
+ocrEngine: rapidocr
+speechToTextEngine: whisper
+
+allowedInputs:
+  pdf:
+    extensions:
+      - .pdf
+    notes:
+      - text-pdf
+      - scanned-pdf-with-local-ocr
+  office:
+    extensions:
+      - .docx
+      - .pptx
+      - .xlsx
+  html:
+    extensions:
+      - .html
+      - .htm
+  image:
+    extensions:
+      - .png
+      - .jpg
+      - .jpeg
+      - .tif
+      - .tiff
+      - .bmp
+      - .webp
+  audio:
+    extensions:
+      - .wav
+      - .mp3
+      - .m4a
+      - .flac
+      - .ogg
+  video:
+    extensions:
+      - .mp4
+      - .mov
+      - .mkv
+      - .avi
+      - .webm
+
+outputs:
+  - markdown
+  - metadata-manifest
+  - extraction-report
+  - chunks-jsonl
+
+outputState:
+  default: extracted
+  allowed:
+    - extracted
+    - candidate
+  disallowed:
+    - reviewed
+
+governance:
+  reviewedKnowledge: false
+  rawSourceTracking: selective
+  requireInputHash: true
+  requireOutputHash: true
+  requireToolVersions: true
+  requireExtractionReport: true
+  requireOcrConfidenceWhenUsed: true
+  requireTimestampsForAudioVideo: true
+  prohibitCredentialCapture: true
+  prohibitUnredactedSensitiveOutput: true

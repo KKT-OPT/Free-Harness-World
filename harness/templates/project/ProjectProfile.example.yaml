@@ -1,0 +1,40 @@
+templateMetadata:
+  status: template
+  version: v0.3.0-formal-project-package
+  purpose: "Define routing metadata for a managed Harness project."
+  inputs:
+    - "<project-id>"
+    - "<project-type>"
+    - "<validation-profile-id>"
+    - "<knowledge-scope>"
+  outputs:
+    - "projects/<project-id>/docs/project/ProjectProfile.yaml"
+  sensitiveBoundary:
+    - "Do not include credentials, auth file content, private settings, unredacted logs, real local paths, concrete GitHub account values, or real private repository URLs."
+  instantiationRules:
+    - "Replace all placeholders with reviewed project routing metadata."
+    - "Keep detailed project facts in docs/project/, not in the root registry."
+
+projectId: <project-id>
+root: projects/<project-id>
+entry: AGENTS.md
+projectIndex: docs/project/ProjectIndex.md
+projectType: <project-type>
+githubAccountRef: <github-account-ref>
+repositoryRef: <repository-ref>
+defaultValidationProfile: <validation-profile-id>
+knowledgeScopes:
+  - project-reviewed:<project-id>
+  - domain:<domain-id>
+  - global
+defaultCommands:
+  validate: <stable-command-id>
+sensitiveBoundaries:
+  - .env
+  - settings*.xml
+  - secrets/**
+workflow:
+  directory: docs/project/workflow
+  requireTaskBrief: true
+  requireHarnessRunCard: true
+status: template

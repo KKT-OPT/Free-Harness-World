@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "harness.projects.v1",
+  "registryKind": "example",
+  "projects": [
+    {
+      "projectId": "example-project",
+      "root": "projects/example-project",
+      "entry": "AGENTS.md",
+      "projectIndex": "docs/project/ProjectIndex.md",
+      "defaultValidationProfile": "example-validation-profile",
+      "knowledgeScopes": [
+        "project-reviewed:example-project",
+        "domain:example-domain",
+        "global"
+      ],
+      "sensitiveBoundarySummary": [
+        "credential-material-excluded",
+        "private-settings-excluded",
+        "auth-files-excluded",
+        "unredacted-logs-excluded",
+        "generated-output-excluded"
+      ]
+    }
+  ]
+}

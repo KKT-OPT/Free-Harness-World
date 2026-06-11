@@ -1,0 +1,34 @@
+templateMetadata:
+  status: template
+  version: v0.2.0-p12.1
+  purpose: "Define the default validation profile for a managed Harness project."
+  inputs:
+    - "<validation-profile-id>"
+    - "<project-type>"
+    - "<stable-command-surface>"
+  outputs:
+    - "projects/<project-id>/docs/project/ValidationProfile.yaml"
+  sensitiveBoundary:
+    - "Do not print credentials, auth file content, private settings, unredacted logs, private paths, or real private repository URLs."
+  instantiationRules:
+    - "Use a stable Harness command surface when one exists."
+    - "Keep raw validation logs outside tracked docs unless redacted."
+
+profileId: <validation-profile-id>
+status: template
+projectType: <project-type>
+toolSurface:
+  validate: <stable-validate-command>
+  showConfig: <stable-config-command>
+defaultGoals:
+  - <default-goal>
+outputs:
+  statusJson: required
+  logPath: required
+sensitiveHandling:
+  printPrivateSettingsBody: false
+  printCredentials: false
+  redactLogsBeforeTrackedDocs: true
+approval:
+  yoloModeAllowed: false
+  dangerousCommandsRequireApproval: true
