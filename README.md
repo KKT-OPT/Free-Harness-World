@@ -1,226 +1,357 @@
 ---
 documentName: README.md
-version: v1.1.0-h8-install-uninstall
-updatedAt: 2026-06-23 10:05:00.000 +08:00
+version: v1.2.0-h8-product-manual
+updatedAt: 2026-06-23 14:15:56.000 +08:00
 status: active
-purpose: 作为人类读者的 Harness Root 入口，说明当前权威文档、稳定布局、registry 和治理自检命令。
+purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、常用命令、边界、贡献和 License。
 scope:
-  - human-entry
-  - bootstrap-orientation
-  - workspace-summary
+  - user-manual
+  - installation-guide
+  - quick-start
+  - command-reference
+  - contribution-guide
 prerequisites:
   - AGENTS.md
 relatedDocuments:
   - AGENTS.md
   - INDEX.md
   - harness/HarnessIndex.md
+  - harness/architecture/HarnessEngineering.md
   - harness/architecture/PLANS.md
+  - harness/bootstrap/BootstrapIndex.md
+  - harness/tools/ToolsIndex.md
 outputTo:
   - README.md
 owner: mixed
-reviewAfter: 2026-07-17
+reviewAfter: 2026-07-23
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
-  - INDEX.md
-  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+  - harness/bootstrap/BootstrapIndex.md
 review:
   reviewedBy: agent
   reviewedAt: 2026-06-23
-  decision: h8-install-uninstall-added
+  decision: h8-product-manual-refresh
 ---
-# Harness Root 人类入口
+# Free Harness World
 
-`<HARNESS_ROOT>` 是 Harness Workspace，也是本地执行沙盒。长期目标是作为可下载、可植入、跨机器复用的 Harness Distribution Repo checkout。
+Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。它提供统一的入口规则、项目路由、工具资产、验证、自检、治理、知识边界、Memory/Skill 机制和项目模板，用于把 Codex、Hermes 等执行主体接入到可审查、可迁移、可持续演进的本地工作区。
 
-```text
-AGENTS.md
-INDEX.md
-README.md
-LICENSE
-adapter/
-harness/
-projects/
-sandbox/
-user/
-var/
-```
+当前仓库还不是正式产品化 release。H8 已完成 bootstrap、install、uninstall 和 `agent-git` 分支验证；正式发布需要等待 H9 真实项目验证和后续 release gate。`main` 分支由用户维护，agent 只在 `agent-git` 分支提交和推送。
 
-Harness 是 agent 维护和读取的通用文档系统知识库，同时也是项目自动化控制层、工具资产层和治理层。Codex、Hermes 等 Agent Runtime 负责执行；Harness 负责入口、规则、路由、工具、证据和治理。
+## 1. 适用对象
 
-## 当前权威
+| 对象 | 用途 |
+|---|---|
+| 普通用户 | 下载、安装、初始化 Harness Workspace，并按 README 执行自检。 |
+| 项目维护者 | 在 `projects/<project-id>/` 下挂载项目实例，维护项目事实和工作流证据。 |
+| Agent / Runtime 集成者 | 使用 `AGENTS.md`、`INDEX.md`、`harness/HarnessIndex.md` 和工具脚本接入自动化任务。 |
+| Harness 贡献者 | 在 `agent-git` 分支修改文档、工具、模板或治理机制，并通过自检后提交。 |
 
-当前唯一最终架构权威：
+## 2. 当前状态
 
 ```text
-harness/architecture/HarnessEngineering.md
+stage = H8 complete
+nextStage = H9 real project validation
+defaultAgentBranch = agent-git
+humanReleaseBranch = main
+license = MIT
 ```
 
-当前长期索引和阶段计划：
+H8 已验证：
 
-```text
-INDEX.md
-harness/HarnessIndex.md
-harness/architecture/PLANS.md
-```
+- 从 GitHub clone `agent-git`；
+- 运行 `bootstrap-harness-workspace.ps1 -Mode status`；
+- 运行 `bootstrap-harness-workspace.ps1 -Mode install`；
+- 运行 governance self-check；
+- 运行 `bootstrap-harness-workspace.ps1 -Mode uninstall`；
+- 确认卸载不删除 Git clone、tracked 文档或项目挂载点。
 
-旧兼容入口在确认无风险后删除；长期入口以本文、`AGENTS.md`、`INDEX.md` 和 `harness/HarnessIndex.md` 为准。
+## 3. 系统要求
 
-## Bootstrap
+最低要求：
 
-H8 当前目标是完成 bootstrap foundation 和 `agent-git` 分支 GitHub 管理恢复，不是正式产品化发布。正式产品化发布需要等待 H9 真实项目验证及后续 release gate，并由用户在 `main` 分支完成。
+- Git；
+- Windows PowerShell 5.1 或 PowerShell 7；
+- 能访问 GitHub 仓库 `KKT-OPT/Free-Harness-World`。
 
-检查 bootstrap 状态：
+按任务可选：
+
+- Java 和 Maven：用于 Java/Maven 项目验证；
+- Python：用于 RAG candidate 或文档处理工具；
+- Codex、Hermes 或其他 Agent Runtime：用于执行受管任务。
+
+## 4. 安装
+
+选择一个本机目录作为 `<HARNESS_ROOT>`，然后 clone `agent-git`：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 `
-  -Root <HARNESS_ROOT> `
-  -Mode status
+git clone --branch agent-git --single-branch git@github.com:KKT-OPT/Free-Harness-World.git <HARNESS_ROOT>
+cd <HARNESS_ROOT>
+```
+
+检查工作区状态：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode status
 ```
 
 安装本机 workspace 状态：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 `
-  -Root <HARNESS_ROOT> `
-  -Mode install
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode install
 ```
 
-`-Mode install` 只创建缺失的本地 registry 和运行态目录，其中本地 registry 是空 registry，需要用户后续按真实项目填写；脚本不覆盖已有文件，不写入凭据，不导入真实项目。`-Mode init` 是兼容别名。
+`install` 会创建：
+
+- `user/registry/projects.local.json`；
+- `user/registry/knowledge.local.json`；
+- `var/`、`var/logs/`、`var/tmp/`、`var/rag/`。
+
+安装不会：
+
+- 覆盖已有本地 registry；
+- 写入凭据；
+- 导入真实项目；
+- 修改 `main` 分支；
+- 把 `var/`、`projects/*/`、用户本地配置或私有知识加入 Git。
+
+## 5. 验证安装
+
+运行 bootstrap status：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode status -RunSelfCheck
+```
+
+运行治理自检：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-harness-governance.ps1
+```
+
+运行 registry self-test：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-project-registry.ps1 -SelfTest
+```
+
+通过标准：
+
+- bootstrap status 为 `passed`；
+- governance self-check 为 `passed`；
+- registry self-test 为 `passed`；
+- `git status --short --ignored` 中本地 registry 和运行态目录只显示为 ignored 或不显示。
+
+## 6. 卸载
 
 卸载本机 workspace 安装态：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 `
-  -Root <HARNESS_ROOT> `
-  -Mode uninstall
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode uninstall
 ```
 
-`-Mode uninstall` 只删除 install 生成的本地 registry 文件和空的 `var/` 运行态目录，不删除 Git clone、不删除 tracked 文档、不删除真实项目目录。
+`uninstall` 会删除：
 
-## 稳定布局
+- install 生成的 `user/registry/projects.local.json`；
+- install 生成的 `user/registry/knowledge.local.json`；
+- 空的 `var/` 运行态目录。
 
-- `adapter/`: 用户、gateway、Codex/Hermes runtime adapter、Task Brief 和结果契约。
-- `harness/`: 通用 Harness 文档系统，包括架构、治理、记忆、观测、项目模板、报告、skills、templates、目标 RAG 机制、目标工具资产和目标 verification。
-- `projects/`: 真实或 demo 项目实例。项目事实只进入 `projects/<project-id>/docs/project/`。
-- `sandbox/`: 沙盒环境、隔离、profile 和 settings 边界说明。
-- `user/`: 用户本地信息和设置边界，包括项目 registry、私有 Maven profile、settings、auth、identity 和真实用户知识边界。
-- `var/`: logs、tmp、homes、m2、cache、evidence、rag indexes 等运行态。
+`uninstall` 不会删除：
 
-H8 前置检查后，工具资产、RAG、Verification、Observability、Memory 和 Skill 机制均已迁移或补齐到目标路径：工具资产位于 `harness/tools/`，RAG 机制位于 `harness/rag/`，真实或候选知识位于 `user/knowledge/` 或外部 private repo，运行态索引和提取产物位于 `var/rag/`，验证规则位于 `harness/verification/`，观测 schema 位于 `harness/observability/`，Memory 位于 `harness/memory/`，Skill 位于 `harness/skills/`。
+- Git clone 本身；
+- tracked 文档；
+- `AGENTS.md`、`INDEX.md`、`README.md`；
+- `harness/`；
+- `projects/README.md`；
+- 真实项目目录。
 
-## 项目 Registry
+## 7. 快速开始
 
-本地项目注册表：
+1. 安装 Harness：
+
+```powershell
+git clone --branch agent-git --single-branch git@github.com:KKT-OPT/Free-Harness-World.git <HARNESS_ROOT>
+cd <HARNESS_ROOT>
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode install
+```
+
+2. 阅读入口：
+
+```text
+AGENTS.md
+INDEX.md
+harness/HarnessIndex.md
+harness/architecture/PLANS.md
+```
+
+3. 挂载项目实例：
+
+```text
+projects/<project-id>/
+```
+
+真实项目应作为独立 Git 仓库或本地工作区存在，不能把项目 Git 历史混入 Harness 根仓库。
+
+4. 初始化项目文档：
+
+```text
+harness/templates/project-template/
+-> projects/<project-id>/
+```
+
+项目事实入口：
+
+```text
+projects/<project-id>/AGENTS.md
+projects/<project-id>/docs/project/ProjectIndex.md
+```
+
+5. 修改本地项目 registry：
 
 ```text
 user/registry/projects.local.json
 ```
 
-安全校验：
+6. 执行自检：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\test-project-registry.ps1 `
-  -Root <HARNESS_ROOT> `
-  -Registry user/registry/projects.local.json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-harness-governance.ps1
 ```
 
-registry 只保存路由 metadata。项目事实留在 `projects/<project-id>/docs/project/`。
+## 8. 常用命令
 
-## 治理自检
+| 命令 | 用途 |
+|---|---|
+| `bootstrap-harness-workspace.ps1 -Mode status` | 检查 Harness Workspace 必需入口和 Git ignore 边界。 |
+| `bootstrap-harness-workspace.ps1 -Mode install` | 安装本机 workspace 状态。 |
+| `bootstrap-harness-workspace.ps1 -Mode uninstall` | 卸载本机 workspace 安装态。 |
+| `test-harness-governance.ps1` | 运行 Harness Root 治理自检。 |
+| `test-project-registry.ps1 -SelfTest` | 校验项目 registry 验证器行为。 |
+| `test-project-registry.ps1` | 校验本机项目 registry。 |
+| `show-java-maven-config.ps1` | 输出 Java/Maven profile 的安全摘要。 |
+| `invoke-maven-project.ps1` | 运行 Maven goals 并输出状态摘要和脱敏日志路径。 |
+| `invoke-java-main.ps1` | 编译并运行 Java main class。 |
+| `invoke-rag-candidate.ps1` | 运行 RAG candidate 流程，不直接晋升 reviewed knowledge。 |
+| `clean-sandbox.ps1` | 清理运行态文件；默认 dry-run，`-Apply` 需要明确审批。 |
+| `publish-harness-agent-branch.ps1` | 在 `agent-git` 分支执行受控提交和推送。 |
 
-dry-run 治理自检：
+示例：治理自检
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\test-harness-governance.ps1 `
-  -Root <HARNESS_ROOT> `
-  -Registry user/registry/projects.local.json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-harness-governance.ps1
 ```
 
-该检查覆盖入口路由、历史路径回流、架构权威、敏感边界、生成物、项目 registry 和仓库边界。默认不删除文件。
-
-## Java/Maven Profile
-
-本地 profile ID 应来自用户设置或 Project Profile，例如：
-
-```text
-<profile-id>
-```
-
-profile 文件：
-
-```text
-user/settings/maven/java-maven.local.json
-```
-
-sandbox settings 示例：
-
-```text
-user/settings/maven/settings-sandbox.xml
-```
-
-不要把 settings XML 正文、server 用户名、密码、token、auth 文件或私有仓库细节写入 prompt、Task Brief、workflow summary 或 tracked docs。
-
-安全查看 profile：
+示例：Java/Maven profile 安全摘要
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\show-java-maven-config.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\show-java-maven-config.ps1 `
   -Agent codex `
   -Profile <profile-id> `
   -CheckVersion
 ```
 
-## Maven 验证
-
-普通 Maven 验证：
+示例：Maven 验证
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\invoke-maven-project.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-maven-project.ps1 `
   -Agent codex `
   -Profile <profile-id> `
-  -ProjectRoot <HARNESS_ROOT>\projects\<project-id> `
+  -ProjectRoot .\projects\<project-id> `
   -Goals test
 ```
 
-运行 Java main：
+## 9. 目录结构
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\invoke-java-main.ps1 `
-  -Agent codex `
-  -Profile <profile-id> `
-  -ProjectRoot <HARNESS_ROOT>\projects\<project-id> `
-  -Module <module-name> `
-  -MainClass <package.MainClass> `
-  -PassMarker <pass-marker>
+| 路径 | 说明 | Git 边界 |
+|---|---|---|
+| `AGENTS.md` | Agent 入口契约、硬约束和读取顺序。 | tracked |
+| `INDEX.md` | 全局导航入口。 | tracked |
+| `harness/architecture/` | 架构权威、计划和变更记录。 | tracked |
+| `harness/bootstrap/` | 安装、卸载、初始化和 bootstrap 验收入口。 | tracked |
+| `harness/governance/` | 治理、晋升、清理、文档和索引维护策略。 | tracked |
+| `harness/tools/` | 稳定工具、工具文档、manifest、候选、历史、runtime 和 external 边界。 | tracked with local-only exclusions |
+| `harness/templates/project-template/` | 项目模板唯一目标路径。 | tracked |
+| `harness/verification/` | readiness、validation、regression 和验证用例。 | tracked |
+| `harness/observability/` | trace、failure attribution 和观测结构。 | tracked |
+| `harness/rag/` | RAG 机制层；真实知识不放这里。 | tracked |
+| `harness/memory/` | Memory policy、candidate、reviewed 和 archive 边界。 | tracked |
+| `harness/skills/` | Skill policy、candidate、reviewed、archive 和 usage sidecar。 | tracked |
+| `projects/` | 项目实例挂载点。 | only `projects/README.md` tracked |
+| `user/` | 本地 registry、settings、auth、identity、knowledge 边界。 | local/private files ignored |
+| `var/` | 运行态日志、缓存、临时文件和 RAG index。 | ignored |
+
+## 10. 数据和安全边界
+
+不得提交或写入 tracked docs：
+
+- token、password、secret、auth 文件；
+- Maven settings 正文；
+- 未脱敏日志；
+- 本机私有路径；
+- 私有仓库 URL；
+- 真实项目源码；
+- `var/**` 运行态；
+- `user/settings/**`、`user/auth/**`、`user/identity/**`；
+- `user/registry/*.local.json`；
+- `user/knowledge/**` 中的真实或候选私有知识。
+
+RAG Index 是可重建检索产物，不是事实源。Workflow Evidence 只产生候选事实，不能直接晋升为 Knowledge、Memory、Skill 或 Project Fact。
+
+## 11. 架构文档
+
+长期架构权威：
+
+```text
+harness/architecture/HarnessEngineering.md
 ```
 
-## 清理
+阶段计划和验收状态：
 
-预览 runtime cleanup：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\clean-sandbox.ps1
+```text
+harness/architecture/PLANS.md
 ```
 
-实际清理需要明确授权：
+General Harness 索引：
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\clean-sandbox.ps1 -Apply
+```text
+harness/HarnessIndex.md
 ```
 
-## GitHub 边界
+## 12. 贡献
 
-Harness Root 应作为一个独立 Git 仓库管理。当前 GitHub 仓库是 `KKT-OPT/Free-Harness-World`。
+当前贡献目标分支：
 
-分支边界：
+```text
+agent-git
+```
 
-- `agent-git`：agent 可以提交、修改和推送，用于架构落地、bootstrap foundation 和 H8 后续验证。
-- `main`：用户拥有，正式产品化发布、合并和 release tag 只能由用户执行。
+贡献要求：
 
-复制进 `projects/<project-id>` 的真实项目必须作为另一个独立 Git 仓库管理，即使使用同一个 GitHub 账号，也不得混合 git history。
+1. 不直接修改或推送 `main`。
+2. 不提交真实项目源码、私有设置、auth、token、未脱敏日志或运行态产物。
+3. 重要 Markdown 文档必须保留 YAML frontmatter。
+4. 正式 Harness 文档以中文作为主题说明语言，允许保留专业词、命令、路径和代码标识的英文写法。
+5. 新增稳定工具必须补齐工具契约，并更新 `harness/tools/docs/script-index/ScriptIndex.md`。
+6. 涉及 Knowledge、Memory、Skill、Project Fact 或 Governance 晋升的变更必须 candidate-first、review-first，并保留用户审批边界。
 
-本机路径、GitHub 账号、私有仓库 URL、auth、settings 和私有 Maven 信息属于 `user/` local boundary，不进入 tracked docs。
+提交前运行：
 
-## Obsidian 边界
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-harness-governance.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-project-registry.ps1 -SelfTest
+git diff --check
+```
 
-Harness 文档可以采用 Obsidian-friendly Markdown：frontmatter、wikilink、Mermaid、可选 Bases/Canvas。`.obsidian` workspace、graph、plugin runtime code 不是事实源，不进入默认上下文，也不作为 Git 维护机制。
+受控提交和推送：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\publish-harness-agent-branch.ps1 `
+  -Mode commit-and-push `
+  -CommitMessage "<commit-message>"
+```
+
+## 13. License
+
+本项目使用 MIT License。详见 [LICENSE](LICENSE)。
