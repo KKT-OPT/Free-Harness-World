@@ -1,7 +1,7 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.2.0-h8-install-uninstall-validation
-updatedAt: 2026-06-23 10:05:00.000 +08:00
+version: v1.2.1-h8-install-uninstall-validation-complete
+updatedAt: 2026-06-23 10:50:19.000 +08:00
 status: active
 purpose: 记录新架构方案的落地阶段、当前沙盒 Harness 现状、重构计划、阶段验收标准、H8 bootstrap foundation 和后续真实项目验证/release gate。
 scope:
@@ -34,7 +34,7 @@ dependsOn:
 review:
   reviewedBy: agent
   reviewedAt: 2026-06-23
-  decision: h8-reopened-for-install-uninstall-validation
+  decision: h8-install-uninstall-validation-complete
 ---
 # Harness 架构落地计划
 
@@ -43,9 +43,9 @@ review:
 ## 1. 当前状态
 
 ```text
-currentStage = H8 Install/Uninstall Clone Validation
-status = h8-supplemental-validation-in-progress
-lastCompletedStage = H8-bootstrap-foundation
+currentStage = H9 Real Project Validation
+status = ready-for-H9
+lastCompletedStage = H8
 architectureAuthority = harness/architecture/HarnessEngineering.md
 targetArchitectureVersion = v2.4.0-target-architecture
 ```
@@ -75,7 +75,7 @@ targetArchitectureVersion = v2.4.0-target-architecture
 | H6 | RAG 和 Knowledge 边界迁移 | complete | RAG 机制、用户知识和运行态索引边界已拆分。 |
 | H7 | Verification、Observability 和 Governance 对齐 | complete | 验证规则、观测 schema 和治理 linkage 已对齐目标路径。 |
 | H8-pre | H8 前置检查和完善 | complete | 结构检查、兼容清理、治理/Memory/Skill/Knowledge 机制补齐、Git 管理恢复决策。 |
-| H8 | GitHub agent 分支恢复和 Bootstrap Foundation | supplemental-validation | 已恢复 `agent-git` 分支 GitHub 管理；补充 install/uninstall 和非沙盒 clone 验证后才可完成验收。 |
+| H8 | GitHub agent 分支恢复和 Bootstrap Foundation | complete | 已恢复 `agent-git` 分支 GitHub 管理；install/uninstall 和非沙盒 clone 验证已通过。 |
 | H9 | 目标布局后的真实项目验证 | pending | 用真实项目 workflow 验证 Skill、Governance、Knowledge、Memory 和工具闭环，不晋升私有事实。 |
 | H10 | Release Readiness 和 main 发布门禁 | pending | H9 验证后再判断是否具备 release candidate；`main` 合并、tag、正式发布只能由用户执行。 |
 
@@ -234,7 +234,10 @@ H8 完成结果：
 | 自检 | governance self-check 通过；registry self-test 通过；`git diff --check` 无 whitespace error。 |
 | GitHub 恢复 | H0-H8 变更已提交并推送到 `origin/agent-git`，commit `1786664`。 |
 | Release 边界 | H8 未发布正式版本，`main` 未被 agent 修改，正式 release 推迟到 H9 真实项目验证之后。 |
-| 补充要求 | 用户要求 H8 增加 install/uninstall，并在非当前 Harness Root 的独立本地路径做 clone/install/uninstall 验证。 |
+| Install/Uninstall | `bootstrap-harness-workspace.ps1` 已支持 `status`、`install`、`uninstall`；`init` 保留为兼容别名。 |
+| Clean Install Registry | `install` 生成空的本地 project/knowledge registry，不自动引用不存在的示例项目。 |
+| Clone 验证 | 已在非当前 Harness Root 的独立本地路径完成 clone、status、install、self-check、uninstall、status 流程验证。 |
+| 最新 GitHub 恢复 | install/uninstall 补充已提交并推送到 `origin/agent-git`，commit `0655fed`。 |
 
 ## 9. H9 目标
 
