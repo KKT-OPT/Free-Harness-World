@@ -128,14 +128,14 @@ review:
 
 | 契约项 | 内容 |
 |---|---|
-| Inputs | `-Mode status|init`、`-Root`、`-RunSelfCheck`。 |
+| Inputs | `-Mode status|install|uninstall|init`、`-Root`、`-RunSelfCheck`。 |
 | Outputs | JSON status summary、required file check、ignored boundary check、可选 governance self-check。 |
 | Status Summary | mode、missingRequiredFiles、actions、ignoredChecks、nextActions。 |
 | Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要。 |
-| Sensitive Handling | 不读取 settings/auth 正文；`init` 只复制 example registry 到 ignored local registry，不覆盖已有文件。 |
+| Sensitive Handling | 不读取 settings/auth 正文；`install` 只复制 example registry 到 ignored local registry，不覆盖已有文件；`uninstall` 只删除本地安装态文件。 |
 | Failure Mode | `bootstrap/missing-route`、`bootstrap/gitignore-boundary`、`governance/self-check`。 |
 | Repair Suggestion | 补齐缺失入口、修复 `.gitignore` 或运行治理自检定位 route/boundary 问题。 |
-| Validation Instruction | 先运行 `-Mode status`，首次本机初始化再运行 `-Mode init`。 |
+| Validation Instruction | 先运行 `-Mode status`，首次本机初始化运行 `-Mode install`，卸载本机安装态运行 `-Mode uninstall`。 |
 
 ### `invoke-rag-candidate.ps1`
 

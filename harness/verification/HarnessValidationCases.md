@@ -60,8 +60,11 @@ Expected:
 Expected:
 
 - routes to `harness/bootstrap/BootstrapIndex.md`;
-- verifies `README.md` documents bootstrap status/init commands;
+- verifies `README.md` documents bootstrap status/install/uninstall commands;
 - runs `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1 -Mode status`;
+- runs `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1 -Mode install`;
+- runs `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1 -Mode uninstall`;
+- validates the clone/install/uninstall flow outside the active sandbox path;
 - confirms local registry examples exist;
 - confirms `.gitignore` blocks `var/`, `projects/*/`, user local registry files, user private settings and runtime/external tool contents;
 - does not claim H8 is a formal product release.

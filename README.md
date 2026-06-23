@@ -1,7 +1,7 @@
 ---
 documentName: README.md
-version: v1.0.0-pre-h8-readiness-complete
-updatedAt: 2026-06-23 08:18:39.000 +08:00
+version: v1.1.0-h8-install-uninstall
+updatedAt: 2026-06-23 10:05:00.000 +08:00
 status: active
 purpose: 作为人类读者的 Harness Root 入口，说明当前权威文档、稳定布局、registry 和治理自检命令。
 scope:
@@ -27,7 +27,7 @@ dependsOn:
 review:
   reviewedBy: agent
   reviewedAt: 2026-06-23
-  decision: pre-h8-readiness-complete
+  decision: h8-install-uninstall-added
 ---
 # Harness Root 人类入口
 
@@ -78,15 +78,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
   -Mode status
 ```
 
-首次本机初始化：
+安装本机 workspace 状态：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 `
   -Root <HARNESS_ROOT> `
-  -Mode init
+  -Mode install
 ```
 
-`-Mode init` 只创建缺失的本地 registry 和运行态目录，不覆盖已有文件，不写入凭据，不导入真实项目。
+`-Mode install` 只创建缺失的本地 registry 和运行态目录，不覆盖已有文件，不写入凭据，不导入真实项目。`-Mode init` 是兼容别名。
+
+卸载本机 workspace 安装态：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 `
+  -Root <HARNESS_ROOT> `
+  -Mode uninstall
+```
+
+`-Mode uninstall` 只删除 install 生成的本地 registry 文件和空的 `var/` 运行态目录，不删除 Git clone、不删除 tracked 文档、不删除真实项目目录。
 
 ## 稳定布局
 

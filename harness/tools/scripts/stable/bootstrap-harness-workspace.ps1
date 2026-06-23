@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("status", "init")]
+    [ValidateSet("status", "init", "install", "uninstall")]
     [string]$Mode = "status",
 
     [string]$Root = "",
@@ -71,6 +71,55 @@ function Copy-ExampleIfMissing {
     }
 }
 
+function Assert-UnderHarnessRoot {
+    param(
+        [string]$RootPath,
+        [string]$Path
+    )
+    $rootFull = [System.IO.Path]::GetFullPath($RootPath).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    $pathFull = [System.IO.Path]::GetFullPath($Path)
+    if (-not $pathFull.StartsWith($rootFull + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to operate outside Harness root: $pathFull"
+    }
+}
+
+function Remove-LocalFileIfExists {
+    param(
+        [string]$RootPath,
+        [string]$RelativePath,
+        [System.Collections.ArrayList]$Actions
+    )
+    $path = Join-Path $RootPath ($RelativePath -replace '/', '\')
+    Assert-UnderHarnessRoot -RootPath $RootPath -Path $path
+    if (Test-Path -LiteralPath $path -PathType Leaf) {
+        Remove-Item -LiteralPath $path
+        [void]$Actions.Add([pscustomobject]@{ action = "removed-local-file"; path = $RelativePath })
+    } else {
+        [void]$Actions.Add([pscustomobject]@{ action = "missing-local-file"; path = $RelativePath })
+    }
+}
+
+function Remove-EmptyDirectoryIfExists {
+    param(
+        [string]$RootPath,
+        [string]$RelativePath,
+        [System.Collections.ArrayList]$Actions
+    )
+    $path = Join-Path $RootPath ($RelativePath -replace '/', '\')
+    Assert-UnderHarnessRoot -RootPath $RootPath -Path $path
+    if (-not (Test-Path -LiteralPath $path -PathType Container)) {
+        [void]$Actions.Add([pscustomobject]@{ action = "missing-directory"; path = $RelativePath })
+        return
+    }
+    $children = @(Get-ChildItem -LiteralPath $path -Force)
+    if ($children.Count -eq 0) {
+        Remove-Item -LiteralPath $path
+        [void]$Actions.Add([pscustomobject]@{ action = "removed-empty-directory"; path = $RelativePath })
+    } else {
+        [void]$Actions.Add([pscustomobject]@{ action = "kept-nonempty-directory"; path = $RelativePath })
+    }
+}
+
 function Test-GitIgnored {
     param(
         [string]$RootPath,
@@ -90,6 +139,11 @@ function Test-GitIgnored {
 
 $rootPath = if ([string]::IsNullOrWhiteSpace($Root)) { Find-HarnessRoot } else { (Resolve-Path -LiteralPath $Root).Path }
 $actions = New-Object System.Collections.ArrayList
+$installDirs = @("user/registry", "user/knowledge", "projects", "var", "var/logs", "var/tmp", "var/rag")
+$localRegistryFiles = @(
+    @{ Example = "user/registry/projects.local.example.json"; Target = "user/registry/projects.local.json" },
+    @{ Example = "user/registry/knowledge.local.example.json"; Target = "user/registry/knowledge.local.json" }
+)
 $requiredFiles = @(
     "AGENTS.md",
     "INDEX.md",
@@ -107,12 +161,22 @@ $requiredFiles = @(
     ".gitignore"
 )
 
-if ($Mode -eq "init") {
-    foreach ($dir in @("user/registry", "user/knowledge", "projects", "var", "var/logs", "var/tmp", "var/rag")) {
+if ($Mode -in @("init", "install")) {
+    foreach ($dir in $installDirs) {
         Ensure-Directory -RootPath $rootPath -RelativePath $dir -Actions $actions
     }
-    Copy-ExampleIfMissing -RootPath $rootPath -ExampleRelativePath "user/registry/projects.local.example.json" -TargetRelativePath "user/registry/projects.local.json" -Actions $actions
-    Copy-ExampleIfMissing -RootPath $rootPath -ExampleRelativePath "user/registry/knowledge.local.example.json" -TargetRelativePath "user/registry/knowledge.local.json" -Actions $actions
+    foreach ($file in $localRegistryFiles) {
+        Copy-ExampleIfMissing -RootPath $rootPath -ExampleRelativePath $file.Example -TargetRelativePath $file.Target -Actions $actions
+    }
+}
+
+if ($Mode -eq "uninstall") {
+    foreach ($file in $localRegistryFiles) {
+        Remove-LocalFileIfExists -RootPath $rootPath -RelativePath $file.Target -Actions $actions
+    }
+    foreach ($dir in @("var/logs", "var/tmp", "var/rag", "var")) {
+        Remove-EmptyDirectoryIfExists -RootPath $rootPath -RelativePath $dir -Actions $actions
+    }
 }
 
 $missing = New-Object System.Collections.ArrayList
@@ -159,6 +223,8 @@ $status = if ($missing.Count -eq 0 -and $ignoredOk -and (($null -eq $selfCheck) 
     ignoredChecks = $ignoredResults
     selfCheck = $selfCheck
     nextActions = @(
+        "Use -Mode install for first-run local workspace setup; init remains a compatibility alias.",
+        "Use -Mode uninstall to remove generated local registry files and empty runtime directories without deleting the Git clone.",
         "Edit user/registry/projects.local.json for real local projects.",
         "Keep projects/<project-id> as independent Git repositories or local workspaces.",
         "Run test-harness-governance.ps1 before committing Harness changes.",

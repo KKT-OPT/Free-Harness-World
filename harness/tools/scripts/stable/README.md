@@ -50,7 +50,8 @@ H8 bootstrap 初始化命令：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode status
-powershell -NoProfile -ExecutionPolicy Bypass -File harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode init
+powershell -NoProfile -ExecutionPolicy Bypass -File harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode install
+powershell -NoProfile -ExecutionPolicy Bypass -File harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode uninstall
 ```
 
-`-Mode init` 只创建缺失的本地 registry 和运行态目录，不覆盖已有本地文件，不写入凭据。
+`-Mode install` 只创建缺失的本地 registry 和运行态目录，不覆盖已有本地文件，不写入凭据。`-Mode uninstall` 只删除 install 生成的本地 registry 文件和空的运行态目录。
