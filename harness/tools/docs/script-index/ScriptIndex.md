@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.0.0-h7-verification-observability
-updatedAt: 2026-06-23 06:51:14.830 +08:00
+version: v1.1.0-h9-java-main-working-directory
+updatedAt: 2026-06-23 18:54:52.291 +08:00
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约。
 scope:
@@ -23,8 +23,8 @@ dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-18
-  decision: h7-verification-observability-aligned
+  reviewedAt: 2026-06-23
+  decision: h9-java-main-working-directory
 ---
 # 脚本索引
 
@@ -76,9 +76,9 @@ review:
 
 | 契约项 | 内容 |
 |---|---|
-| Inputs | `-ProjectRoot`、`-MainClass`、`-Agent`、`-MavenGoals`、`-Module`、`-Profile`、`-ProgramArgs`、`-JvmArgs`、`-PassMarker`、`-ReactorClasspathModules`。 |
+| Inputs | `-ProjectRoot`、`-MainClass`、`-Agent`、`-MavenGoals`、`-Module`、`-Profile`、`-ProgramArgs`、`-JvmArgs`、`-PassMarker`、`-JavaWorkingDirectory`、`-ReactorClasspathModules`。 |
 | Outputs | status summary、status JSON path、redacted log path、classpath runtime evidence。 |
-| Status Summary | state、exitCode、mainClass、profile、module、passMarker 结果。 |
+| Status Summary | state、exitCode、mainClass、profile、module、Java working directory、passMarker 结果。 |
 | Redacted Log Path | `var/logs/` 下的 Java/Maven 执行日志路径；tracked docs 只记录路径。 |
 | Sensitive Handling | 不解析 settings XML；程序参数如含私有值不得写入 tracked docs。 |
 | Failure Mode | `tool/execution`、`environment/java`、`input/main-class`、`project/build`、`project/runtime`。 |

@@ -1,6 +1,6 @@
 templateMetadata:
   status: template
-  version: v0.2.0-p12.1
+  version: v0.3.0-command-surface-main-program
   purpose: "Define the default validation profile for a managed Harness project."
   inputs:
     - "<validation-profile-id>"
@@ -20,6 +20,7 @@ projectType: <project-type>
 toolSurface:
   validate: <stable-validate-command>
   showConfig: <stable-config-command>
+  runMain: <stable-main-command>
 defaultGoals:
   - <default-goal>
 outputs:

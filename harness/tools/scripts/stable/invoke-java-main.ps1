@@ -23,6 +23,8 @@ param(
 
     [string]$PassMarker,
 
+    [string]$JavaWorkingDirectory,
+
     [switch]$AlsoMake,
 
     [switch]$Offline,
@@ -180,6 +182,7 @@ function Write-Status {
         settings = $Settings
         localRepository = $LocalRepo
         sandboxHome = $HomeDir
+        javaWorkingDirectory = $JavaWorkingDirectory
         classpathFile = $ClasspathFile
         javaArgFile = $JavaArgFile
         log = $Log
@@ -232,6 +235,38 @@ function Add-ClasspathRootIfExists {
     }
 }
 
+function Resolve-JavaWorkingDirectory {
+    param(
+        [string]$Value,
+        [string]$ProjectRootPath,
+        [string]$ModuleRootPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $ModuleRootPath
+    }
+
+    $normalized = $Value.Trim()
+    switch -Regex ($normalized.ToLowerInvariant()) {
+        '^(module|module-root|\{module-root\})$' {
+            return $ModuleRootPath
+        }
+        '^(project|project-root|\{project-root\})$' {
+            return $ProjectRootPath
+        }
+        default {
+            if ([System.IO.Path]::IsPathRooted($normalized)) {
+                $candidate = $normalized
+            }
+            else {
+                $candidate = Join-Path $ProjectRootPath $normalized
+            }
+            Assert-PathExists $candidate 'Java working directory'
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+}
+
 try {
     $profileValues = Resolve-JavaMavenProfile
     if (-not $Maven) { $Maven = Expand-AgentPath $profileValues.maven }
@@ -268,6 +303,7 @@ try {
     Add-Log "Module:      $Module"
     Add-Log "Main class:  $MainClass"
     Add-Log "Maven goals: $($MavenGoals -join ' ')"
+    Add-Log "Java cwd:    $JavaWorkingDirectory"
     Add-Log "Offline:     $([bool]$Offline)"
     Add-Log "Maven:       $Maven"
     Add-Log "Java:        $Java"
@@ -314,6 +350,7 @@ try {
 
     $classRootList = [System.Collections.Generic.List[string]]::new()
     $mainOutputBase = if ($Module) { Join-Path $ProjectRoot $Module } else { $ProjectRoot }
+    $javaRunCwd = Resolve-JavaWorkingDirectory -Value $JavaWorkingDirectory -ProjectRootPath $ProjectRoot -ModuleRootPath $mainOutputBase
     Add-ClasspathRootIfExists -Roots $classRootList -Path (Join-Path $mainOutputBase 'target\test-classes')
     Add-ClasspathRootIfExists -Roots $classRootList -Path (Join-Path $mainOutputBase 'target\classes')
 
@@ -347,7 +384,8 @@ try {
     Add-Log "Java argfile: $JavaArgFile"
     Add-Log "Classpath file: $ClasspathFile"
     Add-Log "Classpath entry count: $($classpathParts.Count)"
-    $javaExit = Invoke-LoggedCommand -Label 'java-main' -Exe $Java -CommandArgs @("@$JavaArgFile") -Cwd $mainOutputBase
+    Add-Log "Resolved Java cwd: $javaRunCwd"
+    $javaExit = Invoke-LoggedCommand -Label 'java-main' -Exe $Java -CommandArgs @("@$JavaArgFile") -Cwd $javaRunCwd
     if ($javaExit -ne 0) {
         throw "Java main command failed with exit code $javaExit"
     }
@@ -366,6 +404,7 @@ try {
         passMarkerFound = $passMarkerFound
         reactorClasspathModules = $ReactorClasspathModules
         extraClasspathRoots = $ClasspathRoots
+        javaWorkingDirectory = $javaRunCwd
     }
     Add-Log ''
     Add-Log 'JAVA_MAIN_PASS'

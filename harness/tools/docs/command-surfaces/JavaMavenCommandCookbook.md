@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/command-surfaces/JavaMavenCommandCookbook.md
-version: v1.0.0-h5-tool-layer
-updatedAt: 2026-06-18 14:30:00.000 +08:00
+version: v1.1.0-h9-java-main-working-directory
+updatedAt: 2026-06-23 18:54:52.291 +08:00
 status: active
 purpose: 提供 Java/Maven 稳定命令门面的可复用调用示例，避免 Agent 为不同项目临时拼接命令。
 scope:
@@ -24,8 +24,8 @@ dependsOn:
   - harness/tools/docs/command-surfaces/JavaMavenCommandSurface.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-18
-  decision: h5-complete
+  reviewedAt: 2026-06-23
+  decision: h9-java-main-working-directory
 ---
 # Java/Maven 命令示例
 
@@ -96,8 +96,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
   -ProjectRoot <HARNESS_ROOT>\projects\<project-id> `
   -Module <module-name> `
   -MainClass <package.MainClass> `
+  -JavaWorkingDirectory module-root `
   -PassMarker <pass-marker>
 ```
+
+`-JavaWorkingDirectory project-root` 可用于需要复现 IDE 项目根工作目录语义的 E2E program；场景级 pass marker 和业务输出判断只写入 workflow evidence。
 
 ## 6. 运行带兄弟模块 classpath 的 Java Main
 
