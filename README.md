@@ -86,7 +86,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
   -Mode install
 ```
 
-`-Mode install` 只创建缺失的本地 registry 和运行态目录，不覆盖已有文件，不写入凭据，不导入真实项目。`-Mode init` 是兼容别名。
+`-Mode install` 只创建缺失的本地 registry 和运行态目录，其中本地 registry 是空 registry，需要用户后续按真实项目填写；脚本不覆盖已有文件，不写入凭据，不导入真实项目。`-Mode init` 是兼容别名。
 
 卸载本机 workspace 安装态：
 

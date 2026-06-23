@@ -73,7 +73,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\bootstrap-harness-workspace.ps1 -Mode install
 ```
 
-`-Mode install` 只创建缺失的本地目录和本地 registry 文件，不覆盖已有文件，不写入凭据，不导入真实项目。`-Mode init` 是兼容别名。
+`-Mode install` 只创建缺失的本地目录和空的本地 registry 文件。用户需要后续按真实项目和知识源填写本地 registry。脚本不覆盖已有文件，不写入凭据，不导入真实项目。`-Mode init` 是兼容别名。
 
 ## 2.1 卸载流程
 
@@ -87,8 +87,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 
 | 产物 | Git 边界 | 说明 |
 |---|---|---|
-| `user/registry/projects.local.json` | ignored | 本机项目路由，需要用户按真实项目修改。 |
-| `user/registry/knowledge.local.json` | ignored | 本机知识源路由，需要用户按真实知识源修改。 |
+| `user/registry/projects.local.json` | ignored | 空本机项目路由，需要用户按真实项目修改。 |
+| `user/registry/knowledge.local.json` | ignored | 空本机知识源路由，需要用户按真实知识源修改。 |
 | `projects/` | tracked mount README only | 真实项目目录默认 ignored，项目 Git 独立。 |
 | `var/` | ignored | 运行态 logs、tmp、cache、rag index 等。 |
 

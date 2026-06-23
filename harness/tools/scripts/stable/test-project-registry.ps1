@@ -83,11 +83,12 @@ function Test-ProjectRegistryObject {
         $errors += New-ErrorItem -Code "schemaVersionInvalid" -Message "schemaVersion must be harness.projects.v1."
     }
 
-    if (-not $RegistryObject.projects) {
+    $hasProjects = $RegistryObject.PSObject.Properties.Name -contains "projects"
+    if (-not $hasProjects) {
         $errors += New-ErrorItem -Code "projectsMissing" -Message "projects array is required."
     }
 
-    $projectEntries = @($RegistryObject.projects)
+    $projectEntries = if ($hasProjects -and $null -ne $RegistryObject.projects) { @($RegistryObject.projects) } else { @() }
     $seen = @{}
 
     foreach ($project in $projectEntries) {

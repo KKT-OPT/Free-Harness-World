@@ -71,6 +71,25 @@ function Copy-ExampleIfMissing {
     }
 }
 
+function Write-JsonIfMissing {
+    param(
+        [string]$RootPath,
+        [string]$RelativePath,
+        [object]$Value,
+        [string]$SourceDescription,
+        [System.Collections.ArrayList]$Actions
+    )
+    $target = Join-Path $RootPath ($RelativePath -replace '/', '\')
+    Assert-UnderHarnessRoot -RootPath $RootPath -Path $target
+    if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
+        $json = $Value | ConvertTo-Json -Depth 8
+        Set-Content -LiteralPath $target -Value $json -Encoding UTF8
+        [void]$Actions.Add([pscustomobject]@{ action = "created-local-file"; path = $RelativePath; source = $SourceDescription })
+    } else {
+        [void]$Actions.Add([pscustomobject]@{ action = "exists-local-file"; path = $RelativePath })
+    }
+}
+
 function Assert-UnderHarnessRoot {
     param(
         [string]$RootPath,
@@ -165,9 +184,16 @@ if ($Mode -in @("init", "install")) {
     foreach ($dir in $installDirs) {
         Ensure-Directory -RootPath $rootPath -RelativePath $dir -Actions $actions
     }
-    foreach ($file in $localRegistryFiles) {
-        Copy-ExampleIfMissing -RootPath $rootPath -ExampleRelativePath $file.Example -TargetRelativePath $file.Target -Actions $actions
-    }
+    Write-JsonIfMissing -RootPath $rootPath -RelativePath "user/registry/projects.local.json" -SourceDescription "empty-install-registry" -Actions $actions -Value ([pscustomobject]@{
+        schemaVersion = "harness.projects.v1"
+        registryKind = "local"
+        projects = @()
+    })
+    Write-JsonIfMissing -RootPath $rootPath -RelativePath "user/registry/knowledge.local.json" -SourceDescription "empty-install-registry" -Actions $actions -Value ([pscustomobject]@{
+        schemaVersion = "harness.knowledgeRegistry.v1"
+        registryKind = "local"
+        knowledgeSources = @()
+    })
 }
 
 if ($Mode -eq "uninstall") {
