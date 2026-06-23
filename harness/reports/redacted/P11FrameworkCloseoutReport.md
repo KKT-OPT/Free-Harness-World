@@ -1,10 +1,34 @@
-﻿# P11 Framework Closeout Report
+---
+documentName: P11FrameworkCloseoutReport.md
+version: v1.0.0-pre-h8-report-archive
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: archived
+purpose: 记录 P11 框架收口历史证据；当前阶段状态以 harness/architecture/PLANS.md 为准。
+scope:
+  - redacted-historical-report
+  - non-authoritative-evidence
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/ReportArchivePolicy.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - harness/reports/redacted/P11FrameworkCloseoutReport.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - harness/governance/ReportArchivePolicy.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-report-archive-frontmatter-alignment
+---
+# P11 Framework Closeout Report（P11 框架收口历史报告）
 
-Status: p11.8-acceptance-backlog-cleanup-ready-for-review
-Version: v0.11.0-p11.8
-Date: 2026-06-10
-
-## Purpose
+## 目的
 
 This report is the single redacted P11 framework closeout report.
 
@@ -1035,7 +1059,7 @@ P11.8 completion standard:
 - expired temporary Markdown is deleted after route migration;
 - no RAG installation, live gateway call, real project import or old HarnessVault bulk copy occurred.
 
-## Sensitive Boundary
+## 敏感边界
 
 This report intentionally uses only Harness-relative paths except for the known Harness Root identity. It does not include private Maven settings paths, repository paths, credentials, auth files, raw logs or status JSON contents.
 

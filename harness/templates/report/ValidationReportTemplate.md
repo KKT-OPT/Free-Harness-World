@@ -1,24 +1,49 @@
-# Validation Report Template
+---
+documentName: ValidationReportTemplate.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '提供 Harness 管理任务验证报告的标准结构和敏感信息排除规则。'
+scope:
+  - validation-report-template
+  - verification-evidence
+  - sensitive-handling
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/templates/TemplateIndex.md
+  - harness/verification/VerificationIndex.md
+outputTo:
+  - harness/templates/report/ValidationReportTemplate.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Validation Report Template（验证报告模板）
 
-Status: template
-Version: v0.2.0-p11.5
-Date: 2026-06-10
+## 概要
 
-## Summary
+说明验证对象以及是否通过。
 
-State what was validated and whether it passed.
+## 范围
 
-## Scope
+列出项目、文件、命令和验证 profile。
 
-List project, files, commands, and validation profile.
-
-## Commands
+## 命令
 
 ```text
 <command>
 ```
 
-## Results
+## 结果
 
 ```yaml
 status: pass | fail | partial
@@ -28,28 +53,28 @@ traceSummary: <path-or-workflow-section>
 resultContract: <path-or-workflow-section>
 ```
 
-## Failure Attribution
+## 失败归因
 
-If failed, summarize likely cause and next repair step.
+如果失败，摘要说明可能原因和下一步修复动作。
 
-## Findings
+## 发现
 
-List important findings, including partial passes, repaired failures, residual risks, and evidence gaps.
+列出重要发现，包括部分通过、已修复失败、残余风险和证据缺口。
 
-## Recommended Actions
+## 建议动作
 
-List next actions, review needs, repair tasks, or deferred migration decisions.
+列出下一步动作、审查需求、修复任务或延后迁移决策。
 
-## Approval Required
+## 审批要求
 
-State whether user approval is required before promotion, destructive cleanup, live gateway execution, real project import, or policy/template changes.
+说明在晋升、破坏性清理、真实 gateway 执行、真实项目导入或策略/模板变更前是否需要用户审批。
 
-## Follow-Up Tasks
+## 后续任务
 
-List follow-up tasks without treating them as completed work.
+列出后续任务，不把它们视为已完成工作。
 
 ## Sensitive Handling
 
-Confirm credentials, private settings, auth files, and unredacted logs were not copied into tracked docs.
+确认凭据、私有 settings、auth 文件和未脱敏日志没有复制到受管文档。
 
-Do not paste raw logs, raw status JSON contents, private settings paths, private repository paths, credentials, or auth file contents into this report.
+不要把原始日志、原始 Status JSON 内容、私有 settings 路径、私有仓库路径、凭据或 auth 文件正文粘贴进本报告。

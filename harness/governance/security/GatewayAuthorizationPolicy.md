@@ -1,8 +1,34 @@
-# Gateway Authorization Policy
-
-Status: draft
-Version: v0.1.0-p8
-Date: 2026-06-08
+---
+documentName: GatewayAuthorizationPolicy.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '定义 Hermes WeCom、CLI gateway 和未来消息入口在任务进入 Agent Runtime 前的授权检查规则。'
+scope:
+  - gateway-authorization
+  - user-allowlist
+  - project-allowlist
+  - risk-gating
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/GovernanceIndex.md
+  - adapter/gateways/wecom/HermesWeComTaskFlow.md
+outputTo:
+  - harness/governance/security/GatewayAuthorizationPolicy.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Gateway Authorization Policy（网关授权策略）
 
 ## 1. 文档定位
 

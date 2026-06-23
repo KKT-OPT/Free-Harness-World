@@ -1,8 +1,33 @@
-﻿# Isolation Decision Matrix
-
-Status: draft
-Version: v0.1.0-p8
-Date: 2026-06-08
+---
+documentName: IsolationDecisionMatrix.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '定义本地沙盒、低权限用户、容器、虚拟机和远程 worker 的隔离选择规则。'
+scope:
+  - runtime-isolation
+  - sandbox-boundary
+  - worker-selection
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/GovernanceIndex.md
+  - harness/governance/security/SandboxRuntimeSecurityModel.md
+outputTo:
+  - harness/governance/security/IsolationDecisionMatrix.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Isolation Decision Matrix（隔离决策矩阵）
 
 ## 1. 文档定位
 

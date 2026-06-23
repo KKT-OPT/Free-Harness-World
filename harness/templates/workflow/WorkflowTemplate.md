@@ -1,8 +1,34 @@
-# Workflow Template
-
-Status: template
-Version: v0.2.0-p11.5
-Date: 2026-06-10
+---
+documentName: harness/templates/workflow/WorkflowTemplate.md
+version: v0.2.0-p11.5
+updatedAt: 2026-06-17 18:30:00.000 +08:00
+status: active
+purpose: 维护 Workflow Template 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
+scope:
+  - template
+  - project-or-workflow-entry
+prerequisites:
+  - AGENTS.md
+relatedDocuments:
+  - AGENTS.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - harness/templates/workflow/WorkflowTemplate.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-17
+  decision: frontmatter-aligned
+---
+# Workflow Template（工作流证据模板）
 
 > Workflow，中文解释是工作流证据。项目任务必须把 Task Brief 放在开头。
 
@@ -36,9 +62,11 @@ channel: wecom | codex | hermes-cli | other
 entryDocuments:
   - path: AGENTS.md
     version: <version-or-date>
-  - path: harness/INDEX.md
+  - path: INDEX.md
     version: <version-or-date>
-  - path: harness/PLANS.md
+  - path: harness/HarnessIndex.md
+    version: <version-or-date>
+  - path: harness/architecture/PLANS.md
     version: <version-or-date>
 project:
   projectId: <project-id-or-unknown>
@@ -69,8 +97,9 @@ Loaded context:
 
 ```text
 AGENTS.md
-harness/INDEX.md
-harness/PLANS.md
+INDEX.md
+harness/HarnessIndex.md
+harness/architecture/PLANS.md
 ```
 
 Excluded context:

@@ -1,8 +1,33 @@
-# Runtime Approval Policy
-
-Status: draft
-Version: v0.1.0-p8
-Date: 2026-06-08
+---
+documentName: RuntimeApprovalPolicy.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '定义 Agent Runtime 执行命令、写文件、联网、Git 操作和高风险任务时的审批边界。'
+scope:
+  - runtime-approval
+  - high-risk-action-boundary
+  - git-operation-approval
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/GovernanceIndex.md
+  - harness/governance/security/LocalIdentityAndGitBoundaryPolicy.md
+outputTo:
+  - harness/governance/security/RuntimeApprovalPolicy.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Runtime Approval Policy（运行时审批策略）
 
 ## 1. 文档定位
 
@@ -75,9 +100,9 @@ approvalRequired: true
 Java/Maven 验证应优先使用 P7 稳定工具表面：
 
 ```text
-tools/scripts/stable/show-java-maven-config.ps1
-tools/scripts/stable/invoke-maven-project.ps1
-tools/scripts/stable/invoke-java-main.ps1
+harness/tools/scripts/stable/show-java-maven-config.ps1
+harness/tools/scripts/stable/invoke-maven-project.ps1
+harness/tools/scripts/stable/invoke-java-main.ps1
 ```
 
 agent 不应手动拼接复杂 Maven classpath 或绕过 status JSON/log path 证据输出。

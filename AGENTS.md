@@ -1,8 +1,35 @@
-﻿# Harness Root 智能体入口
-
-Status: active
-Version: v0.9.0-index-led-entry
-Date: 2026-06-12
+---
+documentName: AGENTS.md
+version: v1.0.0-target-navigation-entry
+updatedAt: 2026-06-18 14:30:00.000 +08:00
+status: active
+purpose: 定义 Harness Root 的 Agent 入口契约、最高优先级硬约束、读取顺序和长期文档格式、语言规范治理规则。
+scope:
+  - harness-root-entry
+  - agent-loading-order
+  - hard-constraints
+  - important-document-frontmatter
+  - document-language-standard
+prerequisites:
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/HarnessEngineering.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - AGENTS.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-18
+  decision: user-requested-h5-language-rule
+---
+# Harness Root 智能体入口
 
 ## 1. 根目录定义
 
@@ -19,7 +46,6 @@ cwd = <HARNESS_ROOT>
 HARNESS_ROOT = <HARNESS_ROOT>
 ```
 
-Harness 是面向智能体运行时，英文 Agent Runtime，的通用文档系统知识库、项目自动化控制层、工具资产层和治理层。Codex、Hermes 等 Agent Runtime 负责推理、用户交互、工具调用、文件修改、命令执行和会话管理；Harness 负责入口、约束、项目路由、知识/记忆/技能、稳定工具、验证报告、安全治理和资产沉淀。
 
 ## 2. 必须读取顺序
 
@@ -27,14 +53,14 @@ Harness 是面向智能体运行时，英文 Agent Runtime，的通用文档系�
 
 ```text
 1. AGENTS.md
-2. harness/INDEX.md
-3. 由 harness/INDEX.md 路由到当前任务相关的 Harness 文档、计划、模板、Skill 或 Policy
-4. user/registry/projects.local.json 或 Project Profile，如果已经存在
-5. projects/<project-id>/AGENTS.md
-6. projects/<project-id>/docs/project/ProjectIndex.md
+2. INDEX.md
+3. harness/HarnessIndex.md
+4. harness/architecture/PLANS.md
+5. 由 INDEX.md 和 harness/HarnessIndex.md 路由到当前任务相关的 Harness 文档、计划、模板、Skill、Tool 或 Policy
+6. user/registry/projects.local.json 或 Project Profile，如果已经存在
+7. projects/<project-id>/AGENTS.md
+8. projects/<project-id>/docs/project/ProjectIndex.md
 ```
-
-`docs/` 当前只保留短期兼容入口。不要把 `docs/` 里的 stub 当成架构、计划或治理正文来源。
 
 如果后续文档与本文件的硬约束冲突，以本文件为准，除非用户明确要求修改 Harness 设计。
 
@@ -50,21 +76,24 @@ Harness 是面向智能体运行时，英文 Agent Runtime，的通用文档系�
 8. 高风险任务在目标、范围、目标项目、验收标准或风险边界缺失或冲突时，必须先向用户澄清。
 9. 有稳定 Tool Assets，中文解释是工具资产，时应优先使用稳定工具。临时命令和一次性脚本不会自动成为 Harness 资产。
 10. Governance，中文解释是治理，相关变更、Skill 更新、Memory 更新、Knowledge 晋升和 Project Fact 变更，在成为长期资产前需要 review 或用户明确批准。
+11. 受 Git 管控的重要 Harness Markdown 文档必须维护基础 YAML frontmatter；文档状态必须使用 `draft`、`review`、`active`、`stale`、`deprecated`、`archived`、`superseded` 之一。
+12. 受 Git 管控的重要 Harness Markdown 文档应以中文作为文档主题说明语言；允许保留专业词、命令、路径、代码标识和通用技术名词的英文写法。
 
 ## 4. 关键稳定记忆
 
 - `<HARNESS_ROOT>` 是 Harness Root，也是当前本地沙盒。
-- 当前项目落地模型是中央 Harness Root + Project Profile + 项目入口，不是把整套 Harness 复制进每个项目。
+- 当前目标落地模型是 Harness Distribution Repo + Harness Workspace + Project Instance，不是把整套 Harness 复制进每个项目。
 - 真实项目实例只放在 `projects/<project-id>`。
 - `harness/architecture/HarnessEngineering.md` 是唯一最终架构权威。
-- `harness/INDEX.md` 是长期总索引，负责把 agent 快速路由到架构、计划、治理、模板、工具、RAG、项目模型和报告。
-- 阶段状态、验收状态和下一步由 `harness/INDEX.md` 路由到 `harness/PLANS.md`；`AGENTS.md` 不记录每轮阶段更新。
+- `INDEX.md` 是全局总索引，负责把 agent 路由到 General Harness、项目实例、本地用户边界和运行态边界。
+- `harness/HarnessIndex.md` 是 General Harness 资产分层索引。
+- 阶段状态、验收状态和下一步由 `INDEX.md` 路由到 `harness/architecture/PLANS.md`；`AGENTS.md` 不记录每轮阶段更新。
 - `adapter/` 是用户、gateway 和 Agent Runtime 的交互适配层。
-- `tools/scripts/` 是稳定脚本、runtime helper、历史脚本和候选脚本的统一工具层。
+- `harness/tools/` 是工具资产层；稳定脚本、工具文档、manifest、候选脚本、历史脚本、runtime helper 和 external tool 边界由 `harness/tools/ToolsIndex.md` 路由。
 - `user/` 是本地用户和私有配置边界；其中的本机路径、settings、auth、GitHub 账号信息、私有仓库信息和私有 Maven 信息不得进入 prompt、Task Brief、workflow summary 或 tracked docs。
-- `rag/knowledge/` 是用户知识库的人类可读分层；`var/rag/` 是可重建索引、embedding 和运行态产物。
+- `harness/rag/` 是目标 RAG 摄取机制层；真实用户知识进入 `user/knowledge/` 或外部 private knowledge repo；`var/rag/` 是可重建索引、embedding 和运行态产物。
 - Hermes、Codex 等 Agent Runtime 仍然是外部执行主体。
-- P11 及后续阶段证据应优先收敛到阶段级合并报告和项目 workflow evidence，避免每轮任务新增零散临时文档。
+- Harness 任务证据应优先收敛到架构计划、治理报告或项目 workflow evidence，避免每轮任务新增零散临时文档。
 
 ## 5. 任务接入规则
 
@@ -84,10 +113,58 @@ agent 应把提示词整理为 Task Brief，中文解释是任务简报，至少
 
 涉及项目执行的任务必须把 Task Brief 保存进 workflow evidence，中文解释是工作流证据。
 
-## 6. 继续读取
+## 6. 文档格式治理规则
+
+所有受 Git 管控的重要 Harness Markdown 文档，在创建或更新时应包含基础 YAML frontmatter，并至少维护以下字段：
+
+```yaml
+documentName:
+version:
+updatedAt:
+status:
+purpose:
+scope:
+prerequisites:
+relatedDocuments:
+outputTo:
+owner:
+reviewAfter:
+supersededBy:
+dependsOn:
+review:
+  reviewedBy:
+  reviewedAt:
+  decision:
+```
+
+规则：
+
+1. `status` 只表示文档状态，不表示迁移阶段、实现状态或验收结果。
+2. 阶段状态、验收结果和下一步只写入 `harness/architecture/PLANS.md`。
+3. 兼容跳转、历史文档或被替代文档应使用 `deprecated`、`archived` 或 `superseded`，并填写 `supersededBy`。
+4. 非 Markdown 文件、许可证正文、JSON example、脚本和运行态产物不套用 Markdown frontmatter。
+5. 补齐 frontmatter 不得引入密钥、私有 settings、本机绝对路径、私有仓库 URL 或未脱敏日志。
+
+## 7. 文档语言规范
+
+受 Git 管控的重要 Harness Markdown 文档应以中文作为文档主题说明语言。
+
+允许保留英文的内容包括：
+
+- 专业词和通用技术名词，例如 Agent Runtime、Tool Asset、Command Surface、Status JSON、Workflow Evidence；
+- 命令、参数、路径、文件名、类名、函数名、配置键和代码标识；
+- 必须与外部工具、协议或标准保持一致的原文名称。
+
+规则：
+
+1. 文档标题、目的、范围、规则、边界、验收和维护说明应优先使用中文表达。
+2. 英文专业词首次出现时，必要时补充中文解释。
+3. 不把整篇 Harness 正式文档写成英文说明，除非该文件是外部规范、第三方原文或代码内注释。
+
+## 8. 继续读取
 
 继续读取：
 
 ```text
-harness/INDEX.md
+INDEX.md
 ```

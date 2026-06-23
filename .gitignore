@@ -7,6 +7,9 @@
 /user/auth/
 /user/git/
 /user/identity/
+/user/knowledge/**
+!/user/knowledge/
+!/user/knowledge/README.md
 /user/registry/*.local.json
 /user/registry/*.private.json
 /user/**/*.secret.*
@@ -18,11 +21,17 @@
 /config/local/*.private.json
 
 # Sandbox-managed external runtimes and downloaded tools.
-/tools/external/
+/harness/tools/scripts/runtime/**
+!/harness/tools/scripts/runtime/
+!/harness/tools/scripts/runtime/README.md
+/harness/tools/external/**
+!/harness/tools/external/
+!/harness/tools/external/README.md
 
 # Managed project work copies are separate repositories from the Harness Root repo.
 /projects/*/
 !/projects/.gitkeep
+!/projects/README.md
 
 # Obsidian runtime/editor state is not a Harness fact source.
 /.obsidian/workspace.json
@@ -40,4 +49,6 @@ dist/
 out/
 .gradle/
 .idea/
+__pycache__/
+*.pyc
 *.log

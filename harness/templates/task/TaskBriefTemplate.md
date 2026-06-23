@@ -1,7 +1,33 @@
-# Task Brief Template
-
-Status: template
-Version: v0.1.0-p6
+---
+documentName: TaskBriefTemplate.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '提供 Agent 将用户自然语言任务整理为 Task Brief 的标准模板。'
+scope:
+  - task-brief-template
+  - task-intake
+  - workflow-evidence-template
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/templates/TemplateIndex.md
+  - adapter/task-intake/TaskIntakeWorkflowModel.md
+outputTo:
+  - harness/templates/task/TaskBriefTemplate.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Task Brief Template（任务简报模板）
 
 > Task Brief，中文解释是任务简报。它由 agent 根据用户自然语言提示词生成，不要求用户直接填写。
 
@@ -88,7 +114,7 @@ handoff:
     unresolvedDecisions: []
 ```
 
-## Human-Readable Summary
+## 人类可读摘要
 
 - Goal:
 - Project:

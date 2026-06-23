@@ -1,8 +1,35 @@
-﻿# Harness 沙盒与 Runtime 安全模型
-
-Status: draft
-Version: v0.1.0-p8
-Date: 2026-06-08
+---
+documentName: harness/governance/security/SandboxRuntimeSecurityModel.md
+version: v0.1.0-p8
+updatedAt: 2026-06-17 18:30:00.000 +08:00
+status: draft
+purpose: 维护 Harness 沙盒与 Runtime 安全模型 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
+scope:
+  - governance
+  - active-route
+  - validation-or-policy
+prerequisites:
+  - AGENTS.md
+relatedDocuments:
+  - AGENTS.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - harness/governance/security/SandboxRuntimeSecurityModel.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-17
+  decision: frontmatter-aligned
+---
+# Harness 沙盒与 Runtime 安全模型
 
 ## 1. 文档定位
 
@@ -74,8 +101,9 @@ Gateway/User Authorization
 ```text
 HARNESS_ROOT = <HARNESS_ROOT>
 AGENTS.md
-harness/INDEX.md
-harness/PLANS.md
+INDEX.md
+harness/HarnessIndex.md
+harness/architecture/PLANS.md
 ```
 
 如果通过 Hermes gateway 接入，还必须满足：

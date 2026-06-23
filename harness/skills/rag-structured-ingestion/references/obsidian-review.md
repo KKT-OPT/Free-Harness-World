@@ -1,0 +1,66 @@
+---
+documentName: harness/skills/rag-structured-ingestion/references/obsidian-review.md
+version: v1.0.0-h6-rag-boundary
+updatedAt: 2026-06-22 23:41:15.773 +08:00
+status: active
+purpose: 说明如何用 Obsidian 审查 local-only candidate knowledge。
+scope:
+  - obsidian-review
+  - candidate-knowledge
+prerequisites:
+  - harness/skills/rag-structured-ingestion/SKILL.md
+relatedDocuments:
+  - harness/rag/RAGIndex.md
+  - user/knowledge/README.md
+outputTo:
+  - harness/skills/rag-structured-ingestion/references/obsidian-review.md
+owner: mixed
+reviewAfter: 2026-07-22
+supersededBy:
+dependsOn:
+  - harness/skills/rag-structured-ingestion/SKILL.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-22
+  decision: h6-complete
+---
+# Obsidian 候选知识审查
+
+当人类希望在 Obsidian 中检查 candidate knowledge 后再决定 promotion 时，使用本文。
+
+## 1. 推荐打开范围
+
+可以打开 Harness Root，也可以只打开：
+
+```text
+user/knowledge/candidate/<run-id>/wiki
+```
+
+不要把 Obsidian workspace files 当作事实源。`.obsidian/workspace*.json`、graph settings、plugin runtime files 和 cache 都是 editor state。
+
+## 2. Review Workflow
+
+1. 从 `index.md` 开始，再读 `overview.md`。
+2. 打开 `sources/` 下的每个页面，并与 `var/rag/<run-id>/extracted/` 中的 extracted Markdown 对照。
+3. 用 backlinks 和 graph view 查 isolated pages、missing concepts 和 weak connections。
+4. 检查每个 source page 的 summary、key claims、contradictions、applicability、sensitive content 和 usage-rights risk。
+5. 在 candidate pages 中加入 review notes，或要求 agent 更新。
+6. 只批准 source-grounded、scoped、non-sensitive 且长期有用的 statement。
+
+## 3. Promotion Boundary
+
+raw-to-candidate Skill 在 promotion 前停止。Human review 可以产生 feedback、requested edits 或单独 promotion request。
+
+promotion approval 应在后续 workflow 中明确表达，例如：
+
+```text
+Promote candidate <path> to reviewed knowledge under scope global/domain/project-reviewed.
+```
+
+审批后，agent 应使用：
+
+```text
+harness/templates/knowledge/ReviewedKnowledgeTemplate.md
+```
+
+创建 reviewed knowledge，并保留 source trace。

@@ -1,12 +1,37 @@
-# Failure Attribution Template
+---
+documentName: FailureAttributionTemplate.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '提供失败、部分成功、阻塞、修复后通过场景的归因和修复记录模板。'
+scope:
+  - failure-attribution-template
+  - repair-evidence
+  - governance-candidate-review
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/templates/TemplateIndex.md
+  - harness/observability/FailureAttribution.md
+outputTo:
+  - harness/templates/report/FailureAttributionTemplate.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Failure Attribution Template（失败归因模板）
 
-Status: template
-Version: v0.2.0-p11.6
-Date: 2026-06-10
+## 目的
 
-## Purpose
-
-Use this template when a Harness-managed task is failed, partial, blocked, repaired, or passed after repair.
+当 Harness 管理任务失败、部分成功、阻塞、已修复或修复后通过时，使用本模板。
 
 Do not paste raw logs, raw terminal transcripts, status JSON contents, private settings paths, private repository paths, credentials, or auth file contents.
 
@@ -22,7 +47,7 @@ Do not paste raw logs, raw terminal transcripts, status JSON contents, private s
 | affectedAsset | `<harness-relative-path-or-tool-surface>` |
 | errorSummary | `<short-redacted-summary>` |
 
-## Evidence
+## 证据
 
 | Evidence Type | Path Or Summary |
 |---|---|

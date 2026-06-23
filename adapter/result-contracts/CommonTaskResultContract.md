@@ -1,24 +1,50 @@
-# Common Task Result Contract
-
-Status: draft
-Version: v0.2.0-p11.5
-Date: 2026-06-10
+---
+documentName: CommonTaskResultContract.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '定义 Harness 管理任务的通用用户结果契约、证据边界和运行时返回格式。'
+scope:
+  - adapter-result-contract
+  - workflow-evidence-boundary
+  - user-facing-result
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - adapter/AdapterIndex.md
+  - harness/observability/ObservabilityIndex.md
+  - harness/governance/ArtifactLifecycle.md
+outputTo:
+  - adapter/result-contracts/CommonTaskResultContract.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Common Task Result Contract（通用任务结果契约）
 
 ## 1. Purpose
 
-This document defines the common user-facing result contract for Harness-managed tasks.
+本文定义 Harness 管理任务对用户返回的通用结果契约。
 
-Codex, Hermes, and future agent runtimes may use different execution mechanics, but their completed task result must be comparable at the Harness layer.
+Codex、Hermes 和未来 Agent Runtime 可以使用不同执行机制，但完成后的任务结果必须能在 Harness 层比较。
 
-Harness owns this contract. Agent runtimes own reasoning, tool invocation, session execution, and channel delivery.
+Harness 负责维护该契约；Agent Runtime 负责推理、工具调用、会话执行和渠道投递。
 
 ## 2. Contract Principles
 
-1. The result contract is a summary and routing artifact, not raw evidence.
-2. Workflow evidence remains the authoritative task record.
-3. Runtime logs and status JSON are runtime state and must not be promoted into project facts.
-4. User-facing replies must include result, evidence paths, and next action.
-5. Private settings, credentials, auth files, unredacted logs, and private repository paths must not be included.
+1. 结果契约是摘要和路由资产，不是原始证据。
+2. Workflow Evidence 仍然是任务记录的权威证据。
+3. Runtime 日志和 Status JSON 是运行态状态，不得晋升为项目事实。
+4. 面向用户的回复必须包含结果、证据路径和下一步动作。
+5. 私有 settings、凭据、auth 文件、未脱敏日志和私有仓库路径不得写入结果契约。
 
 ## 3. Required Shape
 
@@ -68,7 +94,7 @@ sensitiveHandling:
 
 ## 5. User-Facing Reply Format
 
-Human-readable replies should use this shape:
+人类可读回复应使用以下结构：
 
 ```text
 Result: <passed|failed|partial|blocked>
@@ -83,11 +109,11 @@ Failure Attribution: <path/section or none>
 Next: <next action>
 ```
 
-Shorter channel-specific replies are allowed when message length is constrained, but they must preserve result, workflow evidence, and next action.
+当渠道消息长度受限时，可以使用更短回复，但必须保留结果、Workflow Evidence 和下一步动作。
 
 ## 6. Evidence Boundary
 
-Allowed in the result:
+结果中允许包含：
 
 - relative Harness paths;
 - redacted status/log paths;
@@ -96,7 +122,7 @@ Allowed in the result:
 - governance candidate types and review action;
 - next action.
 
-Forbidden in the result:
+结果中禁止包含：
 
 - Maven settings contents or private settings paths;
 - credentials, tokens, auth files, or server usernames;
@@ -116,9 +142,9 @@ Forbidden in the result:
 
 ## 8. P11 Evidence Mapping
 
-P11 uses this contract to make staged framework validation comparable across runtimes.
+P11 使用该契约让分阶段框架验证在不同 runtime 之间可比较。
 
-For a staged P11 step:
+对于分阶段 P11 步骤：
 
 - `status` reports the step result, not full Harness production acceptance;
 - `nextAction` should usually be `review-needed` or the next P11 step;

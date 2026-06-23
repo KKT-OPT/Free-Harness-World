@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "harness.knowledgeRegistry.v1",
+  "registryKind": "local-example",
+  "knowledgeSources": [
+    {
+      "knowledgeId": "example-knowledge",
+      "root": "user/knowledge/example-knowledge",
+      "scope": "user-private",
+      "status": "example",
+      "description": "Example only. Replace in knowledge.local.json with local or private knowledge routes.",
+      "sensitiveBoundarySummary": [
+        "real-source-material-excluded-from-git",
+        "private-paths-excluded-from-tracked-docs",
+        "credentials-excluded",
+        "runtime-indexes-excluded"
+      ]
+    }
+  ]
+}

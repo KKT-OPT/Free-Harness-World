@@ -1,10 +1,35 @@
-# E2E Validation Report Template
+---
+documentName: E2EValidationReportTemplate.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '提供端到端 Harness 验证报告的标准结构，覆盖入口、上下文、证据、验证用例和治理候选。'
+scope:
+  - e2e-validation-template
+  - workflow-evidence
+  - governance-closeout
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/templates/TemplateIndex.md
+  - harness/verification/VerificationIndex.md
+outputTo:
+  - harness/templates/report/E2EValidationReportTemplate.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# E2E Validation Report Template（端到端验证报告模板）
 
-Status: template
-Version: v0.2.0-p11.7
-Date: 2026-06-10
-
-## Summary
+## 概要
 
 - taskId:
 - projectId:
@@ -13,7 +38,7 @@ Date: 2026-06-10
 - status:
 - nextAction:
 
-## Entry and Context
+## 入口和上下文
 
 - entryDocs:
 - projectDocs:
@@ -21,7 +46,7 @@ Date: 2026-06-10
 - excludedContext:
 - sensitiveHandling:
 
-## Task Brief Summary
+## Task Brief 摘要
 
 - goal:
 - scope:
@@ -30,7 +55,7 @@ Date: 2026-06-10
 - risk:
 - missingCriticalFields:
 
-## Evidence
+## 证据
 
 - workflow:
 - traceSummary:
@@ -39,7 +64,7 @@ Date: 2026-06-10
 - validationReport:
 - failureAttribution:
 
-## Validation Cases
+## 验证用例
 
 | Case | Result | Evidence |
 |---|---|---|
@@ -51,7 +76,7 @@ Date: 2026-06-10
 | Result contract and user reply | pending | |
 | Governance closeout | pending | |
 
-## Failure Attribution
+## 失败归因
 
 - failedCriterion:
 - dimension:
@@ -59,12 +84,12 @@ Date: 2026-06-10
 - retryable:
 - repairPath:
 
-## Governance Candidates
+## 治理 Candidates
 
 | candidateId | Type | Proposal | Source Evidence | Target Asset | Disposition | Approval Required | Next Action |
 |---|---|---|---|---|---|---|---|
 
-## Acceptance
+## 验收
 
 - accepted:
 - reviewer:

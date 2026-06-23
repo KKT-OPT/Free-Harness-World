@@ -1,8 +1,33 @@
-# Context File Security Policy
-
-Status: draft
-Version: v0.1.0-p8
-Date: 2026-06-08
+---
+documentName: ContextFileSecurityPolicy.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '定义 Agent 读取上下文文件时的提示词注入、敏感信息和数据投毒防护规则。'
+scope:
+  - context-file-security
+  - prompt-injection-defense
+  - sensitive-context-boundary
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/GovernanceIndex.md
+  - harness/governance/context/ContextLoadingPolicy.md
+outputTo:
+  - harness/governance/security/ContextFileSecurityPolicy.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Context File Security Policy（上下文文件安全策略）
 
 ## 1. 文档定位
 

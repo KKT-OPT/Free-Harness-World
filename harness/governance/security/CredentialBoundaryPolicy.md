@@ -1,8 +1,33 @@
-# Credential Boundary Policy
-
-Status: draft
-Version: v0.2.0-local-identity
-Date: 2026-06-12
+---
+documentName: CredentialBoundaryPolicy.md
+version: v1.0.0-pre-h8-frontmatter
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: active
+purpose: '定义凭据、本地身份、私有路径和认证材料在 Harness 中的读取、传递和记录边界。'
+scope:
+  - credential-boundary
+  - local-identity-boundary
+  - sensitive-information-handling
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/GovernanceIndex.md
+  - harness/governance/security/LocalIdentityAndGitBoundaryPolicy.md
+outputTo:
+  - harness/governance/security/CredentialBoundaryPolicy.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-frontmatter-alignment
+---
+# Credential Boundary Policy（凭据边界策略）
 
 ## 1. 文档定位
 

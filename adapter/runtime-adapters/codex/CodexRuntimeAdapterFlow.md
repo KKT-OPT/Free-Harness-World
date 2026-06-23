@@ -1,8 +1,35 @@
-﻿# Codex Runtime Adapter Flow
-
-Status: active-contract
-Version: v0.1.1-post-p11-cleanup
-Date: 2026-06-09
+---
+documentName: adapter/runtime-adapters/codex/CodexRuntimeAdapterFlow.md
+version: v0.1.1-post-p11-cleanup
+updatedAt: 2026-06-17 18:30:00.000 +08:00
+status: active
+purpose: 维护 Codex Runtime Adapter Flow 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
+scope:
+  - adapter-contract
+  - agent-runtime-routing
+  - task-flow
+prerequisites:
+  - AGENTS.md
+relatedDocuments:
+  - AGENTS.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - adapter/runtime-adapters/codex/CodexRuntimeAdapterFlow.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-17
+  decision: frontmatter-aligned
+---
+# Codex Runtime Adapter Flow
 
 ## 1. Purpose
 
@@ -16,8 +43,9 @@ When Codex starts a non-simple Harness task, it should orient from:
 
 ```text
 HARNESS_ROOT = <HARNESS_ROOT>
-Read AGENTS.md, harness/INDEX.md, harness/PLANS.md,
-then read task-relevant Harness docs and project entry documents.
+Read AGENTS.md, INDEX.md, harness/HarnessIndex.md,
+harness/architecture/PLANS.md, then read task-relevant Harness docs
+and project entry documents.
 ```
 
 Codex must not require a runtime-specific project fact format. Project identity and validation routing come from Harness project assets.
@@ -26,8 +54,9 @@ Codex must not require a runtime-specific project fact format. Project identity 
 
 1. Read root entry:
    - `AGENTS.md`
-   - `harness/INDEX.md`
-   - `harness/PLANS.md`
+   - `INDEX.md`
+   - `harness/HarnessIndex.md`
+   - `harness/architecture/PLANS.md`
 2. Build a Task Brief from the user's natural-language prompt.
 3. Resolve `projectId` from the prompt, registry example, project profile, or project entry.
 4. Read project entry:
@@ -63,9 +92,9 @@ Runtime-specific details may be recorded in the Harness Run Card when useful, bu
 For Java/Maven validation, Codex should use:
 
 ```text
-tools/docs/command-surfaces/JavaMavenCommandSurface.md
-tools/scripts/stable/invoke-maven-project.ps1
-tools/scripts/stable/invoke-java-main.ps1
+harness/tools/docs/command-surfaces/JavaMavenCommandSurface.md
+harness/tools/scripts/stable/invoke-maven-project.ps1
+harness/tools/scripts/stable/invoke-java-main.ps1
 ```
 
 Codex must not inline private settings, credential material, or unredacted command output into tracked docs.
@@ -89,7 +118,7 @@ channel: codex
 
 | P10 Criterion | Codex Flow |
 |---|---|
-| Codex can use same root entry and project registry | Starts at `AGENTS.md`, `harness/INDEX.md`, `harness/PLANS.md`, then project entry. |
+| Codex can use same root entry and project registry | Starts at `AGENTS.md`, `INDEX.md`, `harness/HarnessIndex.md`, `harness/architecture/PLANS.md`, then project entry. |
 | Comparable workflow evidence | Writes under `projects/<project-id>/docs/project/workflow/`. |
 | User replies include result, evidence paths, next action | Uses Common Task Result Contract. |
 | Runtime details do not leak into project facts | Runtime details stay in Run Card/result, not facts. |
@@ -98,4 +127,4 @@ channel: codex
 
 P10 defines the Codex adapter flow and contract. It does not prove that the full Harness framework is production-complete.
 
-P11 later completed controlled framework closeout. Remaining production hardening, real-project onboarding, RAG tooling, live gateway validation, stronger isolation and unified CLI work belong to the Post-P11 / P12 plan in `harness/PLANS.md`.
+P11 later completed controlled framework closeout. Remaining production hardening, real-project onboarding, RAG tooling, live gateway validation, stronger isolation and unified CLI work are now tracked through `harness/architecture/PLANS.md`.

@@ -1,8 +1,32 @@
-# P10.5 Final Design Landing Report
-
-Status: superseded-by-final-architecture-authority
-Version: v0.2.0-p11-architecture-authority
-Date: 2026-06-10
+---
+documentName: P10_5FinalDesignLandingReport.md
+version: v1.0.0-pre-h8-report-archive
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: superseded
+purpose: 记录 P10.5 设计落地历史证据；该报告已被当前架构权威文档替代。
+scope:
+  - redacted-historical-report
+  - non-authoritative-evidence
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/ReportArchivePolicy.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - harness/reports/redacted/P10_5FinalDesignLandingReport.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy: harness/architecture/HarnessEngineering.md
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - harness/governance/ReportArchivePolicy.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-report-archive-frontmatter-alignment
+---
+# P10.5 Final Design Landing Report（P10.5 最终设计落地历史报告）
 
 ## 1. Summary
 

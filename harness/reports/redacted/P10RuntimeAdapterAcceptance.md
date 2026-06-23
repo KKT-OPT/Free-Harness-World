@@ -1,8 +1,32 @@
-# P10 Runtime Adapter Acceptance
-
-Status: retained-evidence
-Version: v0.1.1-post-p11-cleanup
-Date: 2026-06-09
+---
+documentName: P10RuntimeAdapterAcceptance.md
+version: v1.0.0-pre-h8-report-archive
+updatedAt: 2026-06-23 08:18:39.000 +08:00
+status: archived
+purpose: 记录 P10 Runtime Adapter 验收历史证据；该报告不是当前架构事实源。
+scope:
+  - redacted-historical-report
+  - non-authoritative-evidence
+prerequisites:
+  - AGENTS.md
+  - harness/architecture/HarnessEngineering.md
+relatedDocuments:
+  - harness/governance/ReportArchivePolicy.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - harness/reports/redacted/P10RuntimeAdapterAcceptance.md
+owner: mixed
+reviewAfter: 2026-07-23
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - harness/governance/ReportArchivePolicy.md
+review:
+  reviewedBy: mixed
+  reviewedAt: 2026-06-23
+  decision: pre-h8-report-archive-frontmatter-alignment
+---
+# P10 Runtime Adapter Acceptance（P10 运行时适配验收历史报告）
 
 ## 1. Decision
 

@@ -1,8 +1,35 @@
-﻿# Hermes Runtime Adapter Flow
-
-Status: active-contract
-Version: v0.1.1-post-p11-cleanup
-Date: 2026-06-09
+---
+documentName: adapter/runtime-adapters/hermes/HermesRuntimeAdapterFlow.md
+version: v0.1.1-post-p11-cleanup
+updatedAt: 2026-06-17 18:30:00.000 +08:00
+status: active
+purpose: 维护 Hermes Runtime Adapter Flow 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
+scope:
+  - adapter-contract
+  - agent-runtime-routing
+  - task-flow
+prerequisites:
+  - AGENTS.md
+relatedDocuments:
+  - AGENTS.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - adapter/runtime-adapters/hermes/HermesRuntimeAdapterFlow.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-17
+  decision: frontmatter-aligned
+---
+# Hermes Runtime Adapter Flow
 
 ## 1. Purpose
 
@@ -16,7 +43,8 @@ A Hermes task can be prompted to start from Harness Root with this minimal instr
 
 ```text
 HARNESS_ROOT is <HARNESS_ROOT>.
-Start from AGENTS.md, then harness/INDEX.md and harness/PLANS.md.
+Start from AGENTS.md, then INDEX.md, harness/HarnessIndex.md,
+and harness/architecture/PLANS.md.
 For project work, resolve projectId, read projects/<project-id>/AGENTS.md
 and projects/<project-id>/docs/project/ProjectIndex.md.
 Use Harness stable tool surfaces when executing validation.

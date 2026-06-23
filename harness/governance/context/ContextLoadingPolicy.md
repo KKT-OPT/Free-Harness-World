@@ -1,21 +1,48 @@
-# Context Loading Policy
+---
+documentName: harness/governance/context/ContextLoadingPolicy.md
+version: v0.1.0-p10.5
+updatedAt: 2026-06-17 18:30:00.000 +08:00
+status: draft
+purpose: 维护 Context Loading Policy 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
+scope:
+  - governance
+  - active-route
+  - validation-or-policy
+prerequisites:
+  - AGENTS.md
+relatedDocuments:
+  - AGENTS.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - harness/governance/context/ContextLoadingPolicy.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-17
+  decision: frontmatter-aligned
+---
+# Context Loading Policy（上下文加载策略）
 
-Status: draft
-Version: v0.1.0-p10.5
-Date: 2026-06-10
+## 目的
 
-## Purpose
+本策略定义 Agent 在 Harness 下如何加载上下文。
 
-This policy defines how agents load context under Harness.
+目标是加载带来源记录的最小充分上下文，而不是批量加载。
 
-The goal is minimum sufficient context with provenance, not bulk loading.
-
-## Priority Order
+## 优先级顺序
 
 ```text
 current user instruction
 > AGENTS.md hard constraints
-> harness/INDEX.md and harness/PLANS.md
+> INDEX.md, harness/HarnessIndex.md and harness/architecture/PLANS.md
 > task-specific policy/template/skill
 > Project Facts
 > approved Skill
@@ -26,11 +53,11 @@ current user instruction
 > archived reports only when explicitly requested
 ```
 
-Current user instructions cannot override security, privacy, approval, git boundary, credential, or governance hard stops.
+当前用户指令不能覆盖安全、隐私、审批、Git 边界、凭据和治理硬阻断。
 
-## Required Provenance
+## 必需来源记录
 
-Task Brief and workflow evidence should record:
+Task Brief 和 Workflow Evidence 应记录：
 
 - source documents read;
 - inferred fields and source;
@@ -38,9 +65,9 @@ Task Brief and workflow evidence should record:
 - excluded sensitive sources;
 - stale or uncertain context.
 
-## Default Exclusions
+## 默认排除项
 
-Do not load by default:
+默认不要加载：
 
 - `var/**`;
 - raw logs and raw terminal transcripts;

@@ -1,8 +1,35 @@
-﻿# Hermes WeCom Task Flow
-
-Status: draft
-Version: v0.1.0-p10
-Date: 2026-06-09
+---
+documentName: adapter/gateways/wecom/HermesWeComTaskFlow.md
+version: v0.1.0-p10
+updatedAt: 2026-06-17 18:30:00.000 +08:00
+status: draft
+purpose: 维护 Hermes WeCom Task Flow 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
+scope:
+  - adapter-contract
+  - agent-runtime-routing
+  - task-flow
+prerequisites:
+  - AGENTS.md
+relatedDocuments:
+  - AGENTS.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+  - harness/architecture/PLANS.md
+outputTo:
+  - adapter/gateways/wecom/HermesWeComTaskFlow.md
+owner: mixed
+reviewAfter: 2026-07-17
+supersededBy:
+dependsOn:
+  - harness/architecture/HarnessEngineering.md
+  - INDEX.md
+  - harness/HarnessIndex.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-17
+  decision: frontmatter-aligned
+---
+# Hermes WeCom Task Flow
 
 ## 1. Purpose
 
@@ -31,7 +58,7 @@ The Hermes gateway should pass or preserve this Harness orientation:
 
 ```text
 Start from <HARNESS_ROOT>.
-Read AGENTS.md, harness/INDEX.md, and harness/PLANS.md.
+Read AGENTS.md, INDEX.md, harness/HarnessIndex.md, and harness/architecture/PLANS.md.
 Use project entry documents and stable Harness tools.
 Write workflow evidence before returning the result.
 Use the Common Task Result Contract.

@@ -1,15 +1,39 @@
-# Candidate Knowledge Template
-
-Status: template
-Version: v0.2.0-p11.7
-Date: 2026-06-10
+﻿---
+documentName: harness/templates/knowledge/CandidateKnowledgeTemplate.md
+version: v1.0.0-h6-rag-boundary
+updatedAt: 2026-06-22 23:41:15.773 +08:00
+status: active
+purpose: 提供 candidate knowledge 记录模板，确保候选知识不会自动晋升为 reviewed knowledge。
+scope:
+  - knowledge-template
+  - candidate-knowledge
+prerequisites:
+  - AGENTS.md
+  - harness/governance/KnowledgePromotionPolicy.md
+relatedDocuments:
+  - harness/rag/RAGIndex.md
+  - user/knowledge/README.md
+  - harness/templates/knowledge/ReviewedKnowledgeTemplate.md
+outputTo:
+  - harness/templates/knowledge/CandidateKnowledgeTemplate.md
+owner: mixed
+reviewAfter: 2026-07-22
+supersededBy:
+dependsOn:
+  - harness/governance/KnowledgePromotionPolicy.md
+review:
+  reviewedBy: agent
+  reviewedAt: 2026-06-22
+  decision: h6-complete
+---
+# Candidate Knowledge 模板
 
 ## Source
 
 ```yaml
 sourceRef: <source>
 sourceType: raw | extracted | structured | workflow-evidence | project-fact | report | other
-scope: global | domain | project-reviewed
+scope: global | domain | project-reviewed | user-private
 projectId: null
 domain: null
 confidence: low | medium | high
@@ -21,25 +45,25 @@ sensitiveRisk: none | low | medium | high
 
 ## Candidate Statement
 
-Write the candidate knowledge here.
+在这里写候选知识。候选知识不是 reviewed Knowledge。
 
-## Evidence
+## 证据
 
-List source files, sections, hashes, or workflow evidence references.
+列出 source files、sections、hashes 或 workflow evidence references。不得粘贴 raw logs、credential、private settings 或未脱敏 trace。
 
 ## Applicability
 
-Describe where this candidate may apply and where it must not apply.
+说明该 candidate 适用和不适用的边界。
 
 ## Review Notes
 
-Record what must be checked before promotion to reviewed Knowledge.
+记录晋升前必须检查的事项。
 
 ## Promotion Decision
 
 ```yaml
 decision: approve | reject | defer
-targetAsset: <rag/knowledge/reviewed/path-or-null>
+targetAsset: <user/knowledge/reviewed/path-or-private-repo-path-or-null>
 reviewer: <reviewer-or-null>
 decisionDate: <date-or-null>
 reason: <reason>
