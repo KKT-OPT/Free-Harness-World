@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.0.0-h5-tool-layer
-updatedAt: 2026-06-18 14:30:00.000 +08:00
+version: v1.5.0-knowledge-vault-governance
+updatedAt: 2026-07-01 12:30:00.000 +08:00
 status: active
 purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界和稳定工具契约入口。
 scope:
@@ -29,8 +29,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-18
-  decision: h5-complete
+  reviewedAt: 2026-07-01
+  decision: knowledge-vault-governance-command-added
 ---
 # 工具资产索引
 
@@ -85,6 +85,14 @@ H8 新增 bootstrap 稳定脚本：
 ```text
 harness/tools/scripts/stable/bootstrap-harness-workspace.ps1
 ```
+
+Phase 5 新增 reviewed Knowledge access 稳定脚本：
+
+```text
+harness/tools/scripts/stable/invoke-rag-knowledge.ps1
+```
+
+该脚本用于初始化 `user/knowledge/` Obsidian vault 入口、同步 reviewed Knowledge 索引、构建 reviewed graph、执行 reviewed-only query、health check，把 unresolved reviewed wikilinks 转为 candidate-only gap plan，用 reviewed evidence 补强 gap candidate pages，生成供人类审核的 gap review package，并在审核前治理 vault 入口、候选审核队列和历史证据索引。它不得把 raw、candidate、chunks 或 runtime graph 当作 authoritative knowledge；`reviewed-gap-plan -WriteCandidates`、`enrich-gap-candidates`、`gap-review-package` 和 `govern-vault` 也只能写入 candidate wiki、vault navigation 或 runtime review/governance package，不能绕过 review 写入 reviewed Knowledge。
 
 ## 4. 禁止事项
 

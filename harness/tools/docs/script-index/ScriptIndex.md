@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.1.0-h9-java-main-working-directory
-updatedAt: 2026-06-23 18:54:52.291 +08:00
+version: v1.9.0-pipeline-smoke
+updatedAt: 2026-07-02 00:00:00.000 +08:00
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约。
 scope:
@@ -23,8 +23,8 @@ dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: h9-java-main-working-directory
+  reviewedAt: 2026-07-02
+  decision: p5-15-pipeline-smoke-command-added
 ---
 # 脚本索引
 
@@ -42,6 +42,7 @@ review:
 | `harness/tools/scripts/stable/test-harness-governance.ps1` | 运行 Harness Root 治理自检。 | yes |
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | 通过稳定门面运行 RAG candidate 流程。 | yes |
+| `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
 | `harness/tools/scripts/stable/publish-harness-agent-branch.ps1` | 管理 agent-owned Git branch、提交和推送。 | yes，写操作需审批 |
 
 ## 2. 稳定工具契约
@@ -149,6 +150,19 @@ review:
 | Failure Mode | `rag/input`、`rag/pipeline`、`rag/lint`、`rag/query`、`tool/execution`。 |
 | Repair Suggestion | 修正 input path、manifest、candidate wiki、graph 或 pipeline 配置。 |
 | Validation Instruction | 使用非敏感样例运行 `health` 或 candidate ingest，确认只生成候选和运行态产物。 |
+
+### `invoke-rag-knowledge.ps1`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Command`、`-Root`、`-InputPath`、`-Vault`、`-Reviewed`、`-Candidate`、`-Raw`、`-Graph`、`-Report`、`-CandidateWiki`、`-TargetDir`、`-Target`、`-Question`、`-Limit`、`-Scope`、`-Reviewer`、`-ApprovalNote`、`-ReviewAfter`、`-WriteCandidates`、`-ArchiveInactiveCandidates`、`-CopyRaw`、`-Overwrite`、`-MaxChunkChars`、`-RunId`。 |
+| Outputs | stdout JSON、`user/knowledge/Home.md` 单入口 Obsidian vault view、可选 `user/knowledge/candidate/reviewed-gap-concepts/wiki`、可选 `user/knowledge/reviewed/concepts/*.md` reviewed concept pages、可选 `user/knowledge/reviewed/<run-id>.md` pipeline smoke reviewed page、可选 `user/knowledge/candidate/_archive/` 非破坏性归档、`var/rag/reviewed-knowledge/` graph、query / health / gap / enrichment / review package / promotion / governance / pipeline smoke reports、status JSON。 |
+| Status Summary | command、vault、reviewed path、state、matched pages、gap count、enriched page count、ready/dedup/revise counts、promoted/deferred counts、active review count、archived candidate count、archive action count、pipeline smoke step summary、artifact paths。 |
+| Redacted Log Path | `var/logs/reviewed-knowledge.json` 或对应 runtime report path；tracked docs 只记录路径。 |
+| Sensitive Handling | 只读取 reviewed Knowledge 和生成 local-only view / runtime artifacts；不读取 raw、candidate、chunks 作为事实源；`reviewed-gap-plan -WriteCandidates`、`enrich-gap-candidates`、`gap-review-package` 和 `govern-vault` 只写 candidate-only gap wiki、`Home.md` 单入口或 runtime review/governance package；`promote-gap-candidates` 只有在传入 reviewer 和 approval note 后写入 reviewed concept pages；`pipeline-smoke` 只有在传入 reviewer、approval note、question 和 raw input 后执行 approved promotion，并把 candidate/chunks 作为证据而非事实源；`-ArchiveInactiveCandidates` 只移动 inactive 或 promoted candidate corpus 并同步 reviewed source trace。 |
+| Failure Mode | `rag/knowledge-vault`、`rag/reviewed-query`、`rag/graph`、`tool/execution`。 |
+| Repair Suggestion | 修正 vault/reviewed path，重新运行 `sync-reviewed-index`、`health-reviewed`、`build-reviewed-graph` 或对 gap candidate wiki 运行 candidate `health` / `lint` / `build-graph`。 |
+| Validation Instruction | 使用已审核 reviewed 文档运行 `init-obsidian-vault`、`health-reviewed`、`query-reviewed`、`reviewed-gap-plan -WriteCandidates`、`enrich-gap-candidates`、`gap-review-package`、`promote-gap-candidates`、`govern-vault -ArchiveInactiveCandidates` 和 `pipeline-smoke`，确认 Obsidian `Home.md` 单入口可打开、query 只返回 reviewed Knowledge、gap candidate wiki 仍停留在 candidate boundary，candidate health / lint / graph 通过，review package 状态可进入 human review，approved concepts 可晋升 reviewed pages，full pipeline smoke 能从 raw 生成 candidate、晋升 reviewed、刷新 vault 并查询命中新 reviewed target，vault governance 只做非破坏性归档和 source trace 同步。 |
 
 ### `publish-harness-agent-branch.ps1`
 

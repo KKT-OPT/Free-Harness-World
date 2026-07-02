@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import time
 from datetime import datetime
 from importlib import metadata as importlib_metadata
 from pathlib import Path
@@ -135,15 +137,38 @@ def update_status(root: Path, run_id: str | None, values: dict[str, Any]) -> Non
     if not run_id:
         return
     status_path = root / "var" / "logs" / f"{run_id}.json"
-    current: dict[str, Any] = {}
-    if status_path.exists():
-        try:
-            current = json.loads(read_text(status_path))
-        except json.JSONDecodeError:
-            current = {}
-    current.update(values)
-    current["statusJson"] = rel(root, status_path)
-    write_text(status_path, json.dumps(current, indent=2, ensure_ascii=False))
+    lock_path = status_path.with_suffix(status_path.suffix + ".lock")
+    lock_handle: int | None = None
+    try:
+        for _ in range(100):
+            try:
+                lock_path.parent.mkdir(parents=True, exist_ok=True)
+                lock_handle = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                break
+            except FileExistsError:
+                time.sleep(0.05)
+        if lock_handle is None:
+            raise TimeoutError(f"timed out waiting for status lock: {lock_path}")
+
+        current: dict[str, Any] = {}
+        if status_path.exists():
+            try:
+                current = json.loads(read_text(status_path))
+            except json.JSONDecodeError:
+                corrupt_path = status_path.with_suffix(status_path.suffix + f".corrupt-{timestamp_id()}")
+                status_path.replace(corrupt_path)
+                current = {"corruptStatusBackup": rel(root, corrupt_path)}
+        current.update(values)
+        current["runId"] = run_id
+        current["statusJson"] = rel(root, status_path)
+        write_text(status_path, json.dumps(current, indent=2, ensure_ascii=False))
+    finally:
+        if lock_handle is not None:
+            os.close(lock_handle)
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
 
 
 def print_json(value: dict[str, Any]) -> None:

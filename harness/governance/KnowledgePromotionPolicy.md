@@ -1,7 +1,7 @@
 ---
 documentName: harness/governance/KnowledgePromotionPolicy.md
-version: v1.0.0-pre-h8-knowledge-promotion
-updatedAt: 2026-06-23 08:10:00.000 +08:00
+version: v1.4.0-pipeline-smoke
+updatedAt: 2026-07-02 00:00:00.000 +08:00
 status: active
 purpose: 定义 raw source、extracted artifacts、candidate knowledge、reviewed knowledge 和 RAG index 的晋升边界。
 scope:
@@ -28,8 +28,8 @@ dependsOn:
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: pre-h8-knowledge-promotion-aligned
+  reviewedAt: 2026-07-02
+  decision: pipeline-smoke-promotion-boundary-added
 ---
 # Knowledge Promotion Policy（知识晋升策略）
 
@@ -71,7 +71,29 @@ flowchart LR
 6. human review 或用户明确批准；
 7. 记录 reviewer、review date 和 staleness rule。
 
-## 4. 禁止路径
+## 4. 工具支持边界
+
+raw-to-candidate Skill 可以通过稳定工具生成审核材料：
+
+```text
+harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command review-package
+harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command promotion-plan
+harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command promote-reviewed
+harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command promote-gap-candidates
+harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command pipeline-smoke
+```
+
+规则：
+
+1. `review-package` 只汇总 candidate provenance、validation state、page inventory 和 review gates。
+2. `promotion-plan` 只生成目标 scope、目标路径、pre-promotion gates 和 approval blockers。
+3. `review-package` 和 `promotion-plan` 都不得写入 reviewed Knowledge。
+4. `promote-reviewed` 只有在 review gates 通过且 human review 或用户明确批准后才能写入 reviewed Knowledge。
+5. reviewed Knowledge 写入必须记录 reviewer、review date、approval note、reviewAfter、source trace 和 promotion result。
+6. `promote-gap-candidates` 只处理 reviewed gap review package 中已经通过用户批准的 approved concept；`dedup-before-promotion`、`revise-before-review` 或缺少 evidence 的项不得自动晋升。
+7. `pipeline-smoke` 只能作为端到端验证命令使用；它必须要求 reviewer、approval note、raw input 和 query，并且 promotion 仍由 `promote-reviewed` 门禁执行。
+
+## 5. 禁止路径
 
 ```text
 raw log -> reviewed Knowledge

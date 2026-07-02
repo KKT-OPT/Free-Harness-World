@@ -1,9 +1,9 @@
 ---
 documentName: harness/skills/rag-structured-ingestion/references/candidate-enrichment.md
-version: v1.0.0-h6-rag-boundary
-updatedAt: 2026-06-22 23:41:15.773 +08:00
+version: v1.1.0-llm-wiki-method
+updatedAt: 2026-06-30 19:14:00.837 +08:00
 status: active
-purpose: 定义 raw extraction 后如何补全 candidate wiki，且不晋升为 reviewed knowledge。
+purpose: 定义 raw extraction 后如何补全 candidate wiki，并保持 candidate-only 边界。
 scope:
   - candidate-enrichment
   - rag-skill-reference
@@ -21,22 +21,23 @@ dependsOn:
   - harness/skills/rag-structured-ingestion/SKILL.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-22
-  decision: h6-complete
+  reviewedAt: 2026-06-30
+  decision: phase-1-deterministic-absorption
 ---
 # Candidate Wiki 补全参考
 
-raw extraction 完成后，如果 candidate wiki 需要供 agent 或 human review 使用，可以按本文补全。
+raw extraction 完成后，`ingest` 只保证生成可审查 scaffold。若用户需要“待评估的结构化候选知识”，agent 应先运行 `enrichment-plan`，再按本文补全 candidate wiki。
 
-## 1. 步骤
+## 1. 执行步骤
 
-1. 读取 `var/rag/<run-id>/extracted/metadata-manifest.json` 和相关 extracted Markdown。
-2. 更新每个 source page，加入 source-grounded sections：summary、key claims、entities、concepts、contradictions、applicability。
-3. 只为可复用的人物、组织、工具、方法、理论或框架创建 `entities/` 和 `concepts/` 页面。
-4. 更新 `overview.md`，写入 corpus-level synthesis 和 wikilinks。
-5. 更新 `index.md`，确保每个非 meta page 可达。
-6. 更新 `log.md`，记录 ingest 和 agent enrichment step。
-7. 通过 stable wrapper 重新运行 health、lint 和 build-graph。
+1. 运行 `enrichment-plan`，读取输出的 Candidate Enrichment Plan。
+2. 阅读 `var/rag/<run-id>/extracted/metadata-manifest.json` 和相关 extracted Markdown。
+3. 更新每个 source page，补齐 source-grounded sections：summary、key claims、entities、concepts、contradictions、applicability。
+4. 只为有复用价值的人物、组织、工具、方法、理论或框架创建 `entities/` 和 `concepts/` 页面。
+5. 更新 `overview.md`，写入 corpus-level synthesis 和必要 wikilinks。
+6. 更新 `index.md`，确保每个非 meta page 可从索引或 overview 到达。
+7. 更新 `log.md`，记录 ingest 和 agent enrichment step。
+8. 重新运行 `health`、`lint` 和 `build-graph`。
 
 ## 2. 质量规则
 
@@ -45,7 +46,7 @@ raw extraction 完成后，如果 candidate wiki 需要供 agent 或 human revie
 - 内部 candidate pages 使用 wikilinks，外部 URL 使用 Markdown links。
 - 保留 `title`、`type`、`tags`、`sources` 和 `last_updated` 等 candidate frontmatter。
 - unresolved contradictions 应保留为 review notes。
-- 本步骤不得写入 reviewed knowledge。
+- 本步骤不得写入 reviewed Knowledge、Memory、Project Fact 或 promotion artifact。
 
 ## 3. 最小页面集
 

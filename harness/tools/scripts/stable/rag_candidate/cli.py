@@ -5,10 +5,14 @@ import sys
 
 from .commands import (
     run_build_graph,
+    run_enrichment_plan,
     run_health,
     run_ingest,
     run_lint,
+    run_promotion_plan,
+    run_promote_reviewed,
     run_query,
+    run_review_package,
     run_stale_plan,
 )
 from .common import print_json
@@ -54,6 +58,46 @@ def build_parser() -> argparse.ArgumentParser:
     query.add_argument("--wiki", required=True)
     query.add_argument("--limit", type=int, default=10)
     query.set_defaults(func=run_query)
+
+    enrichment = sub.add_parser("enrichment-plan", help="produce a source-grounded candidate enrichment checklist")
+    enrichment.add_argument("--root", default=".")
+    enrichment.add_argument("--manifest", required=True)
+    enrichment.add_argument("--wiki", required=True)
+    enrichment.add_argument("--report", default=None)
+    enrichment.add_argument("--run-id", default=None)
+    enrichment.set_defaults(func=run_enrichment_plan)
+
+    review = sub.add_parser("review-package", help="produce a human-review package for candidate knowledge")
+    review.add_argument("--root", default=".")
+    review.add_argument("--manifest", required=True)
+    review.add_argument("--wiki", required=True)
+    review.add_argument("--report", default=None)
+    review.add_argument("--run-id", default=None)
+    review.set_defaults(func=run_review_package)
+
+    promotion = sub.add_parser("promotion-plan", help="produce a plan for reviewed-knowledge promotion without writing reviewed knowledge")
+    promotion.add_argument("--root", default=".")
+    promotion.add_argument("--manifest", required=True)
+    promotion.add_argument("--wiki", required=True)
+    promotion.add_argument("--scope", default="user-private", choices=["global", "domain", "project-reviewed", "user-private"])
+    promotion.add_argument("--target", default=None)
+    promotion.add_argument("--report", default=None)
+    promotion.add_argument("--run-id", default=None)
+    promotion.set_defaults(func=run_promotion_plan)
+
+    promote = sub.add_parser("promote-reviewed", help="write reviewed knowledge after explicit approval")
+    promote.add_argument("--root", default=".")
+    promote.add_argument("--manifest", required=True)
+    promote.add_argument("--wiki", required=True)
+    promote.add_argument("--scope", default="user-private", choices=["global", "domain", "project-reviewed", "user-private"])
+    promote.add_argument("--target", required=True)
+    promote.add_argument("--reviewer", required=True)
+    promote.add_argument("--approval-note", required=True)
+    promote.add_argument("--review-after", default="source-updated-or-2026-12-31")
+    promote.add_argument("--report", default=None)
+    promote.add_argument("--run-id", default=None)
+    promote.add_argument("--overwrite", action="store_true")
+    promote.set_defaults(func=run_promote_reviewed)
 
     stale = sub.add_parser("stale-plan", help="compare manifest source hashes and produce a plan only")
     stale.add_argument("--root", default=".")

@@ -1,9 +1,9 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.3.1-h9-0-precondition-complete
-updatedAt: 2026-06-23 18:54:52.291 +08:00
+version: v1.4.1-h9-2-skill-git-management-closeout
+updatedAt: 2026-07-02 18:24:00.000 +08:00
 status: active
-purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果，以及 H9 真实项目验证的分阶段计划。
+purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划和 H9-1 真实任务收口结果。
 scope:
   - architecture-landing-plan
   - harness-refactor-plan
@@ -12,6 +12,10 @@ scope:
   - h9-real-project-validation
   - h9-subphase-acceptance
   - h9-0-precondition
+  - h9-1-closeout
+  - h9-2-plan-refinement
+  - h9-2-closeout
+  - llm-wiki-agent-absorption
 prerequisites:
   - AGENTS.md
   - INDEX.md
@@ -22,7 +26,14 @@ relatedDocuments:
   - harness/HarnessIndex.md
   - harness/architecture/HarnessEngineering.md
   - harness/governance/GovernanceIndex.md
+  - harness/governance/SkillGovernance.md
+  - harness/skills/SkillPolicy.md
+  - harness/skills/SkillIndex.md
   - harness/templates/project-template/model/StandardProjectPackage.md
+  - harness/skills/reviewed/simulation-failure-triage/SKILL.md
+  - harness/reports/redacted/H9-2SimulationFailureTriageSkillCandidateReview.md
+  - projects/lfms-decision/docs/project/workflow/20260702-h9-1-simulation-real-data-solver-binding-failure.md
+  - projects/lfms-decision/docs/project/workflow/20260702-h9-1-duplicate-history-reuse-fix.md
 outputTo:
   - harness/architecture/PLANS.md
 owner: mixed
@@ -33,9 +44,9 @@ dependsOn:
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: h9-0-precondition-complete
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-2-simulation-failure-triage-approved-git-managed-and-closed
 ---
 # Harness 架构落地计划
 
@@ -44,9 +55,9 @@ review:
 ## 1. 当前状态
 
 ```text
-currentStage = H9-0 Real Project Fact Baseline
-status = ready-for-H9-0
-lastCompletedStage = H8
+currentStage = H9-3 Governance Loop Validation
+status = h9-2-complete-h9-3-pending
+lastCompletedStage = H9-2
 architectureAuthority = harness/architecture/HarnessEngineering.md
 targetArchitectureVersion = v2.4.0-target-architecture
 h9ValidationAnchor = projects/lfms-decision
@@ -80,9 +91,9 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 | H8-pre | H8 前置检查和完善 | complete | 结构检查、兼容清理、Governance/Memory/Skill/Knowledge 机制补齐、Git 管理恢复决策。 |
 | H8 | GitHub agent 分支恢复和 Bootstrap Foundation | complete | 已恢复 `agent-git` 分支 GitHub 管理；install/uninstall 和非沙盒 clone 验证已通过；README 和 MIT LICENSE 已完成产品化基础补齐。 |
 | H9 | 真实项目验证总阶段 | in-progress | 以 `projects/lfms-decision` 为验证锚点，分阶段验证项目事实、真实任务、Skill、Governance、Knowledge、Memory 和工具闭环。 |
-| H9-0 | 真实项目文档和事实基线 | ready | 补齐 `projects/lfms-decision/docs/project/` 项目事实文档、ProjectIndex 路由和用户审阅结论。 |
-| H9-1 | 至少一个真实任务全流程验证 | pending | 完成一个真实 Java 项目的分析、设计、执行、测试、验收和 workflow evidence 闭环。 |
-| H9-2 | Skill 闭环验证 | pending | 从真实任务产生 Skill candidate 或已有 Skill patch candidate，并完成 review 决策。 |
+| H9-0 | 真实项目文档和事实基线 | complete | `projects/lfms-decision/docs/project/` 已形成真实任务可用的项目入口、测试、验证和 workflow evidence 路由。 |
+| H9-1 | 至少一个真实任务全流程验证 | complete | 已完成一个真实 Java 项目的问题提出、口径对齐、根因定位、代码修复、自动回归、真实仿真、用户验收和 workflow evidence 闭环。 |
+| H9-2 | Skill 闭环验证 | complete | `simulation-failure-triage` 已经用户 approve，晋升到 reviewed Skill，并补齐 Git 管理门禁；SkillIndex、usage sidecar、审核记录和 Skill 机制文档已同步。 |
 | H9-3 | Governance 闭环验证 | pending | 至少一个真实任务完成 candidate-first、review-first、human approval 的治理收口。 |
 | H9-4 | Knowledge 和 Memory 闭环验证 | pending | 验证 Knowledge 晋升边界和 Memory candidate -> review -> active/rejected/archive 路径。 |
 | H9-5 | H9 汇总和 H10 门禁判定 | pending | 汇总 H9 验收结果、架构反向优化项和 release readiness 风险，判断是否进入 H10。 |
@@ -98,7 +109,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 | Sandbox | `sandbox/SandboxIndex.md` 已补齐。 | H9 真实项目验证不得破坏 Harness Root。 |
 | Governance | 目标治理机制文档已补齐到 `harness/governance/`。 | H9-3 用真实任务验证治理闭环。 |
 | Memory | `harness/memory/MemoryIndex.md` 和 `MemoryPolicy.md` 已补齐。 | H9-4 验证 candidate/review/active 或 reject/archive 路径。 |
-| Skills | `harness/skills/SkillIndex.md`、`SkillPolicy.md` 和 usage sidecar 已补齐。 | H9-2 用真实任务验证 Skill candidate 或 patch candidate。 |
+| Skills | `harness/skills/SkillIndex.md`、`SkillPolicy.md`、`SkillGovernance.md`、reviewed Skill 和 usage sidecar 已补齐。 | H9-2 已完成；后续按真实任务继续验证 Skill 使用效果、patch flow 和 Git 管理门禁。 |
 | Knowledge / RAG | `harness/governance/KnowledgePromotionPolicy.md`、`harness/rag/`、`user/knowledge/` 和 `var/rag/` 边界已对齐。 | H9-4 验证 Knowledge 晋升边界，不污染 RAG index 或通用事实。 |
 | Project Template | 目标路径为 `harness/templates/project-template/`；旧项目模板兼容 stub 已清理。 | H9-0 使用模板补齐真实项目文档基线。 |
 | Tool assets | 目标路径为 `harness/tools/`。 | H9-1 验证真实任务是否优先使用 stable tools。 |
@@ -235,6 +246,26 @@ H9-0 前置环境闭环结果：
 5. 任务证据保存到项目 workflow evidence。
 6. 用户完成真实任务验收或明确退回原因。
 
+H9-1 收口记录（2026-07-02）：
+
+| 验收项 | 结果 | 证据 |
+|---|---|---|
+| 真实任务 | 通过 | `lfms-decision` 真实 CSV 仿真触发算法错误，用户提出明确排查和修复目标。 |
+| Task Brief 和项目入口 | 通过 | 任务证据进入项目 workflow evidence；执行前读取项目 `AGENTS.md`、`ProjectIndex.md`、`Validation.md` 和仿真说明书。 |
+| 根因定位 | 通过 | 已从表层 `SOLVER_BINDING_PLUGIN_NOT_REGISTERED` 下钻到重复业务时间、无完整 N/E/D 速度、降级单点历史和 reference-only 路径。 |
+| 代码执行 | 通过 | 已修改治理层和状态投影层，并新增合成最小回归 main program。 |
+| stable tools 验证 | 通过 | 使用 `invoke-java-main.ps1` 完成诊断、真实仿真复跑和回归 main program 验证。 |
+| 用户验收 | 通过 | 用户明确反馈上一轮任务验收通过，并批准项目级流程沉淀和自动回归沉淀。 |
+| workflow evidence | 通过 | 诊断证据和修复证据已保存到 `projects/lfms-decision/docs/project/workflow/`。 |
+
+H9-1 结论：
+
+```text
+status = complete
+acceptedBy = user
+nextStage = H9-2 Skill Loop Validation
+```
+
 ### 8.3 H9-2 Skill 闭环验证
 
 目标：用真实任务判断是否需要新增 Skill 或修补已有 Skill，并完成候选、审查和处置。
@@ -246,6 +277,63 @@ H9-0 前置环境闭环结果：
 3. 产物先进入 candidate 或 patch candidate，不直接晋升 reviewed。
 4. review 结论明确为 approve、reject、archive 或 revise。
 5. 如果 approve，需要同步 usage sidecar 或相应索引；如果 reject/archive，需要记录原因。
+
+H9-2 细化计划（基于 H9-1）：
+
+| 步骤 | 输出 | 判定 |
+|---|---|---|
+| 1. 检查现有 Skill | existing-skill-fit 摘要 | 判断是否已有 Skill 可覆盖真实项目仿真失败排查。 |
+| 2. 判断候选类型 | new skill candidate 或 patch candidate | 若现有 Skill 不能覆盖，则创建 `simulation-failure-triage` 类候选 Skill；若已有相近 Skill，则形成 patch candidate。 |
+| 3. 剥离项目事实 | sanitized reusable workflow | 只保留通用排查流程、命令面模式、产物判读和验证门禁；不写入真实 CSV、项目私有事实或本机路径。 |
+| 4. 写入 candidate | `harness/skills/candidate/.../SKILL.md` | 产物必须进入 candidate，不直接晋升 reviewed。 |
+| 5. review 决策 | approve、reject、archive 或 revise | 用户或治理 review 决定是否晋升；如 approve，再更新 `SkillIndex.md`、usage sidecar，并确保 reviewed Skill 进入 Git 管理。 |
+
+H9-2 进入条件：
+
+1. H9-1 真实任务已经用户验收通过。
+2. 项目级流程文档已落地，能作为 Skill candidate 的事实来源。
+3. 自动回归已验证，证明流程不是单纯文档总结。
+
+H9-2 完成门禁：
+
+1. 至少完成一个 Skill candidate 或 patch candidate 的 review 决策。
+2. 决策结果和理由可追溯到 H9-1 workflow evidence。
+3. 未获批准的候选不得进入 reviewed Skill。
+
+H9-2 执行记录（2026-07-02）：
+
+| 项目 | 结果 |
+|---|---|
+| Existing Skill 检查 | 已检查现有 RAG 和 Obsidian Skill；未发现可覆盖 Java/服务仿真失败排查、流水线归因、诊断 main 和回归验证的已有 Skill。 |
+| Candidate 类型 | 新建 Skill candidate，而不是 patch candidate。 |
+| Candidate 路径 | 原 candidate flow 已完成；审核通过后已迁出 candidate 分区。 |
+| Reviewed 路径 | `harness/skills/reviewed/simulation-failure-triage/SKILL.md`。 |
+| Review package | `harness/reports/redacted/H9-2SimulationFailureTriageSkillCandidateReview.md`。 |
+| 候选来源 | H9-1 真实任务 evidence 和项目级 `SimulationFailureTriage.md`。 |
+| 候选边界 | 仅保留通用流程、命令面模式、产物判读和验证门禁；不写入真实 CSV、未脱敏日志、本机路径或项目私有事实。 |
+| 当前状态 | 用户最终 review 决策为 approve；`simulation-failure-triage` 已从 candidate 晋升为 reviewed Skill，`SkillIndex.md`、usage sidecar、审核记录和 Skill 机制文档已同步；reviewed Skill 必须纳入 Git 管理。H9-2 标记 complete。 |
+
+H9-2 收口结果：
+
+| 验收项 | 结果 | 证据 |
+|---|---|---|
+| 真实任务来源 | 通过 | 来源于 H9-1 真实仿真失败排查和项目级 `SimulationFailureTriage.md`。 |
+| 现有 Skill 检查 | 通过 | 已确认现有 Skill 不覆盖 Java/服务仿真失败排查、流水线归因、诊断 main 和回归验证。 |
+| Candidate-first | 通过 | 先创建 candidate，经两轮 revise 后再由用户审核。 |
+| 用户决策 | 通过 | 用户最终决策为 approve。 |
+| 晋升和路由 | 通过 | reviewed 路径、`SkillIndex.md` 和 `skill-usage.json` 已同步。 |
+| Git 管理门禁 | 通过 | reviewed Skill 作为 Harness 长期资产，按限定路径纳入 Git 管理范围。 |
+| 机制反向优化 | 通过 | `SkillPolicy.md` 和 `SkillGovernance.md` 已补齐用户指定触发、Promotion Gate 和 Git Management Gate。 |
+| 敏感边界 | 通过 | Skill 不保存真实 CSV、未脱敏日志、本机路径、私有配置或凭据。 |
+
+H9-2 结论：
+
+```text
+status = complete
+acceptedBy = user
+reviewedSkill = harness/skills/reviewed/simulation-failure-triage/SKILL.md
+nextStage = H9-3 Governance Loop Validation
+```
 
 ### 8.4 H9-3 Governance 闭环验证
 
@@ -269,6 +357,14 @@ H9-0 前置环境闭环结果：
 3. Memory 只保存通用化经验，不保存用户私有偏好、项目私有业务事实或敏感上下文。
 4. 至少完成一次 Memory candidate -> review -> active/rejected/archive 路径验证。
 5. 如果某类晋升在真实任务中不适用，需要记录不适用原因和后续触发条件。
+
+H9-4 Knowledge/RAG 补充验收记录（2026-06-30）：
+
+- `llm-wiki-agent` 吸收阶段4已完成 Knowledge promotion smoke：raw -> extracted -> candidate -> review package -> promotion plan -> reviewed Knowledge 的受控链路已跑通。
+- 稳定工具已提供 `promote-reviewed` 子命令；该命令要求 reviewer、approval note、reviewAfter，并在 review gates 通过且用户明确批准后写入 reviewed Knowledge。
+- 本轮已验证：语法检查通过、`promote-reviewed` 实际晋升通过、缺少 `ApprovalNote` 的负向门禁通过、`git diff --check` 通过。
+- 边界结果：reviewed Knowledge 和 promotion result 位于 local-only / runtime boundary；未写入 Memory、Project Fact 或 Harness architecture authority。
+- H9-4 整体仍不能标记 complete：Memory candidate -> review -> active/rejected/archive 闭环尚未验证。
 
 ### 8.6 H9-5 汇总和 H10 门禁判定
 

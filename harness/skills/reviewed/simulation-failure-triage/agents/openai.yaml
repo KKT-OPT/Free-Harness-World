@@ -1,0 +1,4 @@
+interface:
+  display_name: "仿真失败排查"
+  short_description: "读取关联文档后按证据排查仿真失败"
+  default_prompt: "使用 $simulation-failure-triage 先读取关联项目文档，再排查一次 Java 仿真失败并输出经过验证的根因摘要。"
