@@ -1,14 +1,15 @@
 ---
 documentName: harness/skills/SkillIndex.md
-version: v1.4.0-rag-knowledge-use-reviewed
+version: v1.6.0-memory-governance-use-reviewed
 updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
-purpose: 作为 Harness Skill 入口，路由 Skill policy、candidate、reviewed、archive、usage sidecar 和现有 skill 包。
+purpose: 作为 Harness Skill 入口，路由 Skill policy、candidate、reviewed、archive、usage sidecar、Memory governance reviewed Skill 和现有 skill 包。
 scope:
   - skill
   - skill-index
   - skill-lifecycle
   - skill-usage
+  - memory-governance-skill-reviewed
 prerequisites:
   - AGENTS.md
   - INDEX.md
@@ -17,6 +18,7 @@ relatedDocuments:
   - harness/skills/SkillPolicy.md
   - harness/governance/SkillGovernance.md
   - harness/templates/skill/SkillTemplate.md
+  - harness/skills/reviewed/memory-governance-use/SKILL.md
   - harness/skills/reviewed/rag-knowledge-use/SKILL.md
   - harness/skills/reviewed/simulation-failure-triage/SKILL.md
 outputTo:
@@ -29,7 +31,7 @@ dependsOn:
 review:
   reviewedBy: user
   reviewedAt: 2026-07-04
-  decision: rag-knowledge-use-promoted-to-reviewed
+  decision: memory-governance-use-approved-and-promoted-to-reviewed
 ---
 # Skill 索引
 
@@ -51,6 +53,7 @@ review:
 | Skill | 当前路径 | 说明 |
 |---|---|---|
 | RAG Structured Ingestion | `harness/skills/rag-structured-ingestion/SKILL.md` | raw-to-candidate knowledge workflow。 |
+| Memory Governance Use | `harness/skills/reviewed/memory-governance-use/SKILL.md` | Memory Update Flow 到稳定命令的流程状态机、Memory store 只读验证、candidate review package、用户决策记录和未工具化生命周期缺口识别；已由用户 approve 并晋升为 reviewed Skill。 |
 | RAG Knowledge Use | `harness/skills/reviewed/rag-knowledge-use/SKILL.md` | reviewed Knowledge 查询、Obsidian 阅读入口、reviewed gap candidate plan、重复治理、post-promotion cleanup 和一键验证流程；已完成用户指定 review 并晋升为 reviewed Skill。 |
 | Simulation Failure Triage | `harness/skills/reviewed/simulation-failure-triage/SKILL.md` | 用户指定触发并经完整 candidate、revise、approve、promotion 流程审核通过的仿真失败排查流程；正文包含笔记属性和关联文档读取路径。 |
 | Obsidian Skills | `harness/skills/obsidian-skills/` | Obsidian Markdown、Bases、Canvas、CLI 等辅助技能包。 |

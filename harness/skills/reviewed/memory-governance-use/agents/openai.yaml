@@ -1,0 +1,4 @@
+interface:
+  display_name: "Memory 治理使用"
+  short_description: "按稳定命令验证和审核 Memory 候选"
+  default_prompt: "使用 $memory-governance-use 先运行 Memory 流程状态和 store 验证，再生成候选审核输入。"

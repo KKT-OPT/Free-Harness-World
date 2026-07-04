@@ -205,6 +205,56 @@ function Invoke-ProjectLifecycleEvidenceSelfTest {
     }
 }
 
+function Invoke-MemoryStoreGate {
+    param(
+        [string]$RootPath,
+        [System.Collections.ArrayList]$Findings
+    )
+
+    $script = Join-Path $RootPath "harness/tools/scripts/stable/invoke-memory.ps1"
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        Add-Finding -List $Findings -Severity "error" -Code "memoryValidatorMissing" -Path "harness/tools/scripts/stable/invoke-memory.ps1" -Message "Memory validator is missing." -RepairSuggestion "Restore invoke-memory.ps1 or update Memory governance docs."
+        return $null
+    }
+
+    try {
+        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Root $RootPath -Command validate-memory-store
+        $result = $raw | ConvertFrom-Json
+        if ($result.state -ne "passed") {
+            Add-Finding -List $Findings -Severity "error" -Code "memoryStoreValidationFailed" -Path "harness/memory" -Message "Memory store validation failed." -RepairSuggestion "Run invoke-memory.ps1 -Command validate-memory-store and repair listed Memory findings."
+        }
+        return $result
+    } catch {
+        Add-Finding -List $Findings -Severity "error" -Code "memoryStoreValidationError" -Path "harness/tools/scripts/stable/invoke-memory.ps1" -Message "Memory store validation errored: $($_.Exception.Message)" -RepairSuggestion "Fix the Memory validator script or Memory store."
+        return $null
+    }
+}
+
+function Invoke-MemoryStoreSelfTest {
+    param(
+        [string]$RootPath,
+        [System.Collections.ArrayList]$Findings
+    )
+
+    $script = Join-Path $RootPath "harness/tools/scripts/stable/invoke-memory.ps1"
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        Add-Finding -List $Findings -Severity "error" -Code "memoryValidatorMissing" -Path "harness/tools/scripts/stable/invoke-memory.ps1" -Message "Memory validator is missing." -RepairSuggestion "Restore invoke-memory.ps1 or update Memory governance docs."
+        return $null
+    }
+
+    try {
+        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Root $RootPath -Command validate-memory-store -SelfTest
+        $result = $raw | ConvertFrom-Json
+        if ($result.state -ne "passed") {
+            Add-Finding -List $Findings -Severity "error" -Code "memoryStoreSelfTestFailed" -Path "harness/tools/scripts/stable/invoke-memory.ps1" -Message "Memory store validator self-test failed." -RepairSuggestion "Run invoke-memory.ps1 -Command validate-memory-store -SelfTest and repair the Memory validator."
+        }
+        return $result
+    } catch {
+        Add-Finding -List $Findings -Severity "error" -Code "memoryStoreSelfTestError" -Path "harness/tools/scripts/stable/invoke-memory.ps1" -Message "Memory store validator self-test errored: $($_.Exception.Message)" -RepairSuggestion "Fix the Memory validator self-test."
+        return $null
+    }
+}
+
 $rootPath = (Resolve-Path -LiteralPath $Root).Path
 $findings = New-Object System.Collections.ArrayList
 
@@ -256,7 +306,8 @@ $requiredRoutes = @(
     "user/registry/knowledge.local.example.json",
     "user/registry/projects.local.json",
     "harness/tools/scripts/stable/test-project-registry.ps1",
-    "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1"
+    "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1",
+    "harness/tools/scripts/stable/invoke-memory.ps1"
 )
 
 foreach ($route in $requiredRoutes) {
@@ -373,6 +424,8 @@ foreach ($gitDir in $projectGitDirs) {
 
 $registryResult = Invoke-ProjectRegistryCheck -RootPath $rootPath -RegistryPath $Registry -Findings $findings
 $projectLifecycleSelfTestResult = Invoke-ProjectLifecycleEvidenceSelfTest -RootPath $rootPath -Findings $findings
+$memoryStoreResult = Invoke-MemoryStoreGate -RootPath $rootPath -Findings $findings
+$memoryStoreSelfTestResult = Invoke-MemoryStoreSelfTest -RootPath $rootPath -Findings $findings
 
 $severityCounts = [ordered]@{
     error = @($findings | Where-Object { $_.severity -eq "error" }).Count
@@ -397,6 +450,8 @@ $output = [pscustomobject]@{
         severityCounts = $severityCounts
         registryStatus = if ($registryResult) { $registryResult.status } else { "not-run" }
         projectLifecycleEvidenceStatus = if ($projectLifecycleSelfTestResult) { $projectLifecycleSelfTestResult.status } else { "not-run" }
+        memoryStoreStatus = if ($memoryStoreResult) { $memoryStoreResult.state } else { "not-run" }
+        memoryStoreSelfTestStatus = if ($memoryStoreSelfTestResult) { $memoryStoreSelfTestResult.state } else { "not-run" }
     }
     checks = @(
         "required-routes",
@@ -409,7 +464,9 @@ $output = [pscustomobject]@{
         "index-plans-route",
         "repository-boundary",
         "project-registry",
-        "project-lifecycle-evidence-self-test"
+        "project-lifecycle-evidence-self-test",
+        "memory-store-validation",
+        "memory-store-self-test"
     )
     findings = @($findings)
 }

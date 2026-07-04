@@ -1,9 +1,9 @@
 ---
 documentName: harness/verification/VerificationIndex.md
-version: v1.1.0-project-lifecycle-evidence-gate
-updatedAt: 2026-07-02 21:20:00.000 +08:00
+version: v1.2.0-memory-governance-self-check
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 作为 Harness Verification 的目标入口，路由 readiness、validation、regression 和 Harness validation cases。
+purpose: 作为 Harness Verification 的目标入口，路由 readiness、validation、regression、Harness validation cases 和 Memory store governance gate。
 scope:
   - verification
   - readiness
@@ -20,7 +20,9 @@ relatedDocuments:
   - harness/verification/RegressionPolicy.md
   - harness/verification/HarnessValidationPlan.md
   - harness/verification/HarnessValidationCases.md
+  - harness/tools/scripts/stable/test-harness-governance.ps1
   - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+  - harness/tools/scripts/stable/invoke-memory.ps1
   - harness/observability/ObservabilityIndex.md
   - harness/governance/GovernanceIndex.md
 outputTo:
@@ -34,8 +36,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: h9-3-project-lifecycle-evidence-gate-added
+  reviewedAt: 2026-07-05
+  decision: memory-governance-self-check-added
 ---
 # Verification 索引
 
@@ -52,6 +54,7 @@ Verification 不直接晋升 Knowledge、Memory、Skill、Project Fact、Tool �
 | Harness Validation Plan | `harness/verification/HarnessValidationPlan.md` | Harness 生命周期验证计划。 |
 | Harness Validation Cases | `harness/verification/HarnessValidationCases.md` | Harness 验证用例和通过标准。 |
 | Project Lifecycle Evidence Gate | `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` | 真实项目任务方案、开发、验证、报告、审核和验收证据闭环的只读检查脚本。 |
+| Memory Store Gate | `harness/tools/scripts/stable/invoke-memory.ps1 -Command validate-memory-store` | Memory candidate、reviewed、archive 生命周期、source evidence、review 字段、敏感边界和重复冲突的只读验证门禁。 |
 
 ## 2. 边界关系
 
@@ -80,3 +83,4 @@ projects/<project-id>/docs/project/workflow/
 3. `harness/governance/` 可以引用验证结果，但不保存验证规则正文。
 4. 验证失败、部分通过或修复后通过时，应同时记录 `harness/observability/FailureAttribution.md` 和 `harness/verification/RegressionPolicy.md` 所需字段。
 5. 真实项目任务收口前，应使用 `test-project-lifecycle-evidence.ps1` 检查项目 workflow evidence 和项目 report 的生命周期证据闭环。
+6. 通用治理自检应运行 `invoke-memory.ps1 -Command validate-memory-store` 和 `invoke-memory.ps1 -Command validate-memory-store -SelfTest`，避免 Memory 生命周期破坏只靠人工阅读发现。

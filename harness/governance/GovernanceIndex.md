@@ -55,7 +55,7 @@ review:
 | Document and Index | `harness/governance/DocumentGovernance.md`, `IndexMaintenancePolicy.md` |
 | Cleanup and Schedule | `harness/governance/CleanupPolicy.md`, `ScheduledGovernance.md` |
 | Archive | `harness/governance/ReportArchivePolicy.md` |
-| Self-Check | `harness/tools/scripts/stable/test-harness-governance.ps1`, `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1`, `harness/tools/docs/script-index/ScriptIndex.md`, `harness/tools/docs/command-surfaces/StableToolSurfaceModel.md` |
+| Self-Check | `harness/tools/scripts/stable/test-harness-governance.ps1`, `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1`, `harness/tools/scripts/stable/invoke-memory.ps1`, `harness/tools/docs/script-index/ScriptIndex.md`, `harness/tools/docs/command-surfaces/StableToolSurfaceModel.md` |
 
 ## 2. 与 Verification / Observability 的边界
 
@@ -125,4 +125,4 @@ harness/tools/scripts/stable/test-harness-governance.ps1
 
 该工具默认只读，输出 findings 和 repair suggestions。它不得检查 credential 正文、Maven settings XML、auth 文件或 raw runtime logs。historical scripts、runtime helpers 和 external tools 默认不进入稳定治理扫描。
 
-`test-harness-governance.ps1` 必须至少运行 `test-project-lifecycle-evidence.ps1 -SelfTest`，保证真实项目生命周期证据门禁脚本本身可用。具体项目任务收口时，应再对目标项目 workflow evidence 和项目 report 运行 `test-project-lifecycle-evidence.ps1`。
+`test-harness-governance.ps1` 必须至少运行 `test-project-lifecycle-evidence.ps1 -SelfTest`，保证真实项目生命周期证据门禁脚本本身可用；同时必须运行 `invoke-memory.ps1 -Command validate-memory-store` 和 `invoke-memory.ps1 -Command validate-memory-store -SelfTest`，保证 Memory store 当前状态和负向 fixture 门禁可用。具体项目任务收口时，应再对目标项目 workflow evidence 和项目 report 运行 `test-project-lifecycle-evidence.ps1`。

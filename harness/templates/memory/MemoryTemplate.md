@@ -1,7 +1,7 @@
 ---
 documentName: harness/templates/memory/MemoryTemplate.md
-version: v1.0.0-pre-h8-memory-template
-updatedAt: 2026-06-23 08:10:00.000 +08:00
+version: v1.1.0-executable-memory-gate-template
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
 purpose: 提供 Memory candidate、reviewed memory 和 archived memory 的记录模板。
 scope:
@@ -14,6 +14,7 @@ prerequisites:
 relatedDocuments:
   - harness/memory/MemoryPolicy.md
   - harness/governance/MemoryGovernance.md
+  - harness/tools/scripts/stable/invoke-memory.ps1
 outputTo:
   - harness/templates/memory/MemoryTemplate.md
 owner: mixed
@@ -24,8 +25,8 @@ dependsOn:
   - harness/memory/MemoryIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: pre-h8-memory-mechanism-aligned
+  reviewedAt: 2026-07-05
+  decision: executable-memory-gate-template-aligned
 ---
 # Memory Template（记忆模板）
 
@@ -47,7 +48,7 @@ stalenessRule: <date-or-condition>
 
 ## Memory Statement
 
-Write the concise reusable memory here.
+在这里写入简洁、可复用、非私有的记忆正文。
 
 ## Source And Evidence
 
@@ -57,11 +58,11 @@ Write the concise reusable memory here.
 
 ## Applicability
 
-Describe when this memory may be used.
+说明这条 Memory 适用于哪些场景。
 
 ## Non-Applicability
 
-Describe when this memory must not be used, including conflicts with Project Facts, reviewed Knowledge or current user instructions.
+说明这条 Memory 不适用于哪些场景，包括与 Project Facts、reviewed Knowledge 或用户当前指令冲突时的边界。
 
 ## Review Notes
 

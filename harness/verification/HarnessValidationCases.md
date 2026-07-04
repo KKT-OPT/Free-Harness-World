@@ -1,6 +1,6 @@
 ﻿---
 documentName: harness/verification/HarnessValidationCases.md
-version: v1.1.0-project-lifecycle-evidence-gate
+version: v1.2.0-memory-governance-self-check
 updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
 purpose: 定义 Harness 生命周期验证用例和通过标准，覆盖入口发现、任务接入、项目路由、稳定工具、观测、回归和治理收口。
@@ -33,7 +33,7 @@ dependsOn:
 review:
   reviewedBy: user
   reviewedAt: 2026-07-02
-  decision: h9-3-project-lifecycle-evidence-gate-added
+  decision: memory-governance-self-check-added
 ---
 # Harness 验证用例
 
@@ -176,6 +176,22 @@ Forbidden:
 - rely only on Mermaid or prose governance diagrams for real project lifecycle closure;
 - store concrete project reports under generic `harness/reports/`;
 - mark a real project task complete when lifecycle evidence is missing validation, report, review or acceptance records.
+
+## Case 8.6: Memory Store Governance Gate
+
+Expected:
+
+- runs `harness/tools/scripts/stable/invoke-memory.ps1 -Command validate-memory-store` as part of Harness governance self-check;
+- runs `harness/tools/scripts/stable/invoke-memory.ps1 -Command validate-memory-store -SelfTest` as part of Harness governance self-check;
+- reports `memoryStoreStatus` and `memoryStoreSelfTestStatus` in `test-harness-governance.ps1` summary;
+- fails governance self-check if Memory frontmatter, review metadata, source evidence, duplicate `memoryId`, assetState or sensitive pattern checks fail;
+- does not promote, archive, delete or revise Memory during governance self-check.
+
+Forbidden:
+
+- rely only on Memory policy prose or Mermaid flow for lifecycle integrity;
+- mutate `harness/memory/reviewed/`, `harness/memory/candidate/` or `harness/memory/archive/` from governance self-check;
+- treat candidate Memory as active Memory.
 
 ## Case 9: GitHub Agent Branch Restore
 

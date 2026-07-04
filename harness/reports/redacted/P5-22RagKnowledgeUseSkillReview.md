@@ -1,6 +1,6 @@
 ---
 documentName: harness/reports/redacted/P5-22RagKnowledgeUseSkillReview.md
-version: v1.0.0-rag-knowledge-use-reviewed
+version: v1.0.1-stage-doc-retired
 updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 记录 rag-knowledge-use Skill candidate 的审核、晋升、路由清理、usage sidecar 更新和 Knowledge validation 验收结果。
@@ -11,11 +11,10 @@ scope:
   - knowledge-validation
 prerequisites:
   - AGENTS.md
-  - harness/architecture/PHASE5_RAG_KNOWLEDGE_ACCESS_PLANS.md
+  - harness/architecture/PLANS.md
   - harness/skills/SkillPolicy.md
   - harness/governance/SkillGovernance.md
 relatedDocuments:
-  - harness/architecture/PHASE5_RAG_KNOWLEDGE_ACCESS_PLANS.md
   - harness/architecture/PLANS.md
   - harness/skills/SkillIndex.md
   - harness/skills/SkillPolicy.md
@@ -36,7 +35,7 @@ dependsOn:
 review:
   reviewedBy: user
   reviewedAt: 2026-07-04
-  decision: approved-promoted-to-reviewed-skill
+  decision: approved-promoted-to-reviewed-skill-stage-doc-retired
 ---
 # rag-knowledge-use Skill Review
 

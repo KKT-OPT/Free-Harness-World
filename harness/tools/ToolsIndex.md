@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.12.0-knowledge-rag-closeout-command
-updatedAt: 2026-07-04 00:00:00.000 +08:00
+version: v1.16.1-stage-doc-retired
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界和稳定工具契约入口。
+purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
 scope:
   - tool-assets
   - stable-tool-contract
@@ -28,9 +28,9 @@ dependsOn:
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: knowledge-rag-closeout-command-surface-updated
+  reviewedBy: agent
+  reviewedAt: 2026-07-05
+  decision: h9-4-stage-doc-retired
 ---
 # 工具资产索引
 
@@ -101,6 +101,14 @@ harness/tools/scripts/stable/invoke-rag-knowledge.ps1
 ```
 
 该脚本用于初始化 `user/knowledge/` Obsidian vault 入口、同步 reviewed Knowledge 索引、构建 reviewed graph、执行 reviewed-only query、health check，把 unresolved reviewed wikilinks 转为 candidate-only gap plan，处置 residual workflow gap，执行 source-centered canonical vault layout，运行 one-click validation gate，生成 task-scoped schema context，验证 LLM Wiki 已吸收机制，生成 post-promotion candidate cleanup dry-run plan，执行显式批准后的 candidate cleanup apply，用 reviewed evidence 补强 gap candidate pages，生成供人类审核的 gap review package，并在审核前治理 vault 入口、候选审核队列和历史证据索引。它不得把 raw、candidate、chunks 或 runtime graph 当作 authoritative knowledge；`reviewed-gap-plan -WriteCandidates`、`dispose-residual-gaps`、`canonicalize-vault-layout`、`validate-knowledge-vault`、`schema-context`、`validate-llm-wiki-mechanisms`、`candidate-cleanup-plan`、`enrich-gap-candidates`、`gap-review-package` 和 `govern-vault` 只能写入 candidate wiki、vault navigation、机制引用处置、local-only 目录治理、schema context 摘要或 runtime review/governance package，不能绕过 review 写入 reviewed Knowledge；`schema-context` 不写 knowledge page，`validate-llm-wiki-mechanisms` 不执行后台自动修复或 reviewed promotion；`candidate-cleanup-plan` 不删除、不移动、不改写 reviewed source trace；`candidate-cleanup-apply` 只有在 reviewer 和 approval note 齐备时才移动 post-promotion full candidate corpus、写入轻量审计记录并改写 source trace，且不执行 reviewed promotion。
+
+Memory validation gate 稳定脚本：
+
+```text
+harness/tools/scripts/stable/invoke-memory.ps1
+```
+
+该脚本当前提供 Memory 流程状态、只读 Memory 门禁、候选审核包和受控生命周期命令：`memory-flow-status` 对照架构权威 Memory Update Flow 输出节点覆盖、已有命令和停止规则；`verify-source-evidence`、`detect-from-workflow`、`classify-candidate-suitability`、`record-no-memory-disposition`、`create-candidate`、`classify-memory-type`、`detect-memory-duplicate-conflict`、`reject-or-merge-candidate`、`conflict-review-package`、`candidate-review-package`、`apply-review-decision`、`promote-reviewed`、`archive-candidate`、`delete-candidate`、`revise-candidate`、`sync-memory-index` 和 `validate-memory-store` 覆盖 Memory Update Flow 的 A-Q 节点。默认命令为 dry-run 或 report-only；写入 candidate、reviewed、archive、删除 candidate 或 candidate 修订必须显式传入 `-Apply`，并提供 reviewer、approval note 和 reason。普通 reject 默认走 `archive-candidate`；只有用户明确要求删除时才走 `delete-candidate`。所有运行态输出进入 `var/memory/` report / status JSON。通用治理自检脚本 `test-harness-governance.ps1` 必须调用 `validate-memory-store` 和 `validate-memory-store -SelfTest`；任一失败应作为 governance finding 输出并使自检失败。
 
 ## 4. 禁止事项
 

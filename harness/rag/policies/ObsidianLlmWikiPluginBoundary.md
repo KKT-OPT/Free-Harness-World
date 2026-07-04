@@ -1,6 +1,6 @@
 ---
 documentName: harness/rag/policies/ObsidianLlmWikiPluginBoundary.md
-version: v1.2.1-reviewed-skill-link
+version: v1.2.2-stage-doc-retired
 updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 定义 Obsidian LLM Wiki 类插件在 Harness Knowledge vault 中的使用边界、禁止路径和验证要求。
@@ -17,7 +17,6 @@ prerequisites:
 relatedDocuments:
   - AGENTS.md
   - harness/architecture/HarnessEngineering.md
-  - harness/architecture/PHASE5_RAG_KNOWLEDGE_ACCESS_PLANS.md
   - harness/rag/RAGIndex.md
   - harness/rag/policies/README.md
   - harness/rag/policies/CandidatePostPromotionCleanupPolicy.md
@@ -38,7 +37,7 @@ dependsOn:
 review:
   reviewedBy: agent
   reviewedAt: 2026-07-04
-  decision: rag-knowledge-use-reviewed-skill-link-updated
+  decision: phase5-stage-doc-retired
 ---
 # Obsidian LLM Wiki 插件边界策略
 

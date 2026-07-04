@@ -1,9 +1,9 @@
 ﻿---
 documentName: harness/verification/HarnessValidationPlan.md
-version: v1.1.0-project-lifecycle-evidence-gate
+version: v1.2.0-memory-governance-self-check
 updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
-purpose: 定义 Harness 生命周期验证计划，覆盖入口、任务接入、上下文、项目路由、工具、观测、验证、修复闭环和治理收口。
+purpose: 定义 Harness 生命周期验证计划，覆盖入口、任务接入、上下文、项目路由、工具、观测、验证、修复闭环、治理收口和 Memory store 门禁。
 scope:
   - verification
   - validation-plan
@@ -17,6 +17,7 @@ relatedDocuments:
   - harness/verification/RegressionPolicy.md
   - harness/verification/HarnessValidationCases.md
   - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+  - harness/tools/scripts/stable/invoke-memory.ps1
   - harness/observability/TraceSchema.md
   - harness/observability/FailureAttribution.md
   - harness/governance/ArtifactLifecycle.md
@@ -33,7 +34,7 @@ dependsOn:
 review:
   reviewedBy: user
   reviewedAt: 2026-07-02
-  decision: h9-3-project-lifecycle-evidence-gate-added
+  decision: memory-governance-self-check-added
 ---
 # Harness 验证计划
 
@@ -54,6 +55,7 @@ review:
 11. Do not expose credentials, settings, auth files or raw logs.
 12. Classify governance candidates with disposition, target and approval requirement.
 13. For real project lifecycle closeout, run `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` against the project workflow evidence and project report when a report is required.
+14. For Harness governance self-check, run Memory store validation and Memory store self-test through `harness/tools/scripts/stable/invoke-memory.ps1`.
 
 ## 2. 验证范围
 
@@ -71,6 +73,7 @@ review:
 | Reports | Is the result report-first and redacted? |
 | Governance | Are candidates listed without auto-promotion? |
 | Lifecycle Evidence Gate | Can a stable script verify task brief, project entry, design, development, validation, report, review and acceptance evidence? |
+| Memory Gate | Can governance self-check verify current Memory store shape and Memory negative fixtures? |
 | Closeout | Are candidate dispositions, approval requirements and deferred backlog clear? |
 
 ## 3. 输出位置

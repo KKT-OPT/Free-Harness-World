@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.18.0-knowledge-rag-closeout-commands
-updatedAt: 2026-07-04 00:00:00.000 +08:00
+version: v1.22.1-stage-doc-retired
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约。
+purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检中的 Memory gate。
 scope:
   - script-index
   - stable-tool-contract
@@ -25,8 +25,8 @@ dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-03
-  decision: knowledge-rag-closeout-command-surface
+  reviewedAt: 2026-07-05
+  decision: h9-4-stage-doc-retired
 ---
 # 脚本索引
 
@@ -46,6 +46,7 @@ review:
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | 通过稳定门面运行 RAG candidate 流程。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、residual gap disposition、canonical vault layout、one-click validation gate、schema context、LLM Wiki mechanism validation、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
+| `harness/tools/scripts/stable/invoke-memory.ps1` | 通过稳定门面运行 Memory flow status、Memory store 只读验证和 candidate review package。 | yes |
 | `harness/tools/scripts/stable/publish-harness-agent-branch.ps1` | 管理 agent-owned Git branch、提交和推送。 | yes，写操作需审批 |
 
 ## 2. 稳定工具契约
@@ -134,12 +135,12 @@ review:
 |---|---|
 | Inputs | `-Root`、`-Registry`。 |
 | Outputs | JSON status summary、severity counts、check list、findings 和 repair suggestions。 |
-| Status Summary | status、findingCount、error/warning/info counts。 |
+| Status Summary | status、findingCount、error/warning/info counts、registryStatus、projectLifecycleEvidenceStatus、memoryStoreStatus、memoryStoreSelfTestStatus。 |
 | Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要。 |
 | Sensitive Handling | 默认排除 `var/`、user-local、runtime、external、projects 等边界；不读取 credential 正文。 |
-| Failure Mode | `governance/route`、`governance/boundary`、`governance/gitignore`、`registry/*`。 |
+| Failure Mode | `governance/route`、`governance/boundary`、`governance/gitignore`、`registry/*`、`memoryStoreValidation*`、`memoryStoreSelfTest*`。 |
 | Repair Suggestion | 根据 finding 的 `repairSuggestion` 更新索引、边界或 registry。 |
-| Validation Instruction | 在 Harness Root 运行 dry-run 自检，确认 required routes、Verification/Observability 目标路由与 Git 边界。 |
+| Validation Instruction | 在 Harness Root 运行 dry-run 自检，确认 required routes、Verification/Observability 目标路由、Git 边界、project lifecycle evidence self-test、Memory store validation 和 Memory store self-test 均通过。 |
 
 ### `bootstrap-harness-workspace.ps1`
 
@@ -179,6 +180,19 @@ review:
 | Failure Mode | `rag/knowledge-vault`、`rag/reviewed-query`、`rag/graph`、`tool/execution`。 |
 | Repair Suggestion | 修正 vault/reviewed path，重新运行 `sync-reviewed-index`、`health-reviewed`、`build-reviewed-graph` 或对 gap candidate wiki 运行 candidate `health` / `lint` / `build-graph`。 |
 | Validation Instruction | 使用已审核 reviewed 文档运行 `init-obsidian-vault`、`health-reviewed`、`query-reviewed`、`reviewed-gap-plan -WriteCandidates`、`dispose-residual-gaps`、`canonicalize-vault-layout`、`validate-knowledge-vault`、`schema-context`、`validate-llm-wiki-mechanisms`、`candidate-cleanup-plan`、`candidate-cleanup-apply`、`govern-reviewed-duplicates`、`enrich-gap-candidates`、`gap-review-package`、`promote-gap-candidates`、`govern-vault -ArchiveInactiveCandidates` 和 `pipeline-smoke`，确认 Obsidian `Home.md` 单入口可打开、query 只返回 authoritative reviewed Knowledge、task-scoped schema context 可生成、LLM Wiki 吸收机制全部通过、residual workflow gap 已处置且 reviewed graph broken link count 为 0、正式 reviewed page 使用语义命名、domain schema 存在、candidate full corpus 清理后只保留轻量审计记录、validation gate 检查全通过、candidate cleanup dry-run 能列出 full corpus、轻量审计记录和推荐清理动作、apply 后 full corpus 为 0、duplicate group 只有一个 authoritative page、gap candidate wiki 仍停留在 candidate boundary，candidate health / lint / graph 通过，review package 状态可进入 human review，approved concepts 可晋升 reviewed pages，full pipeline smoke 能从 raw 生成 candidate、晋升 reviewed、刷新 vault 并查询命中新 reviewed target，vault governance 只做非破坏性归档和 source trace 同步。 |
+
+### `invoke-memory.ps1`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Command memory-flow-status|verify-source-evidence|detect-from-workflow|classify-candidate-suitability|record-no-memory-disposition|create-candidate|classify-memory-type|validate-memory-store|detect-memory-duplicate-conflict|reject-or-merge-candidate|conflict-review-package|candidate-review-package|apply-review-decision|promote-reviewed|archive-candidate|delete-candidate|revise-candidate|sync-memory-index`、`-Root`、`-MemoryRoot`、`-Candidate`、`-Reviewed`、`-Archive`、`-CandidateId`、`-CandidatePath`、`-Report`、`-SourcePath`、`-MemoryId`、`-Statement`、`-Scope`、`-ProjectId`、`-Confidence`、`-StalenessRule`、`-Decision`、`-Reviewer`、`-ApprovalNote`、`-Reason`、`-ReviewAfter`、`-NewStatement`、`-SelfTest`、`-Apply`。 |
+| Outputs | stdout JSON、`var/memory/evals/memory-flow-status.md`、`var/memory/evals/memory-validation-report.md`、`var/memory/reviews/<memory-id>-review-package.md`、`var/memory/status/*.json`；`-SelfTest` 只写 `var/tmp/memory-tool-self-test` runtime fixture 和 self-test report。 |
+| Status Summary | `memory-flow-status` 输出 Memory Update Flow 节点 coverage、requiredCommand、currentCommand 和 executionRule；生命周期命令输出 state、scope、details、boundary、report path 和 status JSON path；`validate-memory-store` 输出 entryCount、candidateCount、reviewedCount、archiveCount、errorCount、warningCount、candidateStates 和 blockingIssues。 |
+| Redacted Log Path | 默认不写日志；runtime report 和 status JSON 位于 `var/memory/`，tracked docs 只记录路径和摘要。 |
+| Sensitive Handling | `memory-flow-status` 只读取内置流程映射并写 runtime report；只读命令只读取 `harness/memory/candidate`、`reviewed`、`archive` 或 source evidence 摘要；扫描本机绝对路径、credential-like assignment、settings XML / `.m2` 路径和 URL auth；不读取 settings/auth 正文；写入命令默认 dry-run，只有 `-Apply`、reviewer、approval note 和 reason 齐备时才修改 candidate/reviewed/archive 或删除 candidate，且不修改项目事实。 |
+| Failure Mode | `memory/frontmatter-*`、`memory/review-*`、`memory/metadata-*`、`memory/source-evidence-missing`、`memory/duplicate-memory-id`、`memory/asset-state-invalid`、`sensitive/*`、`memory/candidate-selection-*`。 |
+| Repair Suggestion | 补齐 frontmatter、review 字段、Memory metadata、sourceEvidence、唯一 memoryId 和合法 assetState；移除敏感内容；为 review package 指定唯一 CandidateId 或 CandidatePath。 |
+| Validation Instruction | 运行 `memory-flow-status` 确认架构 Memory Update Flow 的 17 个节点全部为 implemented；对 `verify-source-evidence`、`detect-from-workflow`、`classify-candidate-suitability`、`record-no-memory-disposition`、`create-candidate`、`classify-memory-type`、`detect-memory-duplicate-conflict`、`reject-or-merge-candidate`、`conflict-review-package`、`candidate-review-package`、`apply-review-decision`、`promote-reviewed`、`archive-candidate`、`delete-candidate`、`revise-candidate`、`sync-memory-index` 执行 dry-run smoke；运行 `validate-memory-store` 确认当前 store 通过且现有候选状态符合预期；运行 `validate-memory-store -SelfTest` 确认坏样本能触发缺 frontmatter、缺 review、缺 source evidence、重复 memoryId、非法 assetState 和敏感模式；确认 dry-run 后 `harness/memory/reviewed`、`archive` 和 candidate 文件未被写入或删除。 |
 
 ### `publish-harness-agent-branch.ps1`
 

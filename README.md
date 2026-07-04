@@ -1,14 +1,15 @@
 ---
 documentName: README.md
-version: v1.3.0-knowledge-rag-product-manual
-updatedAt: 2026-07-04 00:00:00.000 +08:00
+version: v1.4.1-h9-4-closeout
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、Knowledge/RAG 使用、常用命令、边界、贡献和 License。
+purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、Knowledge/RAG 使用、Memory 使用、常用命令、边界、贡献和 License。
 scope:
   - user-manual
   - installation-guide
   - quick-start
   - knowledge-rag-user-guide
+  - memory-user-guide
   - command-reference
   - contribution-guide
 prerequisites:
@@ -22,9 +23,12 @@ relatedDocuments:
   - harness/bootstrap/BootstrapIndex.md
   - harness/tools/ToolsIndex.md
   - harness/rag/RAGIndex.md
+  - harness/memory/MemoryIndex.md
+  - harness/governance/MemoryGovernance.md
   - harness/governance/KnowledgePromotionPolicy.md
   - harness/tools/docs/script-index/ScriptIndex.md
   - harness/skills/reviewed/rag-knowledge-use/SKILL.md
+  - harness/skills/reviewed/memory-governance-use/SKILL.md
   - harness/skills/rag-structured-ingestion/SKILL.md
   - user/knowledge/README.md
 outputTo:
@@ -37,11 +41,13 @@ dependsOn:
   - harness/architecture/PLANS.md
   - harness/bootstrap/BootstrapIndex.md
   - harness/rag/RAGIndex.md
+  - harness/memory/MemoryIndex.md
   - harness/governance/KnowledgePromotionPolicy.md
+  - harness/governance/MemoryGovernance.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-04
-  decision: h9-4-knowledge-rag-product-manual-refresh
+  reviewedBy: user
+  reviewedAt: 2026-07-05
+  decision: h9-4-closeout-confirmed
 ---
 # Free Harness World
 
@@ -62,7 +68,7 @@ Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。�
 
 ```text
 stage = H9 real project validation
-currentLoop = H9-4 Knowledge and Memory validation
+currentLoop = H9-5 summary and H10 gate assessment
 defaultAgentBranch = agent-git
 humanReleaseBranch = main
 license = MIT
@@ -77,7 +83,9 @@ license = MIT
 - 运行 `bootstrap-harness-workspace.ps1 -Mode uninstall`；
 - 确认卸载不删除 Git clone、tracked 文档或项目挂载点；
 - 用真实项目验证项目 workflow evidence、Skill、Governance 和 Knowledge/RAG 机制；
-- Knowledge/RAG 已具备 raw -> candidate -> reviewed -> cleanup -> validation -> query 的稳定命令面和一键门禁；H9-4 整体仍需 Memory 闭环验收后才能收口。
+- Knowledge/RAG 已具备 raw -> candidate -> reviewed -> cleanup -> validation -> query 的稳定命令面和一键门禁；
+- Memory 已具备 candidate -> review -> reviewed/delete 的受控生命周期命令、reviewed Skill、store gate、self-test 和 governance self-check 集成；
+- H9-4 Knowledge/RAG 和 Memory 收口已由用户确认，当前进入 H9-5 汇总和 H10 门禁判定。
 
 ## 3. 系统要求
 
@@ -319,7 +327,41 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -ApprovalNote "<approval-note>"
 ```
 
-## 9. 常用命令
+## 9. Memory 快速使用
+
+Harness Memory 保存通用化、非私有、未来可复用的短经验。它不是项目事实源、不是 Knowledge、不是 Skill，也不保存 raw logs、settings、auth、本机路径、私有业务数据或用户私有偏好。
+
+### 9.1 Agent 应读取的 Skill
+
+当任务涉及记忆候选、Memory store 验证、审核包、用户 approve/reject/delete/defer/revise 决策或 Memory 生命周期收口时，让 Agent 读取：
+
+```text
+harness/skills/reviewed/memory-governance-use/SKILL.md
+```
+
+详细规则继续阅读：
+
+```text
+harness/memory/MemoryIndex.md
+harness/memory/MemoryPolicy.md
+harness/governance/MemoryGovernance.md
+harness/tools/docs/script-index/ScriptIndex.md
+```
+
+### 9.2 常用 Memory 命令
+
+Memory 命令默认只读或 dry-run。写入 candidate、reviewed、archive、删除 candidate 或修订 candidate 时，必须有用户明确决策，并提供 reviewer、approval note、reason 和 `-Apply`。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-memory.ps1 -Root . -Command memory-flow-status
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-memory.ps1 -Root . -Command validate-memory-store
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-memory.ps1 -Root . -Command validate-memory-store -SelfTest
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-memory.ps1 -Root . -Command candidate-review-package -CandidateId <memory-id>
+```
+
+Memory 生命周期写入统一通过 `apply-review-decision` 或对应受控命令完成，不能手工移动文件替代。
+
+## 10. 常用命令
 
 | 命令 | 用途 |
 |---|---|
@@ -338,6 +380,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 | `invoke-rag-knowledge.ps1 -Command validate-llm-wiki-mechanisms` | 验证已吸收的 LLM Wiki 机制，包括 schema context、source gate、granularity、tag、dedup、repair order 和 graph retrieval。 |
 | `invoke-rag-knowledge.ps1 -Command candidate-cleanup-plan` | dry-run 盘点晋升后 candidate full corpus 和轻量审计记录。 |
 | `invoke-rag-knowledge.ps1 -Command pipeline-smoke` | 验证 raw 到 reviewed Knowledge 的端到端链路；需要 reviewer 和 approval note。 |
+| `invoke-memory.ps1 -Command memory-flow-status` | 对照架构 Memory Update Flow 输出节点覆盖、稳定命令和停止规则。 |
+| `invoke-memory.ps1 -Command validate-memory-store` | 验证 Memory candidate、reviewed、archive、frontmatter、review、source evidence、重复和敏感边界。 |
+| `invoke-memory.ps1 -Command validate-memory-store -SelfTest` | 用负向 fixture 验证 Memory store gate 能检出典型坏样本。 |
+| `invoke-memory.ps1 -Command candidate-review-package` | 为候选 Memory 生成用户审核包。 |
 | `clean-sandbox.ps1` | 清理运行态文件；默认 dry-run，`-Apply` 需要明确审批。 |
 | `publish-harness-agent-branch.ps1` | 在 `agent-git` 分支执行受控提交和推送。 |
 
@@ -366,7 +412,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -Goals test
 ```
 
-## 10. 目录结构
+## 11. 目录结构
 
 | 路径 | 说明 | Git 边界 |
 |---|---|---|
@@ -386,7 +432,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 | `user/` | 本地 registry、settings、auth、identity、knowledge 边界；除 README/example 外默认不进入通用 Git。 | local/private files ignored |
 | `var/` | 运行态日志、缓存、临时文件和 RAG index。 | ignored |
 
-## 11. 数据和安全边界
+## 12. 数据和安全边界
 
 不得提交或写入 tracked docs：
 
@@ -403,7 +449,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 
 RAG Index 是可重建检索产物，不是事实源。Workflow Evidence 只产生候选事实，不能直接晋升为 Knowledge、Memory、Skill 或 Project Fact。
 
-## 12. 架构文档
+## 13. 架构文档
 
 长期架构权威：
 
@@ -423,7 +469,7 @@ General Harness 索引：
 harness/HarnessIndex.md
 ```
 
-## 13. 贡献
+## 14. 贡献
 
 当前贡献目标分支：
 
@@ -456,6 +502,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -CommitMessage "<commit-message>"
 ```
 
-## 14. License
+## 15. License
 
 本项目使用 MIT License。详见 [LICENSE](LICENSE)。

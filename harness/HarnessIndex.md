@@ -1,9 +1,9 @@
 ﻿---
 documentName: harness/HarnessIndex.md
-version: v1.2.0-project-lifecycle-evidence-gate
-updatedAt: 2026-07-02 21:20:00.000 +08:00
+version: v1.3.1-h9-4-closeout
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告。
+purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告，并记录 Memory governance gate 当前入口。
 scope:
   - harness-document
 prerequisites:
@@ -14,6 +14,8 @@ relatedDocuments:
   - harness/architecture/PLANS.md
   - harness/reports/ReportsIndex.md
   - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+  - harness/tools/scripts/stable/invoke-memory.ps1
+  - harness/skills/reviewed/memory-governance-use/SKILL.md
 outputTo:
   - harness/HarnessIndex.md
 owner: mixed
@@ -23,8 +25,8 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: report-mechanism-and-project-lifecycle-gate-added
+  reviewedAt: 2026-07-05
+  decision: h9-4-closeout-confirmed
 ---
 # General Harness 索引
 
@@ -44,7 +46,7 @@ review:
 | Project Template | `harness/templates/project-template/README.md` | H4 已统一；旧项目模板路径已清理。 |
 | Tools | `harness/tools/ToolsIndex.md` | H5 已落地；稳定工具、工具文档、manifest、候选、历史、runtime 和 external 边界由 `harness/tools/` 路由。 |
 | RAG Mechanism | `harness/rag/RAGIndex.md` | H6 已落地；机制资产位于 `harness/rag/`，真实或候选知识位于 `user/knowledge/`，运行态位于 `var/rag/`。 |
-| Memory | `harness/memory/MemoryIndex.md` | H8 前置已补齐；Memory policy、candidate、reviewed 和 archive 由该入口路由。 |
+| Memory | `harness/memory/MemoryIndex.md` | H9-4 Memory 已具备 `invoke-memory.ps1` 生命周期命令、reviewed Memory、store gate、self-test 和 governance self-check 集成，已由用户确认收口。 |
 | Skills | `harness/skills/SkillIndex.md` | H8 前置已补齐；Skill policy、candidate、reviewed、archive 和 usage sidecar 由该入口路由。 |
 | Reports | `harness/reports/ReportsIndex.md` | 已落地；定义通用 report 机制、模板、命令面和存放边界，项目具体 report 进入项目实例。 |
 
@@ -150,7 +152,7 @@ harness/skills/usage/skill-usage.json
 | Project lifecycle evidence gate | landed | `test-project-lifecycle-evidence.ps1` 已成为真实项目任务收口前的只读证据门禁。 |
 | RAG / Knowledge | landed | H6 已完成；旧顶层 `rag/` 已移除，机制、用户知识和运行态边界已拆分。 |
 | Verification / Observability | landed | H7 已完成；验证规则位于 `harness/verification/`，观测 schema 位于 `harness/observability/`，Governance 只引用验证和观测结果。 |
-| Memory / Skill | landed | H8 前置已补齐 Memory 和 Skill 机制入口、policy、candidate/reviewed/archive 和 usage sidecar。 |
+| Memory / Skill | landed | Memory 已完成 candidate -> review -> reviewed 的真实闭环，`memory-governance-use` 已晋升 reviewed Skill，Memory store gate 已接入 governance self-check。 |
 | Project Template | landed | `harness/templates/project-template/` 已成为唯一目标项目模板路径；旧兼容 stub 已进入删除流程。 |
 
 ## 4. 维护规则
