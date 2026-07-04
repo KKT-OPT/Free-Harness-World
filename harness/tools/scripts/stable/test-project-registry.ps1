@@ -172,8 +172,8 @@ function Test-ProjectRegistryObject {
 
     [pscustomobject]@{
         status = $status
-        projectCount = $projectEntries.Count
-        errorCount = $errors.Count
+        projectCount = @($projectEntries).Count
+        errorCount = @($errors).Count
         errors = @($errors)
         projects = @($projectsOut)
     }
@@ -191,12 +191,12 @@ function New-TestRegistry {
 
 if ($SelfTest) {
     $validProject = [pscustomobject]@{
-        projectId = "java-demo"
-        root = "projects/java-demo"
+        projectId = "lfms-decision"
+        root = "projects/lfms-decision"
         entry = "AGENTS.md"
         projectIndex = "docs/project/ProjectIndex.md"
         defaultValidationProfile = "real-local-maven"
-        knowledgeScopes = @("project-reviewed:java-demo", "domain:java", "global")
+        knowledgeScopes = @("project-reviewed:lfms-decision", "domain:java", "global")
         sensitiveBoundarySummary = @("credential-material-excluded", "private-settings-excluded", "auth-files-excluded")
     }
 

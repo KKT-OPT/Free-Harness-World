@@ -37,6 +37,9 @@ metadata:
 | `harness/skills/SkillIndex.md` | 确认当前 Skill 状态、候选路径和是否存在可复用或可 patch 的已有 Skill。 |
 | `harness/skills/SkillPolicy.md` | 确认 Skill 创建、更新、候选、审核、晋升和敏感信息边界。 |
 | `harness/governance/SkillGovernance.md` | 确认候选 Skill 的 review gate、用户决策和晋升门禁。 |
+| `harness/verification/HarnessValidationPlan.md` | 确认真实项目任务从入口、执行、验证、报告到治理收口的验证规则。 |
+| `harness/reports/ReportsIndex.md` | 确认 report 格式、项目 report 落点和 report 不是事实源的边界。 |
+| `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` | 在真实项目任务收口前检查 workflow evidence 和项目 report 的证据闭环。 |
 
 ### 2.2 项目级仿真和验证参考
 
@@ -208,6 +211,7 @@ API / Gateway
 - 失败或跳过的验证被如实记录。
 - 可复用流程进入项目级文档或候选 Skill，而不是停留在临时 workflow evidence。
 - 未经用户审核，不把候选经验晋升为 reviewed Skill、Memory、Knowledge 或 Tool Asset。
+- 如果本次排查作为真实项目任务闭环或治理收口证据，应运行 `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1`，检查项目 workflow evidence 和项目 report 覆盖方案、开发、验证、报告、审核和验收。
 
 ## 6. 验收清单
 
@@ -219,6 +223,7 @@ API / Gateway
 - 修复后包含最小合成回归和用户相关仿真复跑，或说明无法覆盖的原因。
 - workflow evidence 记录命令摘要、状态、结果、残余风险和用户验收。
 - 沉淀为候选资产时不包含项目私有事实或敏感数据。
+- 真实项目任务收口时，生命周期证据门禁通过，或明确记录未运行原因。
 
 ## 7. 常见误区
 
@@ -233,10 +238,10 @@ API / Gateway
 | 检查项 | 规则 |
 |---|---|
 | 文档 | `harness/skills/reviewed/simulation-failure-triage/SKILL.md` |
-| 版本 | `v1.0.0-reviewed` |
+| 版本 | `v1.1.0-project-lifecycle-evidence-gate` |
 | 状态 | `active` |
 | 资产状态 | reviewed |
-| 关联文档 | 已在正文列出 Harness 入口、SkillIndex、SkillPolicy、SkillGovernance、SimulationFailureTriage 和 SimulationManual。 |
+| 关联文档 | 已在正文列出 Harness 入口、SkillIndex、SkillPolicy、SkillGovernance、Verification、Reports、生命周期证据门禁、SimulationFailureTriage 和 SimulationManual。 |
 | 事实边界 | 项目事实留在项目文档或 workflow evidence；本 Skill 只保留通用流程。 |
 | 敏感边界 | 不保存原始数据、完整日志、完整请求响应、本机路径、私有配置或凭据。 |
 | 晋升记录 | 用户已在 2026-07-02 审核通过，由 candidate 晋升为 reviewed Skill。 |

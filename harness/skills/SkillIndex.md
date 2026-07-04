@@ -1,7 +1,7 @@
 ---
 documentName: harness/skills/SkillIndex.md
-version: v1.3.1-reviewed-skill-git-managed
-updatedAt: 2026-07-02 18:16:00.000 +08:00
+version: v1.4.0-rag-knowledge-use-reviewed
+updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 作为 Harness Skill 入口，路由 Skill policy、candidate、reviewed、archive、usage sidecar 和现有 skill 包。
 scope:
@@ -17,7 +17,7 @@ relatedDocuments:
   - harness/skills/SkillPolicy.md
   - harness/governance/SkillGovernance.md
   - harness/templates/skill/SkillTemplate.md
-  - harness/skills/candidate/rag-knowledge-use/SKILL.md
+  - harness/skills/reviewed/rag-knowledge-use/SKILL.md
   - harness/skills/reviewed/simulation-failure-triage/SKILL.md
 outputTo:
   - harness/skills/SkillIndex.md
@@ -28,8 +28,8 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: reviewed-skill-git-management-rule-added
+  reviewedAt: 2026-07-04
+  decision: rag-knowledge-use-promoted-to-reviewed
 ---
 # Skill 索引
 
@@ -51,7 +51,7 @@ review:
 | Skill | 当前路径 | 说明 |
 |---|---|---|
 | RAG Structured Ingestion | `harness/skills/rag-structured-ingestion/SKILL.md` | raw-to-candidate knowledge workflow。 |
-| RAG Knowledge Use Candidate | `harness/skills/candidate/rag-knowledge-use/SKILL.md` | reviewed Knowledge 查询、Obsidian 阅读入口和 reviewed gap candidate plan workflow。 |
+| RAG Knowledge Use | `harness/skills/reviewed/rag-knowledge-use/SKILL.md` | reviewed Knowledge 查询、Obsidian 阅读入口、reviewed gap candidate plan、重复治理、post-promotion cleanup 和一键验证流程；已完成用户指定 review 并晋升为 reviewed Skill。 |
 | Simulation Failure Triage | `harness/skills/reviewed/simulation-failure-triage/SKILL.md` | 用户指定触发并经完整 candidate、revise、approve、promotion 流程审核通过的仿真失败排查流程；正文包含笔记属性和关联文档读取路径。 |
 | Obsidian Skills | `harness/skills/obsidian-skills/` | Obsidian Markdown、Bases、Canvas、CLI 等辅助技能包。 |
 

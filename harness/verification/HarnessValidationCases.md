@@ -1,7 +1,7 @@
 ﻿---
 documentName: harness/verification/HarnessValidationCases.md
-version: v1.0.0-h7-verification-boundary
-updatedAt: 2026-06-23 06:51:14.830 +08:00
+version: v1.1.0-project-lifecycle-evidence-gate
+updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
 purpose: 定义 Harness 生命周期验证用例和通过标准，覆盖入口发现、任务接入、项目路由、稳定工具、观测、回归和治理收口。
 scope:
@@ -16,6 +16,7 @@ relatedDocuments:
   - harness/verification/HarnessValidationPlan.md
   - harness/verification/ReadinessCheckPolicy.md
   - harness/verification/RegressionPolicy.md
+  - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
   - harness/observability/TraceSchema.md
   - harness/observability/FailureAttribution.md
   - harness/governance/ArtifactLifecycle.md
@@ -30,9 +31,9 @@ dependsOn:
   - harness/HarnessIndex.md
   - harness/verification/VerificationIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: h7-verification-observability-aligned
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-3-project-lifecycle-evidence-gate-added
 ---
 # Harness 验证用例
 
@@ -158,6 +159,23 @@ Forbidden:
 - promote workflow evidence directly into reviewed Knowledge, Memory, Skill or Project Fact;
 - treat a redacted report as architecture or project fact until absorbed into the correct durable asset;
 - leave candidate target or approval requirement unspecified.
+
+## Case 8.5: Project Lifecycle Evidence Gate
+
+Expected:
+
+- runs `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1 -SelfTest` as part of Harness governance self-check;
+- for a real project closeout, runs `test-project-lifecycle-evidence.ps1` with the target project workflow evidence;
+- passes `-RequireReport` when a project report is part of the acceptance or governance closeout;
+- passes `-RequireUserAcceptance` when the task claims user acceptance;
+- verifies the report is under `projects/<project-id>/docs/project/reports/`, not under `harness/reports/`;
+- verifies workflow evidence covers Task Brief, project entry, design or execution plan, development evidence, validation evidence, user acceptance and governance candidates.
+
+Forbidden:
+
+- rely only on Mermaid or prose governance diagrams for real project lifecycle closure;
+- store concrete project reports under generic `harness/reports/`;
+- mark a real project task complete when lifecycle evidence is missing validation, report, review or acceptance records.
 
 ## Case 9: GitHub Agent Branch Restore
 

@@ -1,7 +1,7 @@
 ﻿---
 documentName: harness/templates/knowledge/CandidateKnowledgeTemplate.md
-version: v1.0.0-h6-rag-boundary
-updatedAt: 2026-06-22 23:41:15.773 +08:00
+version: v1.1.0-alias-tag-governance
+updatedAt: 2026-07-03 22:30:00.000 +08:00
 status: active
 purpose: 提供 candidate knowledge 记录模板，确保候选知识不会自动晋升为 reviewed knowledge。
 scope:
@@ -13,6 +13,7 @@ prerequisites:
 relatedDocuments:
   - harness/rag/RAGIndex.md
   - user/knowledge/README.md
+  - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
   - harness/templates/knowledge/ReviewedKnowledgeTemplate.md
 outputTo:
   - harness/templates/knowledge/CandidateKnowledgeTemplate.md
@@ -24,7 +25,7 @@ dependsOn:
 review:
   reviewedBy: agent
   reviewedAt: 2026-06-22
-  decision: h6-complete
+  decision: p5-21-5-alias-and-tag-fields-added
 ---
 # Candidate Knowledge 模板
 
@@ -41,6 +42,9 @@ reviewStatus: candidate
 submittedBy: human | agent | unknown
 usageRights: unknown | permitted | restricted
 sensitiveRisk: none | low | medium | high
+aliases: []
+tags: []
+tagVocabularyRef: <domain-schema-or-null>
 ```
 
 ## Candidate Statement
@@ -58,6 +62,10 @@ sensitiveRisk: none | low | medium | high
 ## Review Notes
 
 记录晋升前必须检查的事项。
+
+## Alias And Tag Notes
+
+记录 aliases、同义词、跨语言别名和受控标签检查结果。Candidate 使用的 tags 必须来自目标 domain schema 或 review package 中的受控 tag vocabulary。
 
 ## Promotion Decision
 

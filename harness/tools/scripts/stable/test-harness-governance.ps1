@@ -180,6 +180,31 @@ function Invoke-ProjectRegistryCheck {
     }
 }
 
+function Invoke-ProjectLifecycleEvidenceSelfTest {
+    param(
+        [string]$RootPath,
+        [System.Collections.ArrayList]$Findings
+    )
+
+    $script = Join-Path $RootPath "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1"
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        Add-Finding -List $Findings -Severity "error" -Code "projectLifecycleValidatorMissing" -Path "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1" -Message "Project lifecycle evidence validator is missing." -RepairSuggestion "Restore test-project-lifecycle-evidence.ps1 or update Harness lifecycle validation docs."
+        return $null
+    }
+
+    try {
+        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Root $RootPath -SelfTest
+        $result = $raw | ConvertFrom-Json
+        if ($result.status -ne "passed") {
+            Add-Finding -List $Findings -Severity "error" -Code "projectLifecycleValidatorSelfTestFailed" -Path "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1" -Message "Project lifecycle evidence validator self-test failed." -RepairSuggestion "Run test-project-lifecycle-evidence.ps1 -SelfTest and repair listed findings."
+        }
+        return $result
+    } catch {
+        Add-Finding -List $Findings -Severity "error" -Code "projectLifecycleValidatorSelfTestError" -Path "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1" -Message "Project lifecycle evidence validator self-test errored: $($_.Exception.Message)" -RepairSuggestion "Fix the lifecycle validator script."
+        return $null
+    }
+}
+
 $rootPath = (Resolve-Path -LiteralPath $Root).Path
 $findings = New-Object System.Collections.ArrayList
 
@@ -203,6 +228,7 @@ $requiredRoutes = @(
     "harness/governance/CleanupPolicy.md",
     "harness/governance/ScheduledGovernance.md",
     "harness/governance/ReportArchivePolicy.md",
+    "harness/reports/ReportsIndex.md",
     "harness/governance/security/LocalIdentityAndGitBoundaryPolicy.md",
     "harness/memory/MemoryIndex.md",
     "harness/memory/MemoryPolicy.md",
@@ -229,7 +255,8 @@ $requiredRoutes = @(
     "user/knowledge/README.md",
     "user/registry/knowledge.local.example.json",
     "user/registry/projects.local.json",
-    "harness/tools/scripts/stable/test-project-registry.ps1"
+    "harness/tools/scripts/stable/test-project-registry.ps1",
+    "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1"
 )
 
 foreach ($route in $requiredRoutes) {
@@ -345,6 +372,7 @@ foreach ($gitDir in $projectGitDirs) {
 }
 
 $registryResult = Invoke-ProjectRegistryCheck -RootPath $rootPath -RegistryPath $Registry -Findings $findings
+$projectLifecycleSelfTestResult = Invoke-ProjectLifecycleEvidenceSelfTest -RootPath $rootPath -Findings $findings
 
 $severityCounts = [ordered]@{
     error = @($findings | Where-Object { $_.severity -eq "error" }).Count
@@ -368,6 +396,7 @@ $output = [pscustomobject]@{
         findingCount = $findings.Count
         severityCounts = $severityCounts
         registryStatus = if ($registryResult) { $registryResult.status } else { "not-run" }
+        projectLifecycleEvidenceStatus = if ($projectLifecycleSelfTestResult) { $projectLifecycleSelfTestResult.status } else { "not-run" }
     }
     checks = @(
         "required-routes",
@@ -379,7 +408,8 @@ $output = [pscustomobject]@{
         "build-output",
         "index-plans-route",
         "repository-boundary",
-        "project-registry"
+        "project-registry",
+        "project-lifecycle-evidence-self-test"
     )
     findings = @($findings)
 }

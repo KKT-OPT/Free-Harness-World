@@ -1,7 +1,7 @@
 ﻿---
 documentName: harness/templates/project-template/README.md
-version: v1.0.0-pre-h8-clean-template-route
-updatedAt: 2026-06-23 08:10:00.000 +08:00
+version: v1.0.1-report-mechanism-route
+updatedAt: 2026-07-02 20:06:00.000 +08:00
 status: active
 purpose: 作为唯一目标项目模板入口，说明项目模板包结构、实例化映射和边界。
 scope:
@@ -16,6 +16,7 @@ relatedDocuments:
   - harness/templates/project-template/AGENTS.md
   - harness/templates/project-template/docs/project/ProjectIndex.md
   - harness/templates/project-template/model/StandardProjectPackage.md
+  - harness/reports/ReportsIndex.md
 outputTo:
   - harness/templates/project-template/README.md
 owner: mixed
@@ -25,9 +26,9 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/architecture/PLANS.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-18
-  decision: pre-h8-compatibility-cleanup
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-3-report-mechanism-route
 ---
 # Project Template（项目模板）
 
@@ -95,6 +96,8 @@ harness/templates/project-template/
 | decision | `docs/project/decision/ADR-0001.md` | `docs/project/decision/ADR-0001.md` |
 | model | `docs/project/model/README.md` | `docs/project/model/README.md` |
 | reports | `docs/project/reports/README.md` | `docs/project/reports/README.md` |
+
+`reports` 分区的通用格式、规则、命令面和存放边界由 `harness/reports/ReportsIndex.md` 路由；具体项目报告实例化后应写入 `projects/<project-id>/docs/project/reports/`。
 
 ## 实例化规则
 

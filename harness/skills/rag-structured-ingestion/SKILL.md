@@ -2,8 +2,8 @@
 name: rag-structured-ingestion
 description: Convert user-provided raw or unstructured material into Harness RAG runtime artifacts and local-only candidate knowledge, and after explicit approval promote candidate evidence into reviewed Knowledge. Use when the user asks to ingest raw files, convert PDFs/Office/TXT/Markdown into candidate wiki pages, run raw-to-candidate health/lint/graph/query/enrichment-plan/review-package/promotion-plan/promote-reviewed/stale-plan checks, or prepare Obsidian-reviewable candidate notes before reviewed-knowledge approval.
 documentName: harness/skills/rag-structured-ingestion/SKILL.md
-version: v1.4.0-phase5-reviewed-use-handoff
-updatedAt: 2026-07-01 09:30:00.000 +08:00
+version: v1.6.1-reviewed-knowledge-use-handoff
+updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 定义 raw-to-candidate RAG Skill 的执行边界、稳定命令和输出路径。
 scope:
@@ -18,7 +18,8 @@ relatedDocuments:
   - harness/rag/RAGIndex.md
   - user/knowledge/README.md
   - harness/governance/KnowledgePromotionPolicy.md
-  - harness/skills/candidate/rag-knowledge-use/SKILL.md
+  - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
+  - harness/skills/reviewed/rag-knowledge-use/SKILL.md
 outputTo:
   - harness/skills/rag-structured-ingestion/SKILL.md
 owner: mixed
@@ -28,8 +29,8 @@ dependsOn:
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-01
-  decision: phase5-reviewed-knowledge-use-handoff
+  reviewedAt: 2026-07-04
+  decision: rag-knowledge-use-reviewed-handoff-updated
 ---
 # RAG 结构化摄取 Skill
 
@@ -86,22 +87,24 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 
 1. 读取 Harness entry、RAG policy 和本 Skill，把 raw files 视为 unreviewed source material。
 2. 使用 `invoke-rag-candidate.ps1 -Command ingest` 运行摄取。
-3. 读取 status JSON path 和 candidate wiki path。
+3. 读取 status JSON path、metadata manifest 和 candidate wiki path；manifest 应记录 source gate、source fingerprint、domain schema、extraction granularity、entity/concept cap、batch strategy 和 tag vocabulary。
 4. 需要可审查候选语料时，先运行 `enrichment-plan`，再按 `references/candidate-enrichment.md` 补全 candidate pages。
 5. agent 编辑 candidate pages 后，重新运行 `health`、`lint` 和 `build-graph`。
 6. 用户提问时，`query` 只用于找页面；最终回答必须阅读页面并引用来源。
 7. 候选页面通过验证后，运行 `review-package` 生成审核包。
 8. 需要进入晋升讨论时，运行 `promotion-plan` 生成计划；没有用户明确批准时不得写入 reviewed Knowledge。
 9. 用户明确表示审核通过后，运行 `promote-reviewed` 写入 reviewed Knowledge，并记录 reviewer、approval note、reviewAfter 和 promotion result。
-10. 用户需要查询、阅读或用 Obsidian 查看 reviewed Knowledge 时，转入 `harness/skills/candidate/rag-knowledge-use/SKILL.md` 的 reviewed Knowledge use workflow。
+10. 用户需要查询、阅读或用 Obsidian 查看 reviewed Knowledge 时，转入 `harness/skills/reviewed/rag-knowledge-use/SKILL.md` 的 reviewed Knowledge use workflow。
 11. 更新检查使用 `stale-plan`，先报告 changed / missing sources，再做 refresh 或 archive。
 12. 收尾时说明 candidate paths、reviewed target、validation state、known gaps 和是否写入 reviewed knowledge。
+
+执行 raw-to-candidate 前应先判断 source gate：空文件、frontmatter-only、不兼容类型和重复 body hash 不应继续进入 LLM 提取；同名 source 应使用 path fingerprint 和 content hash 防止覆盖或混淆。Candidate tags 必须来自目标 domain schema 或 review package 中的受控 tag vocabulary。
 
 Human-facing reports，中文解释是面向人类审核的报告，例如 `enrichment-plan.md`、`review-package.md` 和 `promotion-plan.md`，必须使用中文作为主说明语言；允许保留 command、path、status code、frontmatter key 和专业术语英文。
 
 ## 5. 输出
 
-- `user/knowledge/raw/<run-id>/`，仅在显式 `-CopyRaw` 时写入；
+- `user/knowledge/raw/<domain>/`，仅在显式 `-CopyRaw -RawDomain <domain>` 时写入；未确定 domain 的临时 run-id copy 不得作为最终 raw 布局；
 - `var/rag/<run-id>/extracted/metadata-manifest.json`；
 - `var/rag/<run-id>/extracted/chunks.jsonl`；
 - `var/rag/<run-id>/extracted/extraction-report.md`；
@@ -112,7 +115,7 @@ Human-facing reports，中文解释是面向人类审核的报告，例如 `enri
 - `var/rag/<run-id>/evals/enrichment-plan.md`，仅在显式运行 `enrichment-plan` 时写入；
 - `var/rag/<run-id>/evals/review-package.md`，仅在显式运行 `review-package` 时写入；
 - `var/rag/<run-id>/evals/promotion-plan.md`，仅在显式运行 `promotion-plan` 时写入；
-- `user/knowledge/reviewed/<run-id>.md`，仅在用户明确批准后运行 `promote-reviewed` 时写入；
+- `user/knowledge/reviewed/<domain>/<semantic-page>.md`，仅在用户明确批准后运行 `promote-reviewed` 时写入；正式 reviewed page 不使用 smoke、pipeline 或 run id 命名；
 - `var/rag/<run-id>/evals/promotion-result.md`，仅在显式运行 `promote-reviewed` 时写入；
 - `var/rag/<run-id>/graph`；
 - `var/logs/<run-id>.json`。

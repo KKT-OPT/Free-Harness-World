@@ -174,6 +174,7 @@ $requiredFiles = @(
     "harness/bootstrap/BootstrapIndex.md",
     "harness/tools/scripts/stable/test-harness-governance.ps1",
     "harness/tools/scripts/stable/test-project-registry.ps1",
+    "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1",
     "user/registry/projects.local.example.json",
     "user/registry/knowledge.local.example.json",
     "projects/README.md",

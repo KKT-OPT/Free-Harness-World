@@ -1,7 +1,7 @@
 ﻿---
 documentName: harness/verification/HarnessValidationPlan.md
-version: v1.0.0-h7-verification-boundary
-updatedAt: 2026-06-23 06:51:14.830 +08:00
+version: v1.1.0-project-lifecycle-evidence-gate
+updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
 purpose: 定义 Harness 生命周期验证计划，覆盖入口、任务接入、上下文、项目路由、工具、观测、验证、修复闭环和治理收口。
 scope:
@@ -16,6 +16,7 @@ relatedDocuments:
   - harness/verification/ReadinessCheckPolicy.md
   - harness/verification/RegressionPolicy.md
   - harness/verification/HarnessValidationCases.md
+  - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
   - harness/observability/TraceSchema.md
   - harness/observability/FailureAttribution.md
   - harness/governance/ArtifactLifecycle.md
@@ -30,9 +31,9 @@ dependsOn:
   - harness/HarnessIndex.md
   - harness/verification/VerificationIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: h7-verification-observability-aligned
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-3-project-lifecycle-evidence-gate-added
 ---
 # Harness 验证计划
 
@@ -52,6 +53,7 @@ review:
 10. Do not auto-promote candidates.
 11. Do not expose credentials, settings, auth files or raw logs.
 12. Classify governance candidates with disposition, target and approval requirement.
+13. For real project lifecycle closeout, run `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` against the project workflow evidence and project report when a report is required.
 
 ## 2. 验证范围
 
@@ -68,6 +70,7 @@ review:
 | Repair Loop | Are failed, partial or repaired results attributed and regressed before closure? |
 | Reports | Is the result report-first and redacted? |
 | Governance | Are candidates listed without auto-promotion? |
+| Lifecycle Evidence Gate | Can a stable script verify task brief, project entry, design, development, validation, report, review and acceptance evidence? |
 | Closeout | Are candidate dispositions, approval requirements and deferred backlog clear? |
 
 ## 3. 输出位置

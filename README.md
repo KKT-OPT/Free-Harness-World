@@ -1,13 +1,14 @@
 ---
 documentName: README.md
-version: v1.2.0-h8-product-manual
-updatedAt: 2026-06-23 14:15:56.000 +08:00
+version: v1.3.0-knowledge-rag-product-manual
+updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
-purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、常用命令、边界、贡献和 License。
+purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、Knowledge/RAG 使用、常用命令、边界、贡献和 License。
 scope:
   - user-manual
   - installation-guide
   - quick-start
+  - knowledge-rag-user-guide
   - command-reference
   - contribution-guide
 prerequisites:
@@ -20,6 +21,12 @@ relatedDocuments:
   - harness/architecture/PLANS.md
   - harness/bootstrap/BootstrapIndex.md
   - harness/tools/ToolsIndex.md
+  - harness/rag/RAGIndex.md
+  - harness/governance/KnowledgePromotionPolicy.md
+  - harness/tools/docs/script-index/ScriptIndex.md
+  - harness/skills/reviewed/rag-knowledge-use/SKILL.md
+  - harness/skills/rag-structured-ingestion/SKILL.md
+  - user/knowledge/README.md
 outputTo:
   - README.md
 owner: mixed
@@ -29,16 +36,18 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/architecture/PLANS.md
   - harness/bootstrap/BootstrapIndex.md
+  - harness/rag/RAGIndex.md
+  - harness/governance/KnowledgePromotionPolicy.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: h8-product-manual-refresh
+  reviewedAt: 2026-07-04
+  decision: h9-4-knowledge-rag-product-manual-refresh
 ---
 # Free Harness World
 
-Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。它提供统一的入口规则、项目路由、工具资产、验证、自检、治理、知识边界、Memory/Skill 机制和项目模板，用于把 Codex、Hermes 等执行主体接入到可审查、可迁移、可持续演进的本地工作区。
+Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。它提供统一的入口规则、项目路由、工具资产、验证、自检、治理、知识库与 RAG 机制、Memory/Skill 机制和项目模板，用于把 Codex、Hermes 等执行主体接入到可审查、可迁移、可持续演进的本地工作区。
 
-当前仓库还不是正式产品化 release。H8 已完成 bootstrap、install、uninstall 和 `agent-git` 分支验证；正式发布需要等待 H9 真实项目验证和后续 release gate。`main` 分支由用户维护，agent 只在 `agent-git` 分支提交和推送。
+当前仓库还不是正式产品化 release。H8 已完成 bootstrap、install、uninstall 和 `agent-git` 分支验证；H9 正在用真实项目验证 Skill、Governance、Knowledge/RAG 和 Memory 闭环。正式发布需要等待 H9 完整验收和后续 release gate。`main` 分支由用户维护，agent 只在 `agent-git` 分支提交和推送。
 
 ## 1. 适用对象
 
@@ -52,21 +61,23 @@ Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。�
 ## 2. 当前状态
 
 ```text
-stage = H8 complete
-nextStage = H9 real project validation
+stage = H9 real project validation
+currentLoop = H9-4 Knowledge and Memory validation
 defaultAgentBranch = agent-git
 humanReleaseBranch = main
 license = MIT
 ```
 
-H8 已验证：
+当前已验证：
 
 - 从 GitHub clone `agent-git`；
 - 运行 `bootstrap-harness-workspace.ps1 -Mode status`；
 - 运行 `bootstrap-harness-workspace.ps1 -Mode install`；
 - 运行 governance self-check；
 - 运行 `bootstrap-harness-workspace.ps1 -Mode uninstall`；
-- 确认卸载不删除 Git clone、tracked 文档或项目挂载点。
+- 确认卸载不删除 Git clone、tracked 文档或项目挂载点；
+- 用真实项目验证项目 workflow evidence、Skill、Governance 和 Knowledge/RAG 机制；
+- Knowledge/RAG 已具备 raw -> candidate -> reviewed -> cleanup -> validation -> query 的稳定命令面和一键门禁；H9-4 整体仍需 Memory 闭环验收后才能收口。
 
 ## 3. 系统要求
 
@@ -220,7 +231,95 @@ user/registry/projects.local.json
 powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-harness-governance.ps1
 ```
 
-## 8. 常用命令
+## 8. Knowledge / RAG 快速使用
+
+Harness 的知识库目标是：用户提供原始材料并审核候选结果，Agent 负责把原始材料转换为结构化候选知识、维护双向链接、执行验证和清理。真实知识默认存放在 `user/knowledge/` 或用户指定的 private knowledge repo，不进入通用 Harness Git。
+
+### 8.1 知识库目录
+
+| 路径 | 用途 | 说明 |
+|---|---|---|
+| `user/knowledge/raw/<domain>/` | 原始材料 | 用户提供 PDF、Markdown 或其他来源材料；按领域分组。 |
+| `user/knowledge/raw/<domain>/normalized/` | 原始材料转换后的 Markdown | 长期可读派生版本，供人类和 Agent 理解原材料结构；不是 reviewed 结论。 |
+| `user/knowledge/candidate/` | 候选知识 | raw-to-candidate 或 gap plan 生成的候选材料，默认不进入 Obsidian 正式图谱。 |
+| `user/knowledge/reviewed/<domain>/` | 已审核知识 | 用户审核通过后的 authoritative reviewed Knowledge。 |
+| `user/knowledge/Home.md` | Obsidian 单入口 | 人类阅读和审核入口。 |
+| `var/rag/` | 运行态 | extracted artifacts、graph、query report、cache 和验证报告，可清理、可重建。 |
+
+### 8.2 Agent 应读取的 Skill
+
+当任务是“使用、查询、治理或验证已审核知识库”时，让 Agent 读取：
+
+```text
+harness/skills/reviewed/rag-knowledge-use/SKILL.md
+```
+
+当任务是“从 raw source 生成 candidate，并准备晋升为 reviewed Knowledge”时，让 Agent 同时读取：
+
+```text
+harness/skills/rag-structured-ingestion/SKILL.md
+harness/skills/reviewed/rag-knowledge-use/SKILL.md
+```
+
+详细规则不要复制到 README；按需继续阅读：
+
+```text
+harness/rag/RAGIndex.md
+harness/governance/KnowledgePromotionPolicy.md
+harness/rag/policies/
+harness/tools/docs/script-index/ScriptIndex.md
+user/knowledge/README.md
+```
+
+### 8.3 从 raw 快速生成 reviewed Knowledge
+
+完整验证链路可使用 `pipeline-smoke`，它会按稳定命令完成 raw -> candidate -> approved promotion -> reviewed vault -> query 的端到端检查。写入 reviewed Knowledge 需要 reviewer 和 approval note；没有用户批准时，只能生成 candidate、review package 或 promotion plan。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-knowledge.ps1 `
+  -Root . `
+  -Command pipeline-smoke `
+  -InputPath .\user\knowledge\raw\<domain>\<source-file> `
+  -Domain <domain> `
+  -Reviewer <reviewer> `
+  -ApprovalNote "<approval-note>" `
+  -Question "<acceptance-query>" `
+  -CopyRaw
+```
+
+如果只想生成候选材料，不晋升 reviewed Knowledge，使用 candidate workflow：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-candidate.ps1 `
+  -Root . `
+  -Command ingest `
+  -InputPath .\user\knowledge\raw\<domain>\<source-file> `
+  -RawDomain <domain> `
+  -CopyRaw
+```
+
+### 8.4 查询、验证和清理
+
+常用 reviewed Knowledge 命令：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-knowledge.ps1 -Root . -Command query-reviewed -Question "<question>"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-knowledge.ps1 -Root . -Command validate-knowledge-vault
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-knowledge.ps1 -Root . -Command validate-llm-wiki-mechanisms
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-knowledge.ps1 -Root . -Command candidate-cleanup-plan
+```
+
+如 dry-run 显示晋升后的 candidate full corpus 需要移出 Obsidian 图谱，在用户批准后执行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\invoke-rag-knowledge.ps1 `
+  -Root . `
+  -Command candidate-cleanup-apply `
+  -Reviewer <reviewer> `
+  -ApprovalNote "<approval-note>"
+```
+
+## 9. 常用命令
 
 | 命令 | 用途 |
 |---|---|
@@ -234,6 +333,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 | `invoke-maven-project.ps1` | 运行 Maven goals 并输出状态摘要和脱敏日志路径。 |
 | `invoke-java-main.ps1` | 编译并运行 Java main class。 |
 | `invoke-rag-candidate.ps1` | 运行 RAG candidate 流程，不直接晋升 reviewed knowledge。 |
+| `invoke-rag-knowledge.ps1 -Command query-reviewed` | 查询已审核 reviewed Knowledge，供 Agent 读取命中页后回答。 |
+| `invoke-rag-knowledge.ps1 -Command validate-knowledge-vault` | 一键验证本地知识库 registry、Home、domain schema、source trace、graph、duplicate、archive 和 Git 边界。 |
+| `invoke-rag-knowledge.ps1 -Command validate-llm-wiki-mechanisms` | 验证已吸收的 LLM Wiki 机制，包括 schema context、source gate、granularity、tag、dedup、repair order 和 graph retrieval。 |
+| `invoke-rag-knowledge.ps1 -Command candidate-cleanup-plan` | dry-run 盘点晋升后 candidate full corpus 和轻量审计记录。 |
+| `invoke-rag-knowledge.ps1 -Command pipeline-smoke` | 验证 raw 到 reviewed Knowledge 的端到端链路；需要 reviewer 和 approval note。 |
 | `clean-sandbox.ps1` | 清理运行态文件；默认 dry-run，`-Apply` 需要明确审批。 |
 | `publish-harness-agent-branch.ps1` | 在 `agent-git` 分支执行受控提交和推送。 |
 
@@ -262,7 +366,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -Goals test
 ```
 
-## 9. 目录结构
+## 10. 目录结构
 
 | 路径 | 说明 | Git 边界 |
 |---|---|---|
@@ -279,10 +383,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 | `harness/memory/` | Memory policy、candidate、reviewed 和 archive 边界。 | tracked |
 | `harness/skills/` | Skill policy、candidate、reviewed、archive 和 usage sidecar。 | tracked |
 | `projects/` | 项目实例挂载点。 | only `projects/README.md` tracked |
-| `user/` | 本地 registry、settings、auth、identity、knowledge 边界。 | local/private files ignored |
+| `user/` | 本地 registry、settings、auth、identity、knowledge 边界；除 README/example 外默认不进入通用 Git。 | local/private files ignored |
 | `var/` | 运行态日志、缓存、临时文件和 RAG index。 | ignored |
 
-## 10. 数据和安全边界
+## 11. 数据和安全边界
 
 不得提交或写入 tracked docs：
 
@@ -299,7 +403,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 
 RAG Index 是可重建检索产物，不是事实源。Workflow Evidence 只产生候选事实，不能直接晋升为 Knowledge、Memory、Skill 或 Project Fact。
 
-## 11. 架构文档
+## 12. 架构文档
 
 长期架构权威：
 
@@ -319,7 +423,7 @@ General Harness 索引：
 harness/HarnessIndex.md
 ```
 
-## 12. 贡献
+## 13. 贡献
 
 当前贡献目标分支：
 
@@ -352,6 +456,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -CommitMessage "<commit-message>"
 ```
 
-## 13. License
+## 14. License
 
 本项目使用 MIT License。详见 [LICENSE](LICENSE)。

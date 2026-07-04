@@ -1,7 +1,7 @@
 ---
 documentName: harness/verification/VerificationIndex.md
-version: v1.0.0-h7-verification-boundary
-updatedAt: 2026-06-23 06:51:14.830 +08:00
+version: v1.1.0-project-lifecycle-evidence-gate
+updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
 purpose: 作为 Harness Verification 的目标入口，路由 readiness、validation、regression 和 Harness validation cases。
 scope:
@@ -20,6 +20,7 @@ relatedDocuments:
   - harness/verification/RegressionPolicy.md
   - harness/verification/HarnessValidationPlan.md
   - harness/verification/HarnessValidationCases.md
+  - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
   - harness/observability/ObservabilityIndex.md
   - harness/governance/GovernanceIndex.md
 outputTo:
@@ -32,9 +33,9 @@ dependsOn:
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: h7-verification-observability-aligned
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-3-project-lifecycle-evidence-gate-added
 ---
 # Verification 索引
 
@@ -50,6 +51,7 @@ Verification 不直接晋升 Knowledge、Memory、Skill、Project Fact、Tool �
 | Regression Policy | `harness/verification/RegressionPolicy.md` | 修复后回归、复验和风险关闭规则。 |
 | Harness Validation Plan | `harness/verification/HarnessValidationPlan.md` | Harness 生命周期验证计划。 |
 | Harness Validation Cases | `harness/verification/HarnessValidationCases.md` | Harness 验证用例和通过标准。 |
+| Project Lifecycle Evidence Gate | `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` | 真实项目任务方案、开发、验证、报告、审核和验收证据闭环的只读检查脚本。 |
 
 ## 2. 边界关系
 
@@ -77,3 +79,4 @@ projects/<project-id>/docs/project/workflow/
 2. 验证规则路径以 `harness/verification/` 为准。
 3. `harness/governance/` 可以引用验证结果，但不保存验证规则正文。
 4. 验证失败、部分通过或修复后通过时，应同时记录 `harness/observability/FailureAttribution.md` 和 `harness/verification/RegressionPolicy.md` 所需字段。
+5. 真实项目任务收口前，应使用 `test-project-lifecycle-evidence.ps1` 检查项目 workflow evidence 和项目 report 的生命周期证据闭环。

@@ -1,7 +1,7 @@
 ---
 documentName: harness/templates/workflow/WorkflowTemplate.md
-version: v0.2.0-p11.5
-updatedAt: 2026-06-17 18:30:00.000 +08:00
+version: v0.3.0-project-lifecycle-evidence-gate
+updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
 purpose: 维护 Workflow Template 的长期文档说明、入口边界或目标骨架，供 Harness 路由、治理或后续阶段重构使用。
 scope:
@@ -14,6 +14,7 @@ relatedDocuments:
   - INDEX.md
   - harness/HarnessIndex.md
   - harness/architecture/PLANS.md
+  - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
 outputTo:
   - harness/templates/workflow/WorkflowTemplate.md
 owner: mixed
@@ -24,9 +25,9 @@ dependsOn:
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-17
-  decision: frontmatter-aligned
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-3-project-lifecycle-evidence-gate-added
 ---
 # Workflow Template（工作流证据模板）
 
@@ -233,6 +234,25 @@ sensitiveHandling:
 | Tool Asset |  | review / reject / defer |
 | Governance |  | review / reject / defer |
 
-## 15. Legacy Or Prior Asset Judgment
+## 15. Lifecycle Evidence Gate
+
+Before claiming a real project task is closed, run the stable lifecycle evidence gate when applicable:
+
+```text
+harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+```
+
+Record the summary:
+
+```yaml
+lifecycleEvidenceGate:
+  command:
+  status:
+  workflowEvidence:
+  projectReport:
+  findings:
+```
+
+## 16. Legacy Or Prior Asset Judgment
 
 Record whether previous templates, policies, reports, scripts, or old Harness assets should be rewritten, migrated, archived, deferred, or excluded for this task.

@@ -1,7 +1,7 @@
 ﻿---
 documentName: harness/skills/rag-structured-ingestion/README.md
-version: v1.3.0-promote-reviewed
-updatedAt: 2026-06-30 21:00:00.000 +08:00
+version: v1.4.0-source-centered-raw-boundary
+updatedAt: 2026-07-03 16:45:00.000 +08:00
 status: active
 purpose: 说明 RAG structured ingestion Skill 的定位、使用方式和 H6 后输出边界。
 scope:
@@ -25,8 +25,8 @@ dependsOn:
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-30
-  decision: phase-4-promote-reviewed
+  reviewedAt: 2026-07-03
+  decision: source-centered-raw-boundary-added
 ---
 # RAG 结构化摄取使用手册
 
@@ -135,7 +135,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
   -Manifest var\rag\<run-id>\extracted\metadata-manifest.json `
   -Wiki user\knowledge\candidate\<run-id>\wiki `
   -Scope user-private `
-  -Target user\knowledge\reviewed\<run-id>.md `
+  -Target user\knowledge\reviewed\<domain>\<semantic-page>.md `
   -Report var\rag\<run-id>\evals\promotion-plan.md `
   -RunId <run-id>
 ```
@@ -149,7 +149,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
   -Manifest var\rag\<run-id>\extracted\metadata-manifest.json `
   -Wiki user\knowledge\candidate\<run-id>\wiki `
   -Scope user-private `
-  -Target user\knowledge\reviewed\<run-id>.md `
+  -Target user\knowledge\reviewed\<domain>\<semantic-page>.md `
   -Reviewer <reviewer> `
   -ApprovalNote "<approval-note>" `
   -ReviewAfter source-updated-or-2026-12-31 `
@@ -161,7 +161,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 
 | 输出 | 说明 |
 |---|---|
-| `user/knowledge/raw/<run-id>/` | `-CopyRaw` 时保存 raw source，local-only。 |
+| `user/knowledge/raw/<domain>/` | `-CopyRaw -RawDomain <domain>` 时保存 raw source，local-only；未确定 domain 的临时 run-id copy 不作为最终 raw 布局。 |
 | `var/rag/<run-id>/extracted/metadata-manifest.json` | Metadata Manifest。 |
 | `var/rag/<run-id>/extracted/chunks.jsonl` | Rebuildable chunks。 |
 | `var/rag/<run-id>/extracted/extraction-report.md` | Extraction Report。 |
@@ -172,7 +172,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 | `var/rag/<run-id>/evals/enrichment-plan.md` | Candidate Enrichment Plan，显式运行 `enrichment-plan` 时生成。 |
 | `var/rag/<run-id>/evals/review-package.md` | Human Review Package，显式运行 `review-package` 时生成。 |
 | `var/rag/<run-id>/evals/promotion-plan.md` | Promotion Plan，显式运行 `promotion-plan` 时生成，不代表已批准。 |
-| `user/knowledge/reviewed/<run-id>.md` | Reviewed Knowledge，只有用户明确批准后运行 `promote-reviewed` 才生成。 |
+| `user/knowledge/reviewed/<domain>/<semantic-page>.md` | Reviewed Knowledge，只有用户明确批准后运行 `promote-reviewed` 才生成；正式 reviewed page 不使用 smoke、pipeline 或 run id 命名。 |
 | `var/rag/<run-id>/evals/promotion-result.md` | Promotion Result，记录 reviewer、approval note、target 和 gates。 |
 | `var/logs/<run-id>.json` | Status JSON。 |
 | `var/rag/<run-id>/graph` | Runtime graph。 |

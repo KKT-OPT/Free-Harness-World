@@ -1,7 +1,7 @@
 ﻿---
 documentName: harness/HarnessIndex.md
-version: v1.0.0-pre-h8-readiness-complete
-updatedAt: 2026-06-23 08:18:39.000 +08:00
+version: v1.2.0-project-lifecycle-evidence-gate
+updatedAt: 2026-07-02 21:20:00.000 +08:00
 status: active
 purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告。
 scope:
@@ -12,6 +12,8 @@ relatedDocuments:
   - INDEX.md
   - harness/architecture/HarnessEngineering.md
   - harness/architecture/PLANS.md
+  - harness/reports/ReportsIndex.md
+  - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
 outputTo:
   - harness/HarnessIndex.md
 owner: mixed
@@ -20,9 +22,9 @@ supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-23
-  decision: pre-h8-readiness-complete
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: report-mechanism-and-project-lifecycle-gate-added
 ---
 # General Harness 索引
 
@@ -44,7 +46,7 @@ review:
 | RAG Mechanism | `harness/rag/RAGIndex.md` | H6 已落地；机制资产位于 `harness/rag/`，真实或候选知识位于 `user/knowledge/`，运行态位于 `var/rag/`。 |
 | Memory | `harness/memory/MemoryIndex.md` | H8 前置已补齐；Memory policy、candidate、reviewed 和 archive 由该入口路由。 |
 | Skills | `harness/skills/SkillIndex.md` | H8 前置已补齐；Skill policy、candidate、reviewed、archive 和 usage sidecar 由该入口路由。 |
-| Reports | `harness/reports/` | 已落地。 |
+| Reports | `harness/reports/ReportsIndex.md` | 已落地；定义通用 report 机制、模板、命令面和存放边界，项目具体 report 进入项目实例。 |
 
 ## 2. 推荐读取路径
 
@@ -137,7 +139,7 @@ harness/skills/usage/skill-usage.json
 
 | 领域 | 状态 | 说明 |
 |---|---|---|
-| 新架构权威 | landed | `HarnessEngineering.md` 已更新为 `v2.4.0-target-architecture`。 |
+| 新架构权威 | landed | `HarnessEngineering.md` 已更新为 `v2.4.1-project-lifecycle-evidence-gate`。 |
 | 导航入口 | landed | 根 `INDEX.md` 和本文已落地；旧导航兼容 stub 已删除。 |
 | 架构计划 | landed | `harness/architecture/PLANS.md` 已落地；旧计划兼容 stub 已删除。 |
 | Bootstrap | landed | H8 bootstrap foundation 已补齐，正式产品化发布推迟到 H9 真实项目验证之后。 |
@@ -145,6 +147,7 @@ harness/skills/usage/skill-usage.json
 | 项目实例 | partial | 项目实例位于 `projects/<project-id>/`；项目根 `AGENTS.md` 是目标入口。 |
 | 敏感边界 | active | `user/`、`var/`、`projects/` 和 credentials boundary 已有规则，需按目标 `.gitignore` 复核。 |
 | 工具资产 | landed | H5 已完成；工具文档、manifest、stable/candidate/historical 脚本已迁移到 `harness/tools/`，runtime 和 external 由 local-only 边界保护。 |
+| Project lifecycle evidence gate | landed | `test-project-lifecycle-evidence.ps1` 已成为真实项目任务收口前的只读证据门禁。 |
 | RAG / Knowledge | landed | H6 已完成；旧顶层 `rag/` 已移除，机制、用户知识和运行态边界已拆分。 |
 | Verification / Observability | landed | H7 已完成；验证规则位于 `harness/verification/`，观测 schema 位于 `harness/observability/`，Governance 只引用验证和观测结果。 |
 | Memory / Skill | landed | H8 前置已补齐 Memory 和 Skill 机制入口、policy、candidate/reviewed/archive 和 usage sidecar。 |

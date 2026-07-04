@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.9.0-pipeline-smoke
-updatedAt: 2026-07-02 00:00:00.000 +08:00
+version: v1.18.0-knowledge-rag-closeout-commands
+updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约。
 scope:
@@ -14,6 +14,8 @@ prerequisites:
 relatedDocuments:
   - harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
   - harness/tools/docs/command-surfaces/JavaMavenCommandSurface.md
+  - harness/verification/HarnessValidationPlan.md
+  - harness/reports/ReportsIndex.md
 outputTo:
   - harness/tools/docs/script-index/ScriptIndex.md
 owner: mixed
@@ -23,8 +25,8 @@ dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-02
-  decision: p5-15-pipeline-smoke-command-added
+  reviewedAt: 2026-07-03
+  decision: knowledge-rag-closeout-command-surface
 ---
 # 脚本索引
 
@@ -39,10 +41,11 @@ review:
 | `harness/tools/scripts/stable/invoke-java-main.ps1` | 编译、构建 classpath、运行 Java main。 | yes |
 | `harness/tools/scripts/stable/clean-sandbox.ps1` | 清理运行态日志和临时文件，默认 dry-run。 | yes，`-Apply` 需审批 |
 | `harness/tools/scripts/stable/test-project-registry.ps1` | 只读校验本地项目 registry。 | yes |
+| `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` | 只读校验真实项目任务的方案、开发、验证、报告、审核和验收证据闭环。 | yes |
 | `harness/tools/scripts/stable/test-harness-governance.ps1` | 运行 Harness Root 治理自检。 | yes |
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | 通过稳定门面运行 RAG candidate 流程。 | yes |
-| `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
+| `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、residual gap disposition、canonical vault layout、one-click validation gate、schema context、LLM Wiki mechanism validation、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
 | `harness/tools/scripts/stable/publish-harness-agent-branch.ps1` | 管理 agent-owned Git branch、提交和推送。 | yes，写操作需审批 |
 
 ## 2. 稳定工具契约
@@ -112,6 +115,19 @@ review:
 | Repair Suggestion | 修正 registry JSON、projectId 重复项或项目路径边界。 |
 | Validation Instruction | 运行 `-SelfTest`，再对本地 registry 执行只读检查。 |
 
+### `test-project-lifecycle-evidence.ps1`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Root`、`-Registry`、`-ProjectId`、`-WorkflowEvidence`、`-ProjectReport`、`-RequireReport`、`-RequireUserAcceptance`、`-SelfTest`。 |
+| Outputs | JSON status summary、workflow/report count、severity counts、checks 和 findings。 |
+| Status Summary | projectId、workflowEvidenceCount、projectReportCount、findingCount、error/warning/info counts。 |
+| Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要写入 workflow evidence 或 report。 |
+| Sensitive Handling | 只读取项目 workflow evidence 和项目 report 的脱敏文本；不读取 raw logs、settings、auth、运行态状态 JSON 正文或真实业务数据。 |
+| Failure Mode | `lifecycle/*`、`workflowEvidence/*`、`projectReport/*`、`frontmatter/*`、`registry/*`。 |
+| Repair Suggestion | 补齐 Task Brief、项目入口、设计/执行计划、文件变更、验证、用户验收、治理候选或项目 report 落点。 |
+| Validation Instruction | 先运行 `-SelfTest`；真实项目任务收口前，传入对应 `docs/project/workflow/` 和 `docs/project/reports/` 文件，必要时加 `-RequireReport -RequireUserAcceptance`。 |
+
 ### `test-harness-governance.ps1`
 
 | 契约项 | 内容 |
@@ -142,11 +158,11 @@ review:
 
 | 契约项 | 内容 |
 |---|---|
-| Inputs | `-Command`、`-Root`、`-InputPath`、`-RunId`、`-Wiki`、`-Report`、`-Graph`、`-Question`、`-Manifest`。 |
-| Outputs | stdout JSON、`var/rag/<run-id>/extracted/`、`user/knowledge/candidate/<run-id>/wiki`、`var/rag/<run-id>/evals/`、runtime graph、status JSON。 |
+| Inputs | `-Command`、`-Root`、`-InputPath`、`-RunId`、`-RawDomain`、`-Wiki`、`-Report`、`-Graph`、`-Question`、`-Manifest`、`-ExtractionGranularity`、`-EntityCap`、`-ConceptCap`、`-BatchStrategy`、`-TagVocabularyMode`、`-AllowedTag`。 |
+| Outputs | stdout JSON、`var/rag/<run-id>/extracted/`、`user/knowledge/candidate/<run-id>/wiki`、`var/rag/<run-id>/evals/`、runtime graph、status JSON、source gate accepted/blocked records、source fingerprint、body hash、extraction granularity 和 tag vocabulary manifest 字段。 |
 | Status Summary | command、runId、artifact paths、state。 |
 | Redacted Log Path | `var/logs/<run-id>.json` 或对应 runtime path；tracked docs 只记录路径。 |
-| Sensitive Handling | 只写 user-local candidate 和 runtime artifacts，不写 reviewed knowledge、Memory 或 Project Facts。 |
+| Sensitive Handling | 只写 user-local candidate 和 runtime artifacts，不写 reviewed knowledge、Memory 或 Project Facts；空文件、frontmatter-only、不兼容类型和重复 body hash 在候选生成前被 source gate 拦截。 |
 | Failure Mode | `rag/input`、`rag/pipeline`、`rag/lint`、`rag/query`、`tool/execution`。 |
 | Repair Suggestion | 修正 input path、manifest、candidate wiki、graph 或 pipeline 配置。 |
 | Validation Instruction | 使用非敏感样例运行 `health` 或 candidate ingest，确认只生成候选和运行态产物。 |
@@ -155,14 +171,14 @@ review:
 
 | 契约项 | 内容 |
 |---|---|
-| Inputs | `-Command`、`-Root`、`-InputPath`、`-Vault`、`-Reviewed`、`-Candidate`、`-Raw`、`-Graph`、`-Report`、`-CandidateWiki`、`-TargetDir`、`-Target`、`-Question`、`-Limit`、`-Scope`、`-Reviewer`、`-ApprovalNote`、`-ReviewAfter`、`-WriteCandidates`、`-ArchiveInactiveCandidates`、`-CopyRaw`、`-Overwrite`、`-MaxChunkChars`、`-RunId`。 |
-| Outputs | stdout JSON、`user/knowledge/Home.md` 单入口 Obsidian vault view、可选 `user/knowledge/candidate/reviewed-gap-concepts/wiki`、可选 `user/knowledge/reviewed/concepts/*.md` reviewed concept pages、可选 `user/knowledge/reviewed/<run-id>.md` pipeline smoke reviewed page、可选 `user/knowledge/candidate/_archive/` 非破坏性归档、`var/rag/reviewed-knowledge/` graph、query / health / gap / enrichment / review package / promotion / governance / pipeline smoke reports、status JSON。 |
-| Status Summary | command、vault、reviewed path、state、matched pages、gap count、enriched page count、ready/dedup/revise counts、promoted/deferred counts、active review count、archived candidate count、archive action count、pipeline smoke step summary、artifact paths。 |
+| Inputs | `-Command`、`-Root`、`-InputPath`、`-Vault`、`-Reviewed`、`-Candidate`、`-Raw`、`-Registry`、`-Domain`、`-SourceDomain`、`-TargetDomain`、`-SourceId`、`-CanonicalPage`、`-Graph`、`-Report`、`-CandidateWiki`、`-CandidateRunId`、`-TargetDir`、`-Target`、`-Question`、`-Limit`、`-Scope`、`-Task`、`-Reviewer`、`-ApprovalNote`、`-ReviewAfter`、`-WriteCandidates`、`-ArchiveInactiveCandidates`、`-CopyRaw`、`-Overwrite`、`-MaxChunkChars`、`-RunId`、`-ExtractionGranularity`、`-EntityCap`、`-ConceptCap`、`-BatchStrategy`、`-TagVocabularyMode`、`-AllowedTag`。 |
+| Outputs | stdout JSON、`user/knowledge/Home.md` 单入口 Obsidian vault view、可选 `user/knowledge/candidate/reviewed-gap-concepts/wiki`、可选 `user/knowledge/reviewed/<domain>/concepts/*.md` reviewed concept pages、可选 `user/knowledge/reviewed/<domain>/<run-id>.md` pipeline smoke validation page、可选 source-centered `user/knowledge/candidate/_archive/by-source/<source-id>/` 非破坏性归档、可选 `user/knowledge/candidate/_audit/post-promotion/*.md` 轻量审计记录、可选 `var/rag/candidate-full-corpus-archive/` full corpus 运行态备份、`var/rag/reviewed-knowledge/` graph、query / health / gap / residual gap disposition / canonical layout / validation gate / schema context / LLM Wiki mechanism validation / candidate cleanup dry-run / candidate cleanup apply / duplicate governance / enrichment / review package / promotion / governance / pipeline smoke reports、status JSON；正式 reviewed page 必须由 `canonicalize-vault-layout` 收口为语义命名 authoritative page 或 validation evidence archive。 |
+| Status Summary | command、vault、reviewed path、state、matched pages、gap count、disposed links、remaining residual gaps、canonical reviewed page、validation check count、blocking issues、schema context selected sections、mechanism check count、candidate cleanup action count、candidate cleanup moved corpus count、candidate audit record count、duplicate group count、similarity candidate count、authoritative/evidence reviewed counts、enriched page count、ready/dedup/revise counts、promoted/deferred counts、active review count、archived candidate count、archive action count、pipeline smoke step summary、artifact paths。 |
 | Redacted Log Path | `var/logs/reviewed-knowledge.json` 或对应 runtime report path；tracked docs 只记录路径。 |
-| Sensitive Handling | 只读取 reviewed Knowledge 和生成 local-only view / runtime artifacts；不读取 raw、candidate、chunks 作为事实源；`reviewed-gap-plan -WriteCandidates`、`enrich-gap-candidates`、`gap-review-package` 和 `govern-vault` 只写 candidate-only gap wiki、`Home.md` 单入口或 runtime review/governance package；`promote-gap-candidates` 只有在传入 reviewer 和 approval note 后写入 reviewed concept pages；`pipeline-smoke` 只有在传入 reviewer、approval note、question 和 raw input 后执行 approved promotion，并把 candidate/chunks 作为证据而非事实源；`-ArchiveInactiveCandidates` 只移动 inactive 或 promoted candidate corpus 并同步 reviewed source trace。 |
+| Sensitive Handling | 只读取 reviewed Knowledge 和生成 local-only view / runtime artifacts；不读取 raw、candidate、chunks 作为事实源；`reviewed-gap-plan -WriteCandidates`、`enrich-gap-candidates`、`gap-review-package` 和 `govern-vault` 只写 candidate-only gap wiki、`Home.md` 单入口或 runtime review/governance package；`dispose-residual-gaps` 只处置已知 workflow residual gap，把 reviewed wikilink 改为 policy / Skill / template 机制引用并标记 candidate disposition，不执行 reviewed promotion；`canonicalize-vault-layout` 只重排 local-only vault、registry 和 source trace，不新增 promotion；`validate-knowledge-vault` 只生成 runtime validation report、graph 和 status JSON，不执行 promotion、不重排 vault、不把 plugin/runtime/candidate 当作事实源；`schema-context` 只读取 registry 和 domain schema 并输出 task-scoped sections，不写知识库页面；`validate-llm-wiki-mechanisms` 只生成机制验证 report 和 status JSON，使用临时 fixture 验证 source gate / granularity，不后台写 reviewed；`candidate-cleanup-plan` 只生成 post-promotion cleanup dry-run report 和 status JSON，不删除、不移动、不改写 reviewed source trace；`candidate-cleanup-apply` 只有在传入 reviewer 和 approval note 后移动 post-promotion full candidate corpus、写入轻量审计记录并改写 source trace，不执行 reviewed promotion；`govern-reviewed-duplicates` 只生成 duplicate governance report 和 status JSON，不改写 reviewed pages；`promote-gap-candidates` 只有在传入 reviewer 和 approval note 后写入 reviewed concept pages；`pipeline-smoke` 只有在传入 reviewer、approval note、question 和 raw input 后执行 approved promotion，并把 candidate/chunks 作为证据而非事实源；`-ArchiveInactiveCandidates` 只移动 inactive 或 promoted candidate corpus 并同步 reviewed source trace。 |
 | Failure Mode | `rag/knowledge-vault`、`rag/reviewed-query`、`rag/graph`、`tool/execution`。 |
 | Repair Suggestion | 修正 vault/reviewed path，重新运行 `sync-reviewed-index`、`health-reviewed`、`build-reviewed-graph` 或对 gap candidate wiki 运行 candidate `health` / `lint` / `build-graph`。 |
-| Validation Instruction | 使用已审核 reviewed 文档运行 `init-obsidian-vault`、`health-reviewed`、`query-reviewed`、`reviewed-gap-plan -WriteCandidates`、`enrich-gap-candidates`、`gap-review-package`、`promote-gap-candidates`、`govern-vault -ArchiveInactiveCandidates` 和 `pipeline-smoke`，确认 Obsidian `Home.md` 单入口可打开、query 只返回 reviewed Knowledge、gap candidate wiki 仍停留在 candidate boundary，candidate health / lint / graph 通过，review package 状态可进入 human review，approved concepts 可晋升 reviewed pages，full pipeline smoke 能从 raw 生成 candidate、晋升 reviewed、刷新 vault 并查询命中新 reviewed target，vault governance 只做非破坏性归档和 source trace 同步。 |
+| Validation Instruction | 使用已审核 reviewed 文档运行 `init-obsidian-vault`、`health-reviewed`、`query-reviewed`、`reviewed-gap-plan -WriteCandidates`、`dispose-residual-gaps`、`canonicalize-vault-layout`、`validate-knowledge-vault`、`schema-context`、`validate-llm-wiki-mechanisms`、`candidate-cleanup-plan`、`candidate-cleanup-apply`、`govern-reviewed-duplicates`、`enrich-gap-candidates`、`gap-review-package`、`promote-gap-candidates`、`govern-vault -ArchiveInactiveCandidates` 和 `pipeline-smoke`，确认 Obsidian `Home.md` 单入口可打开、query 只返回 authoritative reviewed Knowledge、task-scoped schema context 可生成、LLM Wiki 吸收机制全部通过、residual workflow gap 已处置且 reviewed graph broken link count 为 0、正式 reviewed page 使用语义命名、domain schema 存在、candidate full corpus 清理后只保留轻量审计记录、validation gate 检查全通过、candidate cleanup dry-run 能列出 full corpus、轻量审计记录和推荐清理动作、apply 后 full corpus 为 0、duplicate group 只有一个 authoritative page、gap candidate wiki 仍停留在 candidate boundary，candidate health / lint / graph 通过，review package 状态可进入 human review，approved concepts 可晋升 reviewed pages，full pipeline smoke 能从 raw 生成 candidate、晋升 reviewed、刷新 vault 并查询命中新 reviewed target，vault governance 只做非破坏性归档和 source trace 同步。 |
 
 ### `publish-harness-agent-branch.ps1`
 

@@ -11,8 +11,8 @@ tags:
   - agent
   - governance
   - target-architecture
-version: v2.4.0-target-architecture
-updatedAt: 2026-06-18 10:30:00.000 +08:00
+version: v2.9.0-normalized-source-depth-governance
+updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 定义 Harness Distribution Repo、Harness Workspace、Project Instance、治理闭环、项目模板、Memory、Skill、RAG、Tool、Report 等长期目标架构边界。
 scope:
@@ -31,6 +31,9 @@ relatedDocuments:
   - harness/HarnessIndex.md
   - harness/architecture/PLANS.md
   - harness/governance/GovernanceIndex.md
+  - harness/rag/policies/ObsidianLlmWikiPluginBoundary.md
+  - harness/rag/policies/CandidatePostPromotionCleanupPolicy.md
+  - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
   - harness/templates/project-template/docs/project/ProjectIndex.md
 outputTo:
   - harness/architecture/HarnessEngineering.md
@@ -44,10 +47,10 @@ dependsOn:
 supersedes:
   - v2.3.0-feedback-23-integrated-review
 review:
-  reviewedBy: human
-  reviewedAt: 2026-06-17
-  decision: approved
-  notes: 用户确认以 v2.3 为基本口径，并吸收项目入口、RAG/Knowledge、索引、计划和产品化目标的调整。
+  reviewedBy: user
+  reviewedAt: 2026-07-03
+  decision: normalized-source-depth-governance-updated
+  notes: 固化项目入口、RAG/Knowledge、索引、计划、产品化目标、真实项目生命周期证据脚本门禁、LLM Wiki 风格知识库治理模型、source-centered candidate archive 结构、Knowledge one-click validation gate 命令面、Obsidian LLM Wiki 插件边界策略、candidate post-promotion cleanup、obsidian-llm-wiki 可复用机制、normalized source boundary 和 reviewed source depth 门禁。
 ---
 
 # Harness Engineering 目标架构设计方案
@@ -70,7 +73,7 @@ review:
 - 具体项目事实正文；
 - 用户私有知识库正文；
 - 一次性任务过程；
-- Harness 阶段任务完成证据；
+- Harness 计划验收证据；
 - 本机私有配置；
 - token、password、auth、settings.xml 或本机绝对路径。
 
@@ -229,8 +232,9 @@ Harness 的核心职责是：
 3. **Workflow Evidence 分离**：复杂任务必须形成 workflow evidence，但 evidence 只产生候选，不自动成为 Project Fact、Knowledge、Memory、Skill 或架构规则。
 4. **稳定工具分层**：稳定工具必须具备输入输出契约、脱敏日志路径、失败模式和修复建议；一次性脚本不能自动晋升为 stable tool。
 5. **Governance Self-Check**：治理检查应覆盖索引完整性、frontmatter、Git 边界、敏感边界、stale 文档和候选资产，但默认 dry-run、report-first。
-6. **本地 Registry 路由**：本机 registry 只保存路由 metadata，不复制项目事实、私有 settings、真实仓库 URL 或运行日志。
-7. **本地 Settings 边界**：工具可以按 allowlist 传递 settings 路径，但默认不得读取、打印或写入 settings 正文。
+6. **Project Lifecycle Evidence Gate**：真实项目任务的方案设计、开发、验证、报告、审核和验收闭环不能只依赖 Skill、Mermaid 或人工描述；必须存在可执行的只读脚本门禁，用于检查项目 workflow evidence 和项目 report 是否覆盖必要证据。
+7. **本地 Registry 路由**：本机 registry 只保存路由 metadata，不复制项目事实、私有 settings、真实仓库 URL 或运行日志。
+8. **本地 Settings 边界**：工具可以按 allowlist 传递 settings 路径，但默认不得读取、打印或写入 settings 正文。
 
 ### 2.6 从真实项目反向优化 Harness
 
@@ -269,10 +273,11 @@ Harness 的核心职责是：
 | 验证 | Verification | 验证任务是否具备执行条件、是否通过验收、修复后是否回归通过。 |
 | 观测 | Observability | 记录任务执行过程中的 trace、event、failure、cost、human intervention 摘要结构。 |
 | 报告 | Report | Governance、Verification、Observability 的输出证据，不是事实源。 |
-| 知识 | Knowledge | 经 review、带来源和作用域的事实性信息。 |
+| 知识 | Knowledge | 经 review、带来源、作用域、staleness 和治理记录的事实性信息。 |
 | 记忆 | Memory | 可复用、已通用化的经验，不等同于知识或任务历史。 |
 | 技能 | Skill | 可复用工作流或操作过程，不等同于知识。 |
 | 检索增强生成 | RAG | Retrieval-Augmented Generation。RAG Index 是可重建检索产物，不是事实源。 |
+| 知识库 Wiki | Knowledge Wiki | 面向人类和 Agent 的 Markdown 知识库界面，通过 schema、index、wikilink、source trace 和 lint 规则维护知识图谱。 |
 | 工具资产 | Tool Asset | 可重复、可审计、被文档化的脚本、命令表面或工具说明。 |
 
 ---
@@ -287,7 +292,7 @@ Harness Distribution Repo 是可下载、可植入、跨机器复用的通用 Ha
 
 - 智能体唯一入口文档 `AGENTS.md`；
 - 全局导航 `INDEX.md`；
-- Harness 架构文档、阶段性计划文档和 Harness 索引；
+- Harness 架构文档、架构计划文档和 Harness 索引；
 - 通用治理规则、通用记忆规则、项目生命周期和验收闭环规则；
 - 为新项目提供可复制通用模板；
 - 稳定脚本、Skill、Tool、Memory 规则和非私有通用经验；
@@ -1088,7 +1093,7 @@ projects/<project-id>/docs/project/decision/
 
 最低要求：
 
-- 本轮目标；
+- 当前任务目标；
 - 已加载上下文；
 - 执行范围；
 - 禁止修改范围；
@@ -1417,6 +1422,23 @@ projects/<project-id>/docs/project/workflow/
 
 Verification 输出不是事实源。只有经过 Governance Review 并写入目标文档后，才成为正式事实。
 
+### 18.3 Project Lifecycle Evidence Gate
+
+真实项目任务如果声明已经完成方案设计、开发、验证、报告、审核和验收闭环，应通过稳定只读脚本检查对应证据：
+
+```text
+harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+```
+
+该门禁检查的是证据结构和边界：
+
+- workflow evidence 位于 `projects/<project-id>/docs/project/workflow/`；
+- 具体项目 report 位于 `projects/<project-id>/docs/project/reports/`；
+- 证据包含 Task Brief、项目入口、设计或执行计划、开发变更、验证、用户验收和治理候选；
+- report 建议不自动成为事实源，必须经过 review 后写入目标资产。
+
+该门禁不保存具体项目事实，不替代项目验证命令，不替代用户验收。
+
 ---
 
 ## 19. Observability 和 Report
@@ -1508,7 +1530,7 @@ Report 可以引用 Observability 证据，但 Report 中的建议不能自动�
 | RAG 任务 | `harness/rag/RAGIndex.md`、`harness/governance/KnowledgePromotionPolicy.md`、目标 knowledge candidate |
 | 治理任务 | `harness/governance/GovernanceIndex.md`、`ScheduledGovernance.md`、`ArtifactLifecycle.md`、目标报告 |
 
-需求分析任务通常应使用需求分析 Skill 或产生需求分析 workflow evidence。只有当本轮任务沉淀出可复用的新流程，才产生 Skill Candidate。
+需求分析任务通常应使用需求分析 Skill 或产生需求分析 workflow evidence。只有当当前任务沉淀出可复用的新流程，才产生 Skill Candidate。
 
 ---
 
@@ -1520,7 +1542,7 @@ Agent 执行任务前必须完成 readiness check。Readiness Check 不运行任
 
 | 检查项 | 必须确认的问题 |
 |---|---|
-| task | 用户任务是否明确，是否有最终目标和本轮目标。 |
+| task | 用户任务是否明确，是否有最终目标和当前任务目标。 |
 | scope | 是否明确允许修改哪些文件、禁止修改哪些文件。 |
 | context | 是否按 Context Loading Policy 读取必要文档。 |
 | branch | 是否确认当前分支或新建分支策略。 |
@@ -1783,78 +1805,263 @@ flowchart TD
 
 ---
 
-## 24. RAG 和用户知识库
+## 24. RAG、LLM Wiki 和用户知识库
 
-`harness/rag/` 是通用 Harness 的知识摄取机制，不是真实用户知识库本身。
+`harness/rag/` 是通用 Harness 的知识摄取机制层，不是真实用户知识库本身。`user/knowledge/` 是真实用户知识库的推荐本地边界，可以采用 LLM Wiki 风格的 Markdown 知识图谱：raw source 保持不可变，agent 维护候选和 reviewed 页面之间的 wikilink、index、schema、source trace、staleness 和 lint 结果，人类用户负责提供原始材料和审核晋升。
+
+Karpathy's LLM Wiki 模式可作为组织知识库的参考：它强调持久、复利式 Markdown wiki，而不是每次 query 时从 raw source 重新发现知识。Harness 吸收该模式的 schema / index / log / wikilink / lint 纪律，但必须增加 candidate-first、review-first 和 approval gate。任何插件、脚本或 agent 生成的 wiki 页面，在审核前都只是 candidate knowledge。
 
 ### 24.1 RAG Mechanism Assets
 
-`harness/rag/` 可以保存：
+`harness/rag/` 可以保存通用机制资产：
 
 ```text
-- knowledge directory convention；
+- knowledge vault directory convention；
 - raw / extracted / candidate / reviewed / archive lifecycle README；
 - manifest schema and example manifest；
 - ingestion pipeline documents；
 - evaluation templates；
 - promotion rules；
 - chunking / metadata / citation policy；
+- domain schema / tag taxonomy template；
+- reviewed Knowledge query / graph / lint / stale check 规则；
 - 原始非结构化资料转换为结构化候选知识的工具说明；
-- 原始资料获取工具说明，例如网页内容获取工具。
+- 原始资料获取工具说明，例如网页内容获取工具；
+- Obsidian / LLM Wiki 插件与 Harness reviewed gate 的边界说明。
 ```
 
-### 24.2 Real User Knowledge
+这些机制资产可以进入通用 Harness Git；真实 raw source、candidate wiki、reviewed user knowledge、embedding、cache、graph runtime 和本机插件配置不能进入通用 Harness Git。
 
-真实用户知识应保存于 local-only 区域，例如：
+### 24.2 User Knowledge Vault
 
-```text
-user/knowledge/<knowledge-id>/
-user/knowledge/project-id/
-```
-
-或外部路径，并通过：
+真实用户知识应保存于 local-only 区域或外部 private knowledge repo，并通过本地 registry 接入：
 
 ```text
 user/registry/knowledge.local.json
 ```
 
-接入。
+推荐本地结构：
 
-真实用户知识不进入通用 Harness Git。
+```text
+user/knowledge/
+  Home.md
+  raw/<domain>/
+    normalized/
+  candidate/<run-id>/wiki/
+  candidate/_archive/by-source/<source-id>/<bucket>/
+  reviewed/<domain>/
+    index.md
+    schema.md
+    concepts/
+    entities/
+    comparisons/
+    decisions/
+  reviewed/shared/
+  reviewed/_archive/superseded/
+```
 
-### 24.3 Runtime RAG Index
+规则：
 
-RAG 索引、embedding、cache、临时提取结果属于运行态，可重建，保存于：
+1. `Home.md` 是人类和 agent 的全局入口，负责路由到 reviewed domains、active candidate review queue、raw source summary 和 archive summary。
+2. `reviewed/<domain>/index.md` 是领域知识库入口，负责列出该领域 reviewed pages 和核心 wikilinks。
+3. `reviewed/<domain>/schema.md` 记录领域说明、命名规则、frontmatter、tag taxonomy、page threshold 和 staleness 规则。
+4. `raw/<domain>/` 按知识领域而不是工具阶段命名；目录名应描述知识主题，例如 `agent-harness-engineering`、`uav` 或 `decision-algorithm`。
+5. `raw/<domain>/normalized/` 保存原始材料转换后的长期可读派生 Markdown；它属于 raw source boundary，不属于 reviewed 结论层，也不属于可清理 runtime。
+6. `reviewed/shared/` 只保存跨领域复用的 reviewed concepts；领域内概念应放在 `reviewed/<domain>/concepts/`。
+7. 真实用户知识默认不进入通用 Harness Git。
+
+### 24.3 Raw Source 和 Candidate Knowledge
+
+`raw/<domain>/` 是用户提供原始材料的边界。raw source 应视为不可变来源，agent 不应直接改写 raw 正文。需要记录或生成的 source metadata 包括：
+
+```yaml
+sourceId: <stable-id>
+domain: <domain>
+sourceType: pdf | markdown | web | transcript | data | other
+sourceUrl: null
+ingestedAt: <date>
+sha256: <hash-or-null>
+sensitiveRisk: none | low | medium | high
+usageRights: unknown | permitted | restricted
+```
+
+如果 source 更新或 hash drift，应生成 re-ingest / stale candidate，不应静默覆盖已经作为 reviewed source trace 的 raw source。
+
+原始材料转换后的 Markdown 应保存到：
+
+```text
+user/knowledge/raw/<domain>/normalized/<source>.md
+```
+
+该 normalized Markdown 是 raw source 的长期可读派生版本，用于帮助人类和 agent 理解原材料结构；它不是 reviewed 结论，不进入通用 Harness Git。`var/rag/<run-id>/extracted/*.md` 只是运行态抽取副本，可以清理，不应作为 authoritative reviewed page 的长期 Source Trace。
+
+`candidate/<run-id>/wiki/` 是 agent 或工具生成的候选知识图谱，可以包含：
+
+```text
+schema.md 或 config.md
+index.md
+log.md
+overview.md
+sources/
+concepts/
+entities/
+comparisons/
+queries/
+```
+
+Candidate wiki 不是 authoritative knowledge。`index.md` 和 `log.md` 是候选导航和操作证据，不能绕过 review 进入 reviewed Knowledge。`candidate/_archive/` 不是垃圾桶；推荐按 source-centered 结构组织，例如 `candidate/_archive/by-source/<source-id>/canonical-candidate/`、`validation-evidence/`、`gap-concepts/` 和 `legacy/`。如果 archived candidate 被 reviewed Source Trace 引用，不能直接删除。可以删除的候选必须满足无 reviewed 引用、无 active review、无治理保留要求，并经过 dry-run report 和用户批准。
+
+### 24.4 Reviewed Knowledge 和 Knowledge Graph
+
+`reviewed/` 是默认 authoritative knowledge source。Reviewed Knowledge 应按领域组织，而不是按一次性 run id、插件名或阶段名组织。正式 reviewed page 应使用语义命名；`smoke`、`pipeline`、阶段编号或工具 run id 只能保留在 validation evidence、candidate archive 或 runtime report 中。
+
+Reviewed page 应满足：
+
+1. frontmatter 有 `documentName`、`version`、`updatedAt`、`status`、`purpose`、`scope`、`relatedDocuments`、`dependsOn`、`review` 等治理字段；
+2. 正文有 Statement、Source Overview、Core Framework、Applicability、Non-Applicability、Key Concepts、Source Trace、Staleness 和 Governance Notes；
+3. 关键概念使用 `[[wikilinks]]` 连接到同领域或 shared reviewed pages；
+4. source trace 指向 raw source、raw normalized Markdown 和 candidate audit evidence；authoritative reviewed page 不应把 `var/rag/<run-id>/extracted/*.md` 作为长期 sourceRef；
+5. 对 single-source、opinion-heavy、fast-moving 或冲突性内容标记 confidence、contested 或 reviewAfter；
+6. 同一 raw source 和同一主题不得长期存在多个 active authoritative pages；重复 reviewed docs 必须 merge、supersede 或归档。
+
+Source-level reviewed page 必须能让 agent 仅阅读 reviewed page 就理解原始材料的核心主线、概念、方法和边界。Concept page 是知识图谱节点，用于导航和复用概念，不应替代 source-level reviewed page；复杂问题应回到 source-level reviewed page，并在必要时读取 raw normalized Markdown 辅助理解。
+
+Reviewed concept page 可以正式晋升为知识库资产，但应位于领域目录下，例如：
+
+```text
+reviewed/agent-harness-engineering/concepts/TraceNativeEvaluation.md
+```
+
+只有跨领域概念才进入：
+
+```text
+reviewed/shared/concepts/
+```
+
+### 24.5 Runtime RAG Index
+
+RAG 索引、embedding、cache、临时提取结果、query report、health report、graph JSON / HTML 属于运行态，可重建，保存于：
 
 ```text
 var/rag/
 ```
 
-`var/rag/` 不是真实事实源，不进入 Git。
+`var/rag/` 不是真实事实源，不进入 Git。Agent 回答事实问题时可以用 runtime query 定位 reviewed pages，但最终依据必须来自 reviewed page 正文、frontmatter 和 Source Trace。
 
-### 24.4 Knowledge Promotion
+### 24.6 Knowledge Promotion
 
 Knowledge 晋升规则：
 
 ```text
-raw -> extracted -> candidate -> reviewed -> archive
+raw -> extracted -> candidate -> review -> reviewed -> index
+candidate -> archive / reject / revise
+reviewed -> supersede / archive / re-review
 ```
 
 生命周期：
 
 ```mermaid
 flowchart LR
-    Raw["raw source"] --> Extracted["extracted"]
-    Extracted --> Candidate["candidate knowledge"]
+    Raw["raw source<br/>user/knowledge/raw"] --> Extracted["extracted<br/>var/rag"]
+    Extracted --> Candidate["candidate wiki<br/>user/knowledge/candidate"]
     Candidate --> Review["human / governance review"]
-    Review --> Reviewed["reviewed knowledge"]
+    Review --> Reviewed["reviewed knowledge<br/>user/knowledge/reviewed"]
     Reviewed --> Index["RAG Index<br/>var/rag"]
-    Candidate --> Archive["archive / reject"]
+    Candidate --> CandidateArchive["candidate archive / reject"]
+    Reviewed --> ReviewedArchive["reviewed superseded archive"]
 ```
 
 只有 reviewed knowledge 才能作为稳定知识参与长期检索。
 
-一次性任务历史、项目 workflow evidence、未审查材料、运行日志、用户私有原始材料不能自动晋升为 reviewed knowledge。
+一次性任务历史、项目 workflow evidence、未审查材料、运行日志、用户私有原始材料、candidate wiki、graph JSON、chunks 和 eval reports 不能自动晋升为 reviewed knowledge。
+
+### 24.7 Obsidian 和 LLM Wiki 插件边界
+
+Obsidian vault、Dataview、Karpathy / LLM Wiki 类插件可以作为人类阅读、候选生成、lint、query 和可视化界面。它们的输出默认进入 candidate boundary，不能直接写入 `reviewed/`。
+
+插件边界的执行策略见 `harness/rag/policies/ObsidianLlmWikiPluginBoundary.md`。
+
+插件边界规则：
+
+1. 插件配置、API key、模型选择、workspace state 和 query history 留在 local-only，不进入通用 Harness Git；
+2. 插件生成的 `entities/`、`concepts/`、`sources/`、`index` 或 `schema` 只能作为 candidate evidence；
+3. 插件自动 ingest、auto smart fix 或 periodic lint 不得直接修改 reviewed Knowledge，除非通过 Harness approval gate；
+4. Harness stable tools 和 governance policy 是 reviewed Knowledge 晋升权威；
+5. `reviewed/_archive/` 用于保留 reviewed validation evidence、superseded page 或 archived page；被 source trace、domain index、Home、report 或 duplicate governance 引用的归档页不得直接删除。
+
+### 24.8 Knowledge Validation Gate
+
+Knowledge 闭环必须具备一键只读验证门禁；稳定命令入口为 `harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command validate-knowledge-vault`。该门禁只生成 runtime validation report、graph 和 status JSON，不执行 reviewed promotion，不重排 vault，不把 plugin/runtime/candidate 当作事实源。目标检查项包括：
+
+- `user/registry/knowledge.local.json` 存在且只保存 local route metadata；
+- `user/knowledge/Home.md` 是全局入口；
+- `raw/<domain>/`、`candidate/`、`reviewed/<domain>/` 目录符合约定；
+- reviewed frontmatter、review metadata、Source Trace、Staleness 和 Governance Notes 完整；
+- source-level authoritative reviewed page 包含 Source Overview 和 Core Framework 或等价结构，能概括原材料核心内容；
+- reviewed graph 无未解释 orphan 和 broken links；
+- 同一 raw source / 同一主题没有多个 active authoritative reviewed pages；
+- candidate full corpus 不长期保留在 Obsidian 默认图谱中；完成生命周期后的 candidate 只保留轻量审计记录或已批准的例外；
+- residual gap 有 dedup、defer、separate-candidate 或 reject 处置；
+- `user/knowledge/**` 和 `var/rag/**` 不进入通用 Harness Git；
+- Obsidian plugin boundary 不泄露 API key、auth、workspace state 或本机私有配置；
+- Obsidian graph 默认排除 `candidate/`、`raw/` 和 `.obsidian/`；
+- domain schema 包含受控 tag vocabulary、alias rules 和 source gate rules；
+- authoritative reviewed page 的长期 sourceRefs 不依赖 `var/rag/<run-id>/extracted/*.md`；
+- reviewed-only query 使用 lexical match 和 reviewed graph PPR 扩展，且只扫描 authoritative reviewed graph；
+- validation report 输出因果修复顺序：structure pollution、aliases、duplicate merge、dead links、orphans、empty pages、retag。
+
+LLM Wiki 机制增强还必须具备独立验收门禁；稳定命令入口为 `harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command validate-llm-wiki-mechanisms`。该门禁只生成 runtime report 和 status JSON，使用临时 fixture 验证 source gate 和 extraction granularity，不后台写 reviewed。目标检查项包括 task-scoped schema context、source gate fixture、extraction granularity fixture、tag vocabulary、alias/body similarity duplicate governance、repair order、reviewed graph PPR 和 auto maintenance boundary。
+
+任务执行前如只需要部分 schema，应使用 `harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command schema-context -Domain <domain> -Task <task>` 生成 task-scoped schema context；该命令只读取 registry 和 domain schema，不写任何 knowledge page。
+
+### 24.9 Candidate Post-Promotion Cleanup
+
+Candidate lifecycle 完成后，full candidate corpus 不应长期污染 Obsidian 默认图谱。规则见 `harness/rag/policies/CandidatePostPromotionCleanupPolicy.md`。
+
+稳定命令入口：
+
+```text
+harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command candidate-cleanup-plan
+harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command candidate-cleanup-apply -Reviewer <reviewer> -ApprovalNote <approval-note>
+```
+
+`candidate-cleanup-plan` 是 dry-run：只盘点 active candidate、archived full corpus、轻量审计记录、wikilink 数量和 reviewed/Home/registry 引用，并输出 recommended cleanup actions。它不删除、不移动、不改写 reviewed source trace，也不执行 promotion。
+
+`candidate-cleanup-apply` 是显式批准后的清理命令：它将 post-promotion full candidate corpus 移出 `user/knowledge` vault，写入 `var/rag/candidate-full-corpus-archive/` 运行态备份，在 `user/knowledge/candidate/_audit/post-promotion/` 保留轻量审计记录，改写 reviewed/Home/registry 中指向 full corpus 的路径，并更新 Obsidian graph filter。它不执行 reviewed promotion，不把 candidate 反向变成事实源。
+
+长期目标：
+
+1. active review candidate 可以留在 `candidate/`；
+2. 晋升、拒绝、合并或 evidence-only 的 full candidate corpus 默认移出 Obsidian 默认图谱或删除；
+3. 保留轻量审计记录，记录 source fingerprint、content hash、review decision、target reviewed page 和必要 provenance；
+4. 若 reviewed source trace 仍引用 full corpus，先改写到轻量审计记录；
+5. 实际移动或删除前必须有 dry-run report 和用户批准；
+6. 实际清理后必须运行 `validate-knowledge-vault` 回归，确保 full corpus 为 0、audit records 可追踪、source trace 不悬空、Obsidian graph filter 生效。
+
+### 24.10 LLM Wiki Mechanism Absorption
+
+Harness 可以吸收 Obsidian / LLM Wiki 工具中的机制，但不吸收其后台自动写 reviewed 的运行方式。规则见 `harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md`。
+
+可吸收机制：
+
+1. `schema/config.md` 风格的 schema 配置，落为 domain schema、schema parser 和 validation gate；
+2. `fine`、`standard`、`coarse`、`minimal`、`custom` extraction granularity，落为 raw-to-candidate manifest 字段，并实际影响 chunk size、preview limits、batch id、entity cap、concept cap 和 batch strategy 记录；
+3. default/custom tag vocabulary，落为每个 reviewed domain 的受控标签表和 health gate；authoritative content page 必须声明受控 tags；
+4. source gate，前置拦截空文件、frontmatter-only、不兼容类型和重复 body hash；
+5. source fingerprint，结合 path fingerprint 与 content hash，避免同名 source 覆盖；
+6. alias-aware dedup，把 aliases、同义词、跨语言别名和 body similarity candidates 作为重复治理基础；
+7. causality-aware repair order，按结构污染、aliases、duplicate merge、dead links、orphans、empty pages、retag 顺序修复；
+8. reviewed-only graph retrieval，用 wikilink graph、lexical match 和 PPR cascade 增强 query，但只扫描 authoritative reviewed graph；
+9. auto maintenance 工程经验只转化为 dry-run、candidate-only 或用户批准后的稳定命令，不允许后台自动写 reviewed Knowledge。
+
+机制吸收完成的最低验收组合是：
+
+1. `schema-context` 可按任务裁剪 domain schema；
+2. `validate-llm-wiki-mechanisms` 全部检查通过；
+3. 对真实 raw source 的 `pipeline-smoke` 通过；
+4. post-promotion candidate cleanup 完成或 dry-run 显示无 full corpus 残留；
+5. `validate-knowledge-vault` 全部检查通过；
+6. focused reviewed-only query 可命中目标 reviewed page。
 
 ---
 

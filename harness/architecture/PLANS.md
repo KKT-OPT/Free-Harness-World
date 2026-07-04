@@ -1,7 +1,7 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.4.1-h9-2-skill-git-management-closeout
-updatedAt: 2026-07-02 18:24:00.000 +08:00
+version: v1.6.0-h9-4-knowledge-rag-review-fixes
+updatedAt: 2026-07-04 00:00:00.000 +08:00
 status: active
 purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划和 H9-1 真实任务收口结果。
 scope:
@@ -15,6 +15,10 @@ scope:
   - h9-1-closeout
   - h9-2-plan-refinement
   - h9-2-closeout
+  - h9-3-closeout
+  - h9-4-knowledge-plan
+  - h9-4-knowledge-skill-review
+  - h9-4-knowledge-rag-closeout
   - llm-wiki-agent-absorption
 prerequisites:
   - AGENTS.md
@@ -31,9 +35,17 @@ relatedDocuments:
   - harness/skills/SkillIndex.md
   - harness/templates/project-template/model/StandardProjectPackage.md
   - harness/skills/reviewed/simulation-failure-triage/SKILL.md
+  - harness/skills/reviewed/rag-knowledge-use/SKILL.md
   - harness/reports/redacted/H9-2SimulationFailureTriageSkillCandidateReview.md
+  - harness/reports/redacted/P5-22RagKnowledgeUseSkillReview.md
+  - projects/lfms-decision/docs/project/reports/20260702-h9-3-governance-closeout-duplicate-history-reuse.md
+  - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+  - harness/rag/policies/ObsidianLlmWikiPluginBoundary.md
+  - harness/rag/policies/CandidatePostPromotionCleanupPolicy.md
+  - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
   - projects/lfms-decision/docs/project/workflow/20260702-h9-1-simulation-real-data-solver-binding-failure.md
   - projects/lfms-decision/docs/project/workflow/20260702-h9-1-duplicate-history-reuse-fix.md
+  - harness/architecture/PHASE5_RAG_KNOWLEDGE_ACCESS_PLANS.md
 outputTo:
   - harness/architecture/PLANS.md
 owner: mixed
@@ -45,8 +57,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: h9-2-simulation-failure-triage-approved-git-managed-and-closed
+  reviewedAt: 2026-07-04
+  decision: h9-4-knowledge-rag-review-fixes-applied
 ---
 # Harness 架构落地计划
 
@@ -55,11 +67,11 @@ review:
 ## 1. 当前状态
 
 ```text
-currentStage = H9-3 Governance Loop Validation
-status = h9-2-complete-h9-3-pending
-lastCompletedStage = H9-2
+currentStage = H9-4 Knowledge and Memory Loop Validation
+status = h9-3-complete-h9-4-pending
+lastCompletedStage = H9-3
 architectureAuthority = harness/architecture/HarnessEngineering.md
-targetArchitectureVersion = v2.4.0-target-architecture
+targetArchitectureVersion = v2.7.0-rag-knowledge-executable-governance
 h9ValidationAnchor = projects/lfms-decision
 h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 ```
@@ -94,7 +106,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 | H9-0 | 真实项目文档和事实基线 | complete | `projects/lfms-decision/docs/project/` 已形成真实任务可用的项目入口、测试、验证和 workflow evidence 路由。 |
 | H9-1 | 至少一个真实任务全流程验证 | complete | 已完成一个真实 Java 项目的问题提出、口径对齐、根因定位、代码修复、自动回归、真实仿真、用户验收和 workflow evidence 闭环。 |
 | H9-2 | Skill 闭环验证 | complete | `simulation-failure-triage` 已经用户 approve，晋升到 reviewed Skill，并补齐 Git 管理门禁；SkillIndex、usage sidecar、审核记录和 Skill 机制文档已同步。 |
-| H9-3 | Governance 闭环验证 | pending | 至少一个真实任务完成 candidate-first、review-first、human approval 的治理收口。 |
+| H9-3 | Governance 闭环验证 | complete | 已复用 H9-1 真实仿真任务生成项目级 Governance closeout report；用户确认后补齐生命周期证据门禁并完成收口。 |
 | H9-4 | Knowledge 和 Memory 闭环验证 | pending | 验证 Knowledge 晋升边界和 Memory candidate -> review -> active/rejected/archive 路径。 |
 | H9-5 | H9 汇总和 H10 门禁判定 | pending | 汇总 H9 验收结果、架构反向优化项和 release readiness 风险，判断是否进入 H10。 |
 | H10 | Release Readiness 和 main 发布门禁 | pending | H9 全部子阶段验收后再判断是否具备 release candidate；`main` 合并、tag、正式发布只能由用户执行。 |
@@ -107,7 +119,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 | 全局索引 | `INDEX.md` 和 `harness/HarnessIndex.md` 已落地；旧兼容 stub 已清理。 | H9 只在必要时同步阶段路由，不记录项目事实。 |
 | Adapter | `adapter/AdapterIndex.md` 已补齐。 | 用真实任务验证入口和 Task Brief 交接是否足够。 |
 | Sandbox | `sandbox/SandboxIndex.md` 已补齐。 | H9 真实项目验证不得破坏 Harness Root。 |
-| Governance | 目标治理机制文档已补齐到 `harness/governance/`。 | H9-3 用真实任务验证治理闭环。 |
+| Governance | 目标治理机制文档已补齐到 `harness/governance/`；H9-3 项目级治理报告已完成，生命周期证据门禁已新增并接入治理自检。 | 进入 H9-4 验证 Knowledge 和 Memory 晋升边界。 |
 | Memory | `harness/memory/MemoryIndex.md` 和 `MemoryPolicy.md` 已补齐。 | H9-4 验证 candidate/review/active 或 reject/archive 路径。 |
 | Skills | `harness/skills/SkillIndex.md`、`SkillPolicy.md`、`SkillGovernance.md`、reviewed Skill 和 usage sidecar 已补齐。 | H9-2 已完成；后续按真实任务继续验证 Skill 使用效果、patch flow 和 Git 管理门禁。 |
 | Knowledge / RAG | `harness/governance/KnowledgePromotionPolicy.md`、`harness/rag/`、`user/knowledge/` 和 `var/rag/` 边界已对齐。 | H9-4 验证 Knowledge 晋升边界，不污染 RAG index 或通用事实。 |
@@ -120,7 +132,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 
 | 阶段 | 验收摘要 |
 |---|---|
-| H0 | 架构权威已升级为 `v2.4.0-target-architecture`，状态 active。 |
+| H0 | 架构权威已建立并保持 active；当前版本为 `v2.7.0-rag-knowledge-executable-governance`。 |
 | H1 | 新导航入口和架构计划路径已落地。 |
 | H2 | 活跃文档不再依赖旧索引和旧计划路径作为主入口。 |
 | H3 | 目标一级目录和产品化必需文件已建立。 |
@@ -346,6 +358,39 @@ nextStage = H9-3 Governance Loop Validation
 3. Governance closeout 记录包含风险、证据、决策、处置和后续责任。
 4. Report 仍不是事实源；Workflow Evidence 只产生候选，不直接成为长期事实。
 
+H9-3 执行记录（2026-07-02）：
+
+| 项目 | 结果 |
+|---|---|
+| 真实任务来源 | 复用 H9-1 `lfms-decision` 真实 CSV 仿真排障与修复任务。 |
+| Closeout 报告 | `projects/lfms-decision/docs/project/reports/20260702-h9-3-governance-closeout-duplicate-history-reuse.md`。 |
+| Candidate-first | H9-1 workflow evidence 先产生 Governance Candidates；H9-2 Skill 先进入 candidate。 |
+| Review-first | 项目级沉淀和 Skill 晋升已经用户确认；H9-3 项目级治理报告已按用户反馈补齐生命周期证据门禁。 |
+| Human approval | H9-1 真实任务验收通过；H9-2 Skill 用户 approve；用户明确 H9-3 可以继续使用 H9-1 任务。 |
+| 处置结果 | 项目事实留在项目 workflow evidence 和项目文档；跨项目流程进入 reviewed Skill；治理机制更新进入 Skill/Governance policy；未批准的 Tool、Knowledge、Memory 和错误码体系调整保持 defer 或 no-action。 |
+| 敏感边界 | 报告只记录脱敏路径和摘要，不记录原始 CSV、完整日志、完整响应、本机路径、私有配置或凭据。 |
+
+H9-3 收口结果：
+
+| 验收项 | 结果 | 证据 |
+|---|---|---|
+| 真实任务中产生的治理事项先作为 candidate 进入 review。 | 通过 | H9-1 workflow evidence 的 Governance Candidates 表。 |
+| 高风险或边界不清事项必须有人类审批。 | 通过 | 用户确认 H9-1 业务口径、验收和沉淀；H9-2 Skill approve；H9-3 复用 H9-1 样本。 |
+| Governance closeout 记录包含风险、证据、决策、处置和后续责任。 | 通过 | H9-3 closeout 报告包含 Candidate Table、Review Checks、Approval And Disposition、Follow-Up Backlog 和生命周期证据门禁验证。 |
+| Report 仍不是事实源；Workflow Evidence 只产生候选。 | 通过 | 已批准项分别进入项目文档、reviewed Skill 或治理机制；未批准项 defer/no-action。 |
+| 真实项目生命周期证据由脚本门禁检查。 | 通过 | `test-project-lifecycle-evidence.ps1` 已新增，H9-1 workflow evidence 和 H9-3 project report 检查通过，governance self-check 已接入脚本自测。 |
+
+H9-3 结论：
+
+```text
+status = complete
+acceptedBy = user
+realTask = H9-1 duplicate-history-reuse-fix
+governanceCloseout = projects/lfms-decision/docs/project/reports/20260702-h9-3-governance-closeout-duplicate-history-reuse.md
+projectLifecycleEvidenceGate = harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
+nextStage = H9-4 Knowledge and Memory Loop Validation
+```
+
 ### 8.5 H9-4 Knowledge 和 Memory 闭环验证
 
 目标：验证 Knowledge 晋升和 Memory 晋升的边界，不让项目私有事实污染 General Harness。
@@ -365,6 +410,24 @@ H9-4 Knowledge/RAG 补充验收记录（2026-06-30）：
 - 本轮已验证：语法检查通过、`promote-reviewed` 实际晋升通过、缺少 `ApprovalNote` 的负向门禁通过、`git diff --check` 通过。
 - 边界结果：reviewed Knowledge 和 promotion result 位于 local-only / runtime boundary；未写入 Memory、Project Fact 或 Harness architecture authority。
 - H9-4 整体仍不能标记 complete：Memory candidate -> review -> active/rejected/archive 闭环尚未验证。
+
+H9-4 Knowledge/RAG 后续计划记录（2026-07-03）：
+
+- 已基于用户提供的 llm-wiki Skill 参考文档和 Obsidian LLM Wiki 插件边界，更新 `HarnessEngineering.md` 的 RAG、LLM Wiki 和用户知识库目标架构。
+- 后续 Knowledge 收口先完成 local registry、domain vault layout、重复 reviewed governance、residual gap disposition、一键 Knowledge validation gate 和插件边界，再 review `rag-knowledge-use` Skill。
+- 具体任务清单和验收标准记录于 `harness/architecture/PHASE5_RAG_KNOWLEDGE_ACCESS_PLANS.md`；本计划只记录阶段级摘要。
+- P5-20 前置已完成 source-centered canonical vault layout：当前 raw/reviewed domain 为 `agent-harness-engineering`，authoritative reviewed page 使用语义命名，validation evidence 已归档，candidate archive 已按 source 分组，并补齐 domain schema。
+- P5-20 已完成 Knowledge one-click validation gate：`validate-knowledge-vault` 12 类检查全部通过，覆盖 registry、Home、domain schema、reviewed frontmatter、source trace、reviewed graph、gap plan、duplicate source governance、archive/audit references、Git ignore boundary、Obsidian plugin boundary 和 LLM Wiki 机制吸收 gate。
+- P5-21 已完成 Obsidian LLM Wiki plugin boundary：新增通用 policy，明确插件仅可作为 reading UI、candidate generation、lint、query 和本地治理辅助；插件输出不得绕过 review 写入 reviewed Knowledge，插件配置和 API key 保持 local-only。
+- P5-21 已判断当前无 `reviewed/_achieve/`；实际 `reviewed/_archive/` 应保留为 reviewed validation evidence，不在本阶段删除。
+- P5-21.5 已完成 Candidate post-promotion cleanup policy 和 approved apply：新增 `CandidatePostPromotionCleanupPolicy.md`、`candidate-cleanup-plan` 和 `candidate-cleanup-apply`；已按用户批准移动 full corpus = 6 到 `var/rag/candidate-full-corpus-archive/2026-07-03/`，保留 post-promotion audit records = 6，回归后 full corpus = 0、推荐清理动作 = 0。
+- P5-21.6 已完成 obsidian-llm-wiki 机制吸收：新增 `LlmWikiMechanismAbsorptionPolicy.md`，并把 schema config、extraction granularity、tag vocabulary、source gate、source fingerprint、alias-aware dedup、repair order、reviewed-only graph retrieval 和 auto maintenance 边界写入架构、RAG policy、模板、Skill 和 validation gate。
+- P5-22 已完成 `rag-knowledge-use` Skill review：Skill 已由 candidate 晋升为 `harness/skills/reviewed/rag-knowledge-use/SKILL.md`，`SkillIndex.md`、usage sidecar、RAG policy 链接和 `rag-structured-ingestion` handoff 已同步；审核记录位于 `harness/reports/redacted/P5-22RagKnowledgeUseSkillReview.md`。
+- P5-23 已完成 Knowledge/RAG 收口增强：新增 `schema-context` 和 `validate-llm-wiki-mechanisms` 命令，补齐 task-scoped schema context、extraction granularity 实际策略、authoritative tags 要求、source gate fixture、alias/body similarity duplicate governance、reviewed graph PPR 验证和 auto maintenance boundary validation。
+- P5-23 已用新增真实 PDF `Externalization in LLM Agents A Unified Review of Memory Sklls Protocols and Harness Engineering.pdf` 跑通 raw -> candidate -> review package -> approved reviewed promotion -> reviewed concept pages -> vault governance -> candidate cleanup -> reviewed-only query。
+- P5-23 验收结果记录于 `harness/architecture/PHASE5_RAG_KNOWLEDGE_ACCESS_PLANS.md`：`validate-llm-wiki-mechanisms` 9/9 通过，`validate-knowledge-vault` 12/12 通过，candidate full corpus 回归为 0，focused query 首位命中新 reviewed page。
+- P5-23.1 已按用户审核意见修正 Knowledge/RAG 内容质量和 source boundary：source-level reviewed page 主体改为中文并补足 Source Overview / Core Framework / Knowledge Implications；原始材料转换后的 Markdown 移入 `raw/<domain>/normalized/`；`validate-knowledge-vault` 阻止 authoritative reviewed `sourceRefs` 依赖 `var/rag/<run-id>/extracted/*.md`。
+- Knowledge/RAG 部分再次提交用户审核是否收口；H9-4 整体仍需后续完成 Memory 闭环验证。
 
 ### 8.6 H9-5 汇总和 H10 门禁判定
 

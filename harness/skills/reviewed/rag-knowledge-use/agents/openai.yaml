@@ -1,0 +1,4 @@
+interface:
+  display_name: "reviewed Knowledge 使用"
+  short_description: "查询并治理已审核的本地知识库"
+  default_prompt: "使用 $rag-knowledge-use 查询 reviewed Knowledge，读取命中页后回答问题，并说明验证边界。"

@@ -18,9 +18,18 @@ param(
     [string]$ApprovalNote = "",
     [string]$ReviewAfter = "",
     [int]$Limit = 10,
+    [string]$RawDomain = "",
     [switch]$CopyRaw,
     [switch]$Overwrite,
-    [int]$MaxChunkChars = 4000
+    [int]$MaxChunkChars = 4000,
+    [ValidateSet("fine", "standard", "coarse", "minimal", "custom")]
+    [string]$ExtractionGranularity = "standard",
+    [int]$EntityCap = 0,
+    [int]$ConceptCap = 0,
+    [string]$BatchStrategy = "single-pass-local-conversion",
+    [ValidateSet("default", "custom")]
+    [string]$TagVocabularyMode = "default",
+    [string[]]$AllowedTag = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,8 +56,13 @@ switch ($Command) {
         if ($InputPath.Count -eq 0) { throw "ingest requires -InputPath." }
         $argsList += $InputPath
         if (-not [string]::IsNullOrWhiteSpace($RunId)) { $argsList += @("--run-id", $RunId) }
+        if (-not [string]::IsNullOrWhiteSpace($RawDomain)) { $argsList += @("--raw-domain", $RawDomain) }
         if ($CopyRaw) { $argsList += "--copy-raw" }
         $argsList += @("--max-chunk-chars", [string]$MaxChunkChars)
+        $argsList += @("--extraction-granularity", $ExtractionGranularity, "--batch-strategy", $BatchStrategy, "--tag-vocabulary-mode", $TagVocabularyMode)
+        if ($EntityCap -gt 0) { $argsList += @("--entity-cap", [string]$EntityCap) }
+        if ($ConceptCap -gt 0) { $argsList += @("--concept-cap", [string]$ConceptCap) }
+        if ($AllowedTag.Count -gt 0) { $argsList += @("--allowed-tags") + $AllowedTag }
     }
     "health" {
         if ([string]::IsNullOrWhiteSpace($Wiki)) { throw "health requires -Wiki." }

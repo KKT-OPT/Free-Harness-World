@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("init-obsidian-vault", "sync-reviewed-index", "build-reviewed-graph", "health-reviewed", "query-reviewed", "reviewed-gap-plan", "enrich-gap-candidates", "gap-review-package", "promote-gap-candidates", "govern-vault", "pipeline-smoke")]
+    [ValidateSet("init-obsidian-vault", "sync-reviewed-index", "build-reviewed-graph", "health-reviewed", "query-reviewed", "reviewed-gap-plan", "govern-reviewed-duplicates", "dispose-residual-gaps", "canonicalize-vault-layout", "validate-knowledge-vault", "schema-context", "validate-llm-wiki-mechanisms", "candidate-cleanup-plan", "candidate-cleanup-apply", "enrich-gap-candidates", "gap-review-package", "promote-gap-candidates", "govern-vault", "pipeline-smoke")]
     [string]$Command,
 
     [string]$Root = ".",
@@ -9,9 +9,18 @@ param(
     [string]$Reviewed = "user/knowledge/reviewed",
     [string]$Candidate = "user/knowledge/candidate",
     [string]$Raw = "user/knowledge/raw",
+    [string]$Registry = "user/registry/knowledge.local.json",
+    [string]$Domain = "agent",
+    [string]$SourceDomain = "agent",
+    [string]$TargetDomain = "agent-harness-engineering",
+    [string]$SourceId = "agent-harness-engineering-a-survey",
+    [string]$CanonicalPage = "agent-harness-engineering-survey",
+    [ValidateSet("ingest", "promotion", "query", "validation", "cleanup", "all")]
+    [string]$Task = "validation",
     [string]$Graph = "",
     [string]$Report = "",
     [string]$CandidateWiki = "",
+    [string]$CandidateRunId = "reviewed-gap-concepts",
     [string]$TargetDir = "",
     [string]$Target = "",
     [string]$Question = "",
@@ -25,6 +34,14 @@ param(
     [switch]$CopyRaw,
     [switch]$Overwrite,
     [int]$MaxChunkChars = 4000,
+    [ValidateSet("fine", "standard", "coarse", "minimal", "custom")]
+    [string]$ExtractionGranularity = "standard",
+    [int]$EntityCap = 0,
+    [int]$ConceptCap = 0,
+    [string]$BatchStrategy = "single-pass-local-conversion",
+    [ValidateSet("default", "custom")]
+    [string]$TagVocabularyMode = "default",
+    [string[]]$AllowedTag = @(),
     [string]$RunId = ""
 )
 
@@ -74,6 +91,47 @@ switch ($Command) {
         if (-not [string]::IsNullOrWhiteSpace($CandidateWiki)) { $argsList += @("--candidate-wiki", $CandidateWiki) }
         if ($WriteCandidates) { $argsList += @("--write-candidates") }
     }
+    "govern-reviewed-duplicates" {
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
+    "dispose-residual-gaps" {
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+        if (-not [string]::IsNullOrWhiteSpace($CandidateWiki)) { $argsList += @("--candidate-wiki", $CandidateWiki) }
+        if (-not [string]::IsNullOrWhiteSpace($CandidateRunId)) { $argsList += @("--candidate-run-id", $CandidateRunId) }
+    }
+    "canonicalize-vault-layout" {
+        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry)
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+        if (-not [string]::IsNullOrWhiteSpace($SourceDomain)) { $argsList += @("--source-domain", $SourceDomain) }
+        if (-not [string]::IsNullOrWhiteSpace($TargetDomain)) { $argsList += @("--target-domain", $TargetDomain) }
+        if (-not [string]::IsNullOrWhiteSpace($SourceId)) { $argsList += @("--source-id", $SourceId) }
+        if (-not [string]::IsNullOrWhiteSpace($CanonicalPage)) { $argsList += @("--canonical-page", $CanonicalPage) }
+    }
+    "validate-knowledge-vault" {
+        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry)
+        if (-not [string]::IsNullOrWhiteSpace($Graph)) { $argsList += @("--graph", $Graph) }
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
+    "schema-context" {
+        if ([string]::IsNullOrWhiteSpace($Domain)) { throw "schema-context requires -Domain." }
+        $argsList += @("--registry", $Registry, "--domain", $Domain, "--task", $Task)
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
+    "validate-llm-wiki-mechanisms" {
+        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry)
+        if (-not [string]::IsNullOrWhiteSpace($Graph)) { $argsList += @("--graph", $Graph) }
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
+    "candidate-cleanup-plan" {
+        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry)
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
+    "candidate-cleanup-apply" {
+        if ([string]::IsNullOrWhiteSpace($Reviewer)) { throw "candidate-cleanup-apply requires -Reviewer." }
+        if ([string]::IsNullOrWhiteSpace($ApprovalNote)) { throw "candidate-cleanup-apply requires -ApprovalNote." }
+        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry, "--reviewer", $Reviewer, "--approval-note", $ApprovalNote)
+        if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
     "enrich-gap-candidates" {
         if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
         if (-not [string]::IsNullOrWhiteSpace($CandidateWiki)) { $argsList += @("--candidate-wiki", $CandidateWiki) }
@@ -88,6 +146,7 @@ switch ($Command) {
         if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
         if (-not [string]::IsNullOrWhiteSpace($CandidateWiki)) { $argsList += @("--candidate-wiki", $CandidateWiki) }
         if (-not [string]::IsNullOrWhiteSpace($TargetDir)) { $argsList += @("--target-dir", $TargetDir) }
+        if (-not [string]::IsNullOrWhiteSpace($Domain)) { $argsList += @("--domain", $Domain) }
         $argsList += @("--scope", $Scope, "--reviewer", $Reviewer, "--approval-note", $ApprovalNote, "--review-after", $ReviewAfter)
         if ($Overwrite) { $argsList += @("--overwrite") }
     }
@@ -102,7 +161,11 @@ switch ($Command) {
         if ([string]::IsNullOrWhiteSpace($ApprovalNote)) { throw "pipeline-smoke requires -ApprovalNote." }
         if ([string]::IsNullOrWhiteSpace($Question)) { throw "pipeline-smoke requires -Question." }
         $argsList += $InputPath
-        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--scope", $Scope, "--reviewer", $Reviewer, "--approval-note", $ApprovalNote, "--review-after", $ReviewAfter, "--question", $Question, "--limit", [string]$Limit, "--max-chunk-chars", [string]$MaxChunkChars)
+        $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry, "--domain", $Domain, "--scope", $Scope, "--reviewer", $Reviewer, "--approval-note", $ApprovalNote, "--review-after", $ReviewAfter, "--question", $Question, "--limit", [string]$Limit, "--max-chunk-chars", [string]$MaxChunkChars)
+        $argsList += @("--extraction-granularity", $ExtractionGranularity, "--batch-strategy", $BatchStrategy, "--tag-vocabulary-mode", $TagVocabularyMode)
+        if ($EntityCap -gt 0) { $argsList += @("--entity-cap", [string]$EntityCap) }
+        if ($ConceptCap -gt 0) { $argsList += @("--concept-cap", [string]$ConceptCap) }
+        if ($AllowedTag.Count -gt 0) { $argsList += @("--allowed-tags") + $AllowedTag }
         if (-not [string]::IsNullOrWhiteSpace($Target)) { $argsList += @("--target", $Target) }
         if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
         if ($CopyRaw) { $argsList += @("--copy-raw") }

@@ -1,7 +1,7 @@
 ---
 documentName: harness/templates/project-template/docs/project/ProjectIndex.md
-version: v1.0.0-h4-consolidated
-updatedAt: 2026-06-18 10:30:00.000 +08:00
+version: v1.0.1-report-mechanism-route
+updatedAt: 2026-07-02 20:06:00.000 +08:00
 status: active
 purpose: 项目事实入口模板，路由项目身份、事实模块、workflow evidence、decision、model 和 reports。
 scope:
@@ -12,6 +12,8 @@ prerequisites:
   - projects/<project-id>/AGENTS.md
 relatedDocuments:
   - harness/templates/project-template/AGENTS.md
+  - harness/reports/ReportsIndex.md
+  - harness/templates/project-template/docs/project/reports/README.md
   - harness/templates/project-template/docs/project/SensitiveBoundaries.md
   - harness/templates/project-template/docs/project/Validation.md
 outputTo:
@@ -23,9 +25,9 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/templates/project-template/README.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-18
-  decision: h4-consolidated
+  reviewedBy: user
+  reviewedAt: 2026-07-02
+  decision: h9-3-report-mechanism-route
 ---
 # Project Index（项目事实索引模板）
 
@@ -112,7 +114,7 @@ Project reports live under:
 docs/project/reports/
 ```
 
-Reports are evidence, not facts. A report recommendation becomes a project fact only after review and an explicit update to the target fact document.
+Reports are evidence, not facts. 通用 report 格式、规则、模板、命令面和存放边界由 `harness/reports/ReportsIndex.md` 路由。A report recommendation becomes a project fact only after review and an explicit update to the target fact document.
 
 ## 6. Sensitive Boundary
 

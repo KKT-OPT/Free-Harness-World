@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/manifests/README.md
-version: v1.0.0-h6-rag-boundary
-updatedAt: 2026-06-22 23:41:15.773 +08:00
+version: v1.2.0-source-gate-manifest-fields
+updatedAt: 2026-07-03 23:30:00.000 +08:00
 status: active
 purpose: 说明 RAG manifest schema、profile example 和非私有配置样例的保存边界。
 scope:
@@ -13,6 +13,7 @@ prerequisites:
 relatedDocuments:
   - harness/rag/RAGIndex.md
   - harness/rag/policies/README.md
+  - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
 outputTo:
   - harness/rag/manifests/README.md
 owner: mixed
@@ -23,7 +24,7 @@ dependsOn:
 review:
   reviewedBy: agent
   reviewedAt: 2026-06-22
-  decision: h6-complete
+  decision: source-gate-schema-granularity-tag-fields-added
 ---
 # RAG Manifest
 
@@ -33,6 +34,7 @@ review:
 
 - 不含真实路径的 ingestion profile；
 - converter、OCR、speech-to-text、chunking 和 review requirement 的 schema；
+- source gate、source fingerprint、domain schema、extraction granularity、entity/concept cap、batch strategy 和 tag vocabulary 的非私有 schema 字段；
 - 明确标记为 example 的配置。
 
 禁止保存：
