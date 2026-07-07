@@ -1,7 +1,7 @@
 ﻿---
-documentName: harness/skills/rag-structured-ingestion/README.md
-version: v1.4.0-source-centered-raw-boundary
-updatedAt: 2026-07-03 16:45:00.000 +08:00
+documentName: harness/skills/candidate/rag-structured-ingestion/README.md
+version: v1.4.1-candidate-path-normalized
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
 purpose: 说明 RAG structured ingestion Skill 的定位、使用方式和 H6 后输出边界。
 scope:
@@ -11,13 +11,13 @@ scope:
   - reviewed-knowledge-promotion
 prerequisites:
   - AGENTS.md
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
 relatedDocuments:
   - harness/rag/RAGIndex.md
   - user/knowledge/README.md
   - harness/governance/KnowledgePromotionPolicy.md
 outputTo:
-  - harness/skills/rag-structured-ingestion/README.md
+  - harness/skills/candidate/rag-structured-ingestion/README.md
 owner: mixed
 reviewAfter: 2026-07-22
 supersededBy:
@@ -25,8 +25,8 @@ dependsOn:
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-03
-  decision: source-centered-raw-boundary-added
+  reviewedAt: 2026-07-05
+  decision: moved-to-candidate-skill-boundary
 ---
 # RAG 结构化摄取使用手册
 
@@ -193,7 +193,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 详细规则见：
 
 ```text
-harness/skills/rag-structured-ingestion/references/candidate-enrichment.md
+harness/skills/candidate/rag-structured-ingestion/references/candidate-enrichment.md
 ```
 
 ## 6. 关键边界

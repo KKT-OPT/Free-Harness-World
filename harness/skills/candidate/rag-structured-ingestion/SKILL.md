@@ -1,10 +1,10 @@
 ﻿---
 name: rag-structured-ingestion
 description: Convert user-provided raw or unstructured material into Harness RAG runtime artifacts and local-only candidate knowledge, and after explicit approval promote candidate evidence into reviewed Knowledge. Use when the user asks to ingest raw files, convert PDFs/Office/TXT/Markdown into candidate wiki pages, run raw-to-candidate health/lint/graph/query/enrichment-plan/review-package/promotion-plan/promote-reviewed/stale-plan checks, or prepare Obsidian-reviewable candidate notes before reviewed-knowledge approval.
-documentName: harness/skills/rag-structured-ingestion/SKILL.md
-version: v1.6.1-reviewed-knowledge-use-handoff
-updatedAt: 2026-07-04 00:00:00.000 +08:00
-status: active
+documentName: harness/skills/candidate/rag-structured-ingestion/SKILL.md
+version: v1.6.2-candidate-path-normalized
+updatedAt: 2026-07-05 00:00:00.000 +08:00
+status: review
 purpose: 定义 raw-to-candidate RAG Skill 的执行边界、稳定命令和输出路径。
 scope:
   - rag-skill
@@ -21,7 +21,7 @@ relatedDocuments:
   - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
   - harness/skills/reviewed/rag-knowledge-use/SKILL.md
 outputTo:
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
 owner: mixed
 reviewAfter: 2026-07-22
 supersededBy:
@@ -29,8 +29,8 @@ dependsOn:
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-04
-  decision: rag-knowledge-use-reviewed-handoff-updated
+  reviewedAt: 2026-07-05
+  decision: moved-to-candidate-skill-boundary
 ---
 # RAG 结构化摄取 Skill
 
@@ -144,7 +144,7 @@ Human-facing reports，中文解释是面向人类审核的报告，例如 `enri
 
 ## 8. 参考文件
 
-- `harness/skills/rag-structured-ingestion/references/candidate-enrichment.md`
-- `harness/skills/rag-structured-ingestion/references/obsidian-review.md`
+- `harness/skills/candidate/rag-structured-ingestion/references/candidate-enrichment.md`
+- `harness/skills/candidate/rag-structured-ingestion/references/obsidian-review.md`
 - `harness/tools/scripts/stable/invoke-rag-candidate.ps1`
 - `harness/tools/scripts/stable/rag_candidate/`

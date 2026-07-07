@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.22.1-stage-doc-retired
-updatedAt: 2026-07-05 00:00:00.000 +08:00
+version: v1.24.0-java-javadoc-coverage-gate
+updatedAt: 2026-07-06 22:15:00.000 +08:00
 status: active
-purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检中的 Memory gate。
+purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检中的 Memory gate。
 scope:
   - script-index
   - stable-tool-contract
@@ -25,8 +25,8 @@ dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-05
-  decision: h9-4-stage-doc-retired
+  reviewedAt: 2026-07-06
+  decision: java-javadoc-coverage-gate-added
 ---
 # 脚本索引
 
@@ -42,6 +42,8 @@ review:
 | `harness/tools/scripts/stable/clean-sandbox.ps1` | 清理运行态日志和临时文件，默认 dry-run。 | yes，`-Apply` 需审批 |
 | `harness/tools/scripts/stable/test-project-registry.ps1` | 只读校验本地项目 registry。 | yes |
 | `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` | 只读校验真实项目任务的方案、开发、验证、报告、审核和验收证据闭环。 | yes |
+| `harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1` | 只读校验真实项目代码审查 workflow evidence 的审查、用户审核、修复交接、复查和最终审核证据闭环。 | yes |
+| `harness/tools/scripts/stable/test-java-javadoc-coverage.ps1` | 只读校验 Java 文件、目录或包的类级 Javadoc、作者、since、version、必需类级章节、最少说明长度、public/protected 或全部显式声明方法 Javadoc、参数、返回值和空白星号行。 | yes |
 | `harness/tools/scripts/stable/test-harness-governance.ps1` | 运行 Harness Root 治理自检。 | yes |
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | 通过稳定门面运行 RAG candidate 流程。 | yes |
@@ -129,18 +131,44 @@ review:
 | Repair Suggestion | 补齐 Task Brief、项目入口、设计/执行计划、文件变更、验证、用户验收、治理候选或项目 report 落点。 |
 | Validation Instruction | 先运行 `-SelfTest`；真实项目任务收口前，传入对应 `docs/project/workflow/` 和 `docs/project/reports/` 文件，必要时加 `-RequireReport -RequireUserAcceptance`。 |
 
+### `test-code-review-workflow-evidence.ps1`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Root`、`-Registry`、`-ProjectId`、`-WorkflowEvidence`、`-RequireUserReview`、`-RequireFixDisposition`、`-RequireRecheck`、`-RequireFinalReview`、`-RequireClosedLoop`、`-SelfTest`。 |
+| Outputs | JSON status summary、workflow evidence count、阶段要求 flags、severity counts、checks 和 findings。 |
+| Status Summary | projectId、workflowEvidenceCount、require flags、findingCount、error/warning/info counts。 |
+| Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要写入 workflow evidence 或 report。 |
+| Sensitive Handling | 只读取项目 `docs/project/workflow/` 下的脱敏 Markdown evidence；检测本机绝对路径和 credential-like assignment；不读取 settings/auth、raw logs、完整业务数据或运行态正文。 |
+| Failure Mode | `codeReview/*`、`workflowEvidence/*`、`frontmatter/*`、`registry/*`、`sensitive/*`。 |
+| Repair Suggestion | 补齐 Task Brief、审查范围、trace、findings、用户审核、修复交接、复查、最终审核和状态字段；闭环前不要启用 `-RequireClosedLoop`。 |
+| Validation Instruction | 先运行 `-SelfTest`；真实项目代码审查初稿运行默认结构检查；用户审核后可加 `-RequireUserReview`；修复后可加 `-RequireFixDisposition -RequireRecheck`；最终验收后加 `-RequireClosedLoop`。 |
+
+### `test-java-javadoc-coverage.ps1`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Root`、`-Target`、`-ExpectedAuthor`、`-ExpectedVersion`、`-RequiredClassSection`、`-MinClassJavadocLines`、`-RequireClassAuthor`、`-RequireClassSince`、`-RequireClassVersion`、`-RequirePublicMethodJavadocs`、`-RequireAllMethodJavadocs`、`-RequireParamTags`、`-RequireReturnTags`、`-ForbidBlankJavadocLines`、`-SelfTest`。 |
+| Outputs | JSON status summary、file count、finding count 和逐项 Javadoc finding。 |
+| Status Summary | status、root、target、checkedAt、fileCount、findingCount。 |
+| Redacted Log Path | 默认不写日志；stdout JSON 可写入项目 workflow evidence 摘要。 |
+| Sensitive Handling | 只读取目标 Java 源码文本；不读取 settings/auth、日志、运行态数据或业务原始数据。 |
+| Failure Mode | `classJavadocMissing`、`classAuthorMissing`、`classSinceMissing`、`classVersionMissing`、`classJavadocTooShort`、`classJavadocSectionMissing`、`classAuthorUnexpected`、`classVersionUnexpected`、`methodJavadocMissing`、`methodParamTagMissing`、`methodReturnTagMissing`、`javadocBlankLine`。 |
+| Repair Suggestion | 补齐类级 Javadoc、作者、since、version、项目要求的类级章节、方法 Javadoc、`@param`、`@return`，并删除会触发 Javadoc/IDE 告警的空白星号行。 |
+| Validation Instruction | 先运行 `-SelfTest`；真实 Java 包级审查在项目 root 下传入目标包路径、用户确认的作者、版本、项目要求的类级章节和最少说明长度，必要时启用全部 strict switches，并把 JSON 摘要写入 workflow evidence。 |
+
 ### `test-harness-governance.ps1`
 
 | 契约项 | 内容 |
 |---|---|
 | Inputs | `-Root`、`-Registry`。 |
 | Outputs | JSON status summary、severity counts、check list、findings 和 repair suggestions。 |
-| Status Summary | status、findingCount、error/warning/info counts、registryStatus、projectLifecycleEvidenceStatus、memoryStoreStatus、memoryStoreSelfTestStatus。 |
+| Status Summary | status、findingCount、error/warning/info counts、registryStatus、projectLifecycleEvidenceStatus、codeReviewWorkflowEvidenceStatus、javaJavadocCoverageStatus、memoryStoreStatus、memoryStoreSelfTestStatus。 |
 | Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要。 |
 | Sensitive Handling | 默认排除 `var/`、user-local、runtime、external、projects 等边界；不读取 credential 正文。 |
-| Failure Mode | `governance/route`、`governance/boundary`、`governance/gitignore`、`registry/*`、`memoryStoreValidation*`、`memoryStoreSelfTest*`。 |
+| Failure Mode | `governance/route`、`governance/boundary`、`governance/gitignore`、`registry/*`、`projectLifecycleValidatorSelfTest*`、`codeReviewWorkflowValidatorSelfTest*`、`javaJavadocCoverageValidatorSelfTest*`、`memoryStoreValidation*`、`memoryStoreSelfTest*`。 |
 | Repair Suggestion | 根据 finding 的 `repairSuggestion` 更新索引、边界或 registry。 |
-| Validation Instruction | 在 Harness Root 运行 dry-run 自检，确认 required routes、Verification/Observability 目标路由、Git 边界、project lifecycle evidence self-test、Memory store validation 和 Memory store self-test 均通过。 |
+| Validation Instruction | 在 Harness Root 运行 dry-run 自检，确认 required routes、Verification/Observability 目标路由、Git 边界、project lifecycle evidence self-test、code review workflow evidence self-test、Java Javadoc coverage self-test、Memory store validation 和 Memory store self-test 均通过。 |
 
 ### `bootstrap-harness-workspace.ps1`
 

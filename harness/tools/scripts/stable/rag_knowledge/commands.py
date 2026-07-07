@@ -172,9 +172,9 @@ RESIDUAL_GAP_DISPOSITIONS = {
     "StructuredIngestion": {
         "candidateConcept": "StructuredIngestion",
         "disposition": "dedup-to-rag-structured-ingestion-skill",
-        "replacement": "Structured Ingestion（结构化摄取；见 `harness/skills/rag-structured-ingestion/SKILL.md` 和 `harness/templates/knowledge/StructuredIngestionManifestTemplate.md`）",
+        "replacement": "Structured Ingestion（结构化摄取；见 `harness/skills/candidate/rag-structured-ingestion/SKILL.md` 和 `harness/templates/knowledge/StructuredIngestionManifestTemplate.md`）",
         "targets": [
-            "harness/skills/rag-structured-ingestion/SKILL.md",
+            "harness/skills/candidate/rag-structured-ingestion/SKILL.md",
             "harness/templates/knowledge/StructuredIngestionManifestTemplate.md",
         ],
     },

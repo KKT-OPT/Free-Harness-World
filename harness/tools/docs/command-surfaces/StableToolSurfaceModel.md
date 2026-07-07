@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
-version: v1.7.0-pipeline-smoke
+version: v1.8.0-code-review-evidence-gate
 updatedAt: 2026-07-02 00:00:00.000 +08:00
 status: active
-purpose: 定义 Harness 稳定工具门面的长期模型、调用规则、证据输出和安全边界。
+purpose: 定义 Harness 稳定工具门面的长期模型、调用规则、证据输出、安全边界和真实项目 code review workflow evidence 门禁入口。
 scope:
   - stable-tool-surface
   - command-surface
@@ -26,7 +26,7 @@ dependsOn:
 review:
   reviewedBy: agent
   reviewedAt: 2026-07-02
-  decision: pipeline-smoke-command-surface-added
+  decision: code-review-evidence-gate-added
 ---
 # 稳定工具门面模型
 
@@ -82,6 +82,8 @@ invoke-rag-candidate
 invoke-rag-knowledge
 clean-sandbox
 test-project-registry
+test-project-lifecycle-evidence
+test-code-review-workflow-evidence
 test-harness-governance
 publish-harness-agent-branch
 ```
@@ -91,6 +93,7 @@ Agent 不应：
 - 手动拼接复杂 Maven classpath；
 - 手动拼接 RAG ingestion 的 Python venv、PYTHONPATH 或 Unicode 环境变量；
 - 手工串联 raw -> candidate -> reviewed vault -> query 的 RAG smoke；应使用 `invoke-rag-knowledge pipeline-smoke`，并显式传入 reviewer、approval note、raw input 和 query；
+- 手工判断真实项目 code review workflow evidence 是否闭环；应使用 `test-code-review-workflow-evidence` 按阶段检查结构、用户审核、修复交接、复查和最终审核状态；
 - 手动扫描 reviewed wikilinks 后直接创建 reviewed Knowledge；应使用 `invoke-rag-knowledge reviewed-gap-plan`、`enrich-gap-candidates` 和 `gap-review-package` 形成 candidate-only gap workflow，并在用户明确批准后用 `promote-gap-candidates` 晋升 approved concepts；
 - 手动整理 `user/knowledge/candidate/` 后要求用户逐个审核；应先使用 `invoke-rag-knowledge govern-vault -ArchiveInactiveCandidates` 生成 `Home.md` 单入口、active review queue 和 archive summary；
 - 直接读取 settings/auth 正文；

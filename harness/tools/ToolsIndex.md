@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.16.1-stage-doc-retired
-updatedAt: 2026-07-05 00:00:00.000 +08:00
+version: v1.18.0-java-javadoc-coverage-gate
+updatedAt: 2026-07-06 22:15:00.000 +08:00
 status: active
-purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
+purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
 scope:
   - tool-assets
   - stable-tool-contract
@@ -17,6 +17,8 @@ relatedDocuments:
   - harness/HarnessIndex.md
   - harness/tools/docs/script-index/ScriptIndex.md
   - harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
+  - harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1
+  - harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
   - harness/architecture/PLANS.md
 outputTo:
   - harness/tools/ToolsIndex.md
@@ -29,8 +31,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-05
-  decision: h9-4-stage-doc-retired
+  reviewedAt: 2026-07-06
+  decision: java-javadoc-coverage-gate-added
 ---
 # 工具资产索引
 
@@ -93,6 +95,22 @@ harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
 ```
 
 该脚本用于在真实项目任务收口前，只读检查项目 workflow evidence 和项目 report 是否覆盖 Task Brief、项目入口、设计或执行计划、开发变更、验证、用户验收、治理候选、项目 report 落点和 non-promotion 边界。它是通用 Harness 机制，不保存任何具体项目资产。
+
+Code Review workflow evidence 门禁脚本：
+
+```text
+harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1
+```
+
+该脚本用于只读检查真实项目代码审查 workflow evidence 是否覆盖 Task Brief、审查范围、trace、findings、用户审核、修复交接、复查、最终审核和闭环状态字段。默认模式检查结构完整性；`-RequireUserReview`、`-RequireFixDisposition`、`-RequireRecheck`、`-RequireFinalReview` 和 `-RequireClosedLoop` 用于按阶段强制提高门禁要求。通用治理自检脚本 `test-harness-governance.ps1` 必须调用该脚本的 `-SelfTest`，确保 code review workflow 不是只靠文档约束。
+
+Java Javadoc 覆盖门禁脚本：
+
+```text
+harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
+```
+
+该脚本用于只读检查 Java 文件、目录或包的类级 Javadoc、作者、since、version、必需类级章节、最少类级说明长度、public/protected 或全部显式声明方法 Javadoc、`@param`、`@return` 和 Javadoc 空白星号行。真实项目的 Java 包级代码审查如果把注释完整性作为验收标准，必须在 workflow evidence 中记录该脚本的命令和 JSON 摘要。通用治理自检脚本 `test-harness-governance.ps1` 必须调用该脚本的 `-SelfTest`，确保 Java 注释覆盖不是只靠自然语言约束。
 
 Reviewed Knowledge access 稳定脚本：
 

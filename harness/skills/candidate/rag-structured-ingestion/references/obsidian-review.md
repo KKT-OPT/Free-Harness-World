@@ -1,28 +1,28 @@
 ---
-documentName: harness/skills/rag-structured-ingestion/references/obsidian-review.md
-version: v1.2.0-promote-reviewed
-updatedAt: 2026-06-30 21:00:00.000 +08:00
+documentName: harness/skills/candidate/rag-structured-ingestion/references/obsidian-review.md
+version: v1.2.1-candidate-path-normalized
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
 purpose: 说明如何使用 Obsidian 审查 local-only candidate knowledge。
 scope:
   - obsidian-review
   - candidate-knowledge
 prerequisites:
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
 relatedDocuments:
   - harness/rag/RAGIndex.md
   - user/knowledge/README.md
 outputTo:
-  - harness/skills/rag-structured-ingestion/references/obsidian-review.md
+  - harness/skills/candidate/rag-structured-ingestion/references/obsidian-review.md
 owner: mixed
 reviewAfter: 2026-07-22
 supersededBy:
 dependsOn:
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-30
-  decision: phase-4-promote-reviewed
+  reviewedAt: 2026-07-05
+  decision: moved-to-candidate-skill-boundary
 ---
 # Obsidian 候选知识审查
 

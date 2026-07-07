@@ -49,7 +49,7 @@ metadata:
 | `harness/rag/policies/CandidatePostPromotionCleanupPolicy.md` | 确认 candidate 完成生命周期后的 full corpus 清理、轻量审计记录和 approved apply 边界。 |
 | `harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md` | 确认 schema、granularity、tag vocabulary、source gate、fingerprint、alias dedup、repair order 和 reviewed-only graph retrieval 的吸收边界。 |
 | `harness/tools/docs/script-index/ScriptIndex.md` | 查询 stable RAG Knowledge 命令面和脚本文档入口。 |
-| `harness/skills/rag-structured-ingestion/SKILL.md` | 当任务从 raw source 进入 candidate ingestion 时，先使用 raw-to-candidate workflow，再回到本 Skill 使用 reviewed Knowledge。 |
+| `harness/skills/candidate/rag-structured-ingestion/SKILL.md` | 当任务从 raw source 进入 candidate ingestion 时，先使用 raw-to-candidate workflow，再回到本 Skill 使用 reviewed Knowledge。 |
 | `user/knowledge/README.md` | 确认真正用户知识库的 raw、candidate、reviewed、Home 和 local-only 边界。 |
 
 ## 3. 边界规则

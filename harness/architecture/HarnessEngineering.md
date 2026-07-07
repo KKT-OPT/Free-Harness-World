@@ -11,8 +11,8 @@ tags:
   - agent
   - governance
   - target-architecture
-version: v2.9.0-normalized-source-depth-governance
-updatedAt: 2026-07-04 00:00:00.000 +08:00
+version: v2.10.0-project-feedback-governance
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
 purpose: 定义 Harness Distribution Repo、Harness Workspace、Project Instance、治理闭环、项目模板、Memory、Skill、RAG、Tool、Report 等长期目标架构边界。
 scope:
@@ -31,6 +31,7 @@ relatedDocuments:
   - harness/HarnessIndex.md
   - harness/architecture/PLANS.md
   - harness/governance/GovernanceIndex.md
+  - harness/governance/ProjectHarnessFeedbackPolicy.md
   - harness/rag/policies/ObsidianLlmWikiPluginBoundary.md
   - harness/rag/policies/CandidatePostPromotionCleanupPolicy.md
   - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
@@ -49,8 +50,8 @@ supersedes:
 review:
   reviewedBy: user
   reviewedAt: 2026-07-03
-  decision: normalized-source-depth-governance-updated
-  notes: 固化项目入口、RAG/Knowledge、索引、计划、产品化目标、真实项目生命周期证据脚本门禁、LLM Wiki 风格知识库治理模型、source-centered candidate archive 结构、Knowledge one-click validation gate 命令面、Obsidian LLM Wiki 插件边界策略、candidate post-promotion cleanup、obsidian-llm-wiki 可复用机制、normalized source boundary 和 reviewed source depth 门禁。
+  decision: project-feedback-governance-linked
+  notes: 固化项目入口、RAG/Knowledge、索引、计划、产品化目标、真实项目生命周期证据脚本门禁、LLM Wiki 风格知识库治理模型、source-centered candidate archive 结构、Knowledge one-click validation gate 命令面、Obsidian LLM Wiki 插件边界策略、candidate post-promotion cleanup、obsidian-llm-wiki 可复用机制、normalized source boundary、reviewed source depth 门禁和真实项目反向优化 Harness 的治理入口。
 ---
 
 # Harness Engineering 目标架构设计方案
@@ -253,7 +254,15 @@ Harness 的核心职责是：
 -> closeout
 ```
 
-真实项目中的通用经验可以沉淀为 Skill、Memory、Template、Tool、Governance Rule 或 Project Template 改进；真实项目相关知识应沉淀到 `user/knowledge/project-id/` 或外部 private knowledge repo，而不是直接进入通用 Harness Git。
+真实项目中的通用经验可以沉淀为 Skill、Memory、Template、Tool、Governance Rule、Verification Gate、Observability Schema 或 Project Template 改进；真实项目相关知识应沉淀到 `user/knowledge/`、项目文档或外部 private knowledge repo，而不是直接进入通用 Harness Git。
+
+具体分类、候选落点和审核门禁由以下治理策略定义：
+
+```text
+harness/governance/ProjectHarnessFeedbackPolicy.md
+```
+
+该策略负责区分 workflow 到 Memory、项目代码到代码规范、项目开发到 Skill 或 Tool、项目知识到 Knowledge，以及 Template、Governance、Verification、Observability 和 Architecture 的反向优化边界。
 
 ---
 

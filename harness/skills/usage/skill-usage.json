@@ -45,6 +45,36 @@
       "gitManaged": true,
       "successRate": "not-yet-measured",
       "staleCandidate": false
+    },
+    {
+      "skillId": "code-review",
+      "status": "reviewed",
+      "path": "harness/skills/reviewed/code-review/SKILL.md",
+      "triggerMode": "user-directed",
+      "useCount": 1,
+      "patchCount": 4,
+      "lastUsedAt": "2026-07-06T11:05:00+08:00",
+      "lastPatchedAt": "2026-07-06T11:05:00+08:00",
+      "lastPromotedAt": "2026-07-06T11:05:00+08:00",
+      "promotionDecision": "approved-by-user-after-real-project-forward-test",
+      "gitManaged": true,
+      "successRate": "not-yet-measured",
+      "staleCandidate": false
+    },
+    {
+      "skillId": "code-implementation",
+      "status": "reviewed",
+      "path": "harness/skills/reviewed/code-implementation/SKILL.md",
+      "triggerMode": "user-directed",
+      "useCount": 1,
+      "patchCount": 2,
+      "lastUsedAt": "2026-07-06T11:05:00+08:00",
+      "lastPatchedAt": "2026-07-06T11:05:00+08:00",
+      "lastPromotedAt": "2026-07-06T11:05:00+08:00",
+      "promotionDecision": "approved-by-user-after-real-project-forward-test",
+      "gitManaged": true,
+      "successRate": "not-yet-measured",
+      "staleCandidate": false
     }
   ]
 }

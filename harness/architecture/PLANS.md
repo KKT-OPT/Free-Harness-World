@@ -1,9 +1,9 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.6.9-h9-4-complete-stage-docs-retired
+version: v1.7.0-h9-5-project-feedback-policy
 updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划、H9-4 Knowledge/RAG 和 Memory 收口完成结果，以及 H9-5 汇总和 H10 门禁判定入口。
+purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划、H9-4 Knowledge/RAG 和 Memory 收口完成结果，以及 H9-5 项目反向优化机制、汇总和 H10 门禁判定入口。
 scope:
   - architecture-landing-plan
   - harness-refactor-plan
@@ -29,6 +29,7 @@ scope:
   - h9-4-memory-governance-self-check
   - h9-4-memory-closeout-review
   - h9-4-stage-docs-retired
+  - h9-5-project-feedback-policy
   - llm-wiki-agent-absorption
 prerequisites:
   - AGENTS.md
@@ -40,6 +41,7 @@ relatedDocuments:
   - harness/HarnessIndex.md
   - harness/architecture/HarnessEngineering.md
   - harness/governance/GovernanceIndex.md
+  - harness/governance/ProjectHarnessFeedbackPolicy.md
   - harness/governance/SkillGovernance.md
   - harness/skills/SkillPolicy.md
   - harness/skills/SkillIndex.md
@@ -60,6 +62,7 @@ relatedDocuments:
   - harness/memory/reviewed/harness-entry-reading-order.md
   - harness/skills/reviewed/memory-governance-use/SKILL.md
   - harness/reports/redacted/H9-4MemoryGovernanceUseSkillCandidateReview.md
+  - harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md
   - README.md
 outputTo:
   - harness/architecture/PLANS.md
@@ -71,9 +74,9 @@ dependsOn:
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: user
+  reviewedBy: agent
   reviewedAt: 2026-07-05
-  decision: h9-4-closeout-confirmed-stage-docs-retired
+  decision: h9-5-project-feedback-policy-created
 ---
 # Harness 架构落地计划
 
@@ -82,11 +85,11 @@ review:
 ## 1. 当前状态
 
 ```text
-currentStage = H9-5 Summary and H10 Gate Assessment
-status = h9-4-complete-h9-5-pending
+currentStage = H9-5 Project Feedback Mechanism and H10 Gate Assessment
+status = h9-5-in-progress-project-feedback-policy-created
 lastCompletedStage = H9-4
 architectureAuthority = harness/architecture/HarnessEngineering.md
-targetArchitectureVersion = v2.7.0-rag-knowledge-executable-governance
+targetArchitectureVersion = v2.10.0-project-feedback-governance
 h9ValidationAnchor = projects/lfms-decision
 h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 ```
@@ -123,7 +126,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 | H9-2 | Skill 闭环验证 | complete | `simulation-failure-triage` 已经用户 approve，晋升到 reviewed Skill，并补齐 Git 管理门禁；SkillIndex、usage sidecar、审核记录和 Skill 机制文档已同步。 |
 | H9-3 | Governance 闭环验证 | complete | 已复用 H9-1 真实仿真任务生成项目级 Governance closeout report；用户确认后补齐生命周期证据门禁并完成收口。 |
 | H9-4 | Knowledge 和 Memory 闭环验证 | complete | Knowledge/RAG 已完成 raw -> candidate -> reviewed -> cleanup -> validation -> query 闭环；Memory 已完成 candidate -> review -> reviewed/delete 闭环并接入 governance self-check。 |
-| H9-5 | H9 汇总和 H10 门禁判定 | pending | 汇总 H9 验收结果、架构反向优化项和 release readiness 风险，判断是否进入 H10。 |
+| H9-5 | H9 汇总和 H10 门禁判定 | in-progress | 已先建立真实项目反向优化 Harness 的治理规则和 triage 模板；后续继续处理 code review Skill、测试 Skill、项目规范和剩余 release readiness 风险。 |
 | H10 | Release Readiness 和 main 发布门禁 | pending | H9 全部子阶段验收后再判断是否具备 release candidate；`main` 合并、tag、正式发布只能由用户执行。 |
 
 ## 3. 当前沙盒 Harness 落地现状
@@ -147,7 +150,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 
 | 阶段 | 验收摘要 |
 |---|---|
-| H0 | 架构权威已建立并保持 active；当前版本为 `v2.7.0-rag-knowledge-executable-governance`。 |
+| H0 | 架构权威已建立并保持 active；当前版本为 `v2.10.0-project-feedback-governance`。 |
 | H1 | 新导航入口和架构计划路径已落地。 |
 | H2 | 活跃文档不再依赖旧索引和旧计划路径作为主入口。 |
 | H3 | 目标一级目录和产品化必需文件已建立。 |
@@ -463,6 +466,17 @@ H9-4 Knowledge/RAG 后续计划记录（2026-07-03）：
 3. 需要修改架构权威的事项单独列为用户审批项，不直接写入 `HarnessEngineering.md`。
 4. 残余风险、未完成项和建议下一步明确。
 5. 用户决定进入 H10、继续 H9 迭代，或退回某个 H9 子阶段。
+
+当前 H9-5 不直接进入最终总结。用户已明确 `projects/lfms-decision` 仍需要继续补齐 code review Skill、测试 Skill 等真实项目能力，同时 Harness 缺少从真实项目反向优化通用机制的稳定规则。
+
+H9-5 第一项长期机制已建立：
+
+| 输出 | 路径 | 作用 |
+|---|---|---|
+| 项目反向优化治理策略 | `harness/governance/ProjectHarnessFeedbackPolicy.md` | 定义 workflow、项目代码、项目开发、项目知识和其他反馈信号如何进入 Memory、Skill、Knowledge、Tool、Template、Governance、Verification、Observability 或 Architecture 候选。 |
+| 项目反向优化 triage 模板 | `harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md` | 用于每个真实项目任务收口时记录来源证据、候选类型、目标资产、审批状态、验证门禁和处置结果。 |
+
+后续 H9-5 任务应优先使用上述策略对 `lfms-decision` 的 code review、测试、开发、项目知识和项目规范候选进行分类，再分别进入对应 Skill、Tool、Project Fact、Knowledge 或 Governance 闭环。
 
 ## 9. H10 目标
 

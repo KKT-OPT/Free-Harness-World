@@ -1,14 +1,15 @@
 ﻿---
 documentName: harness/governance/GovernanceIndex.md
-version: v1.2.0-project-lifecycle-evidence-gate
-updatedAt: 2026-07-02 21:20:00.000 +08:00
+version: v1.3.0-project-feedback-policy
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 作为 Harness Governance 的长期入口，路由 security、context、promotion、archive 和 self-check，并说明通用治理机制与具体项目治理实例、Report、Verification、Observability 的边界。
+purpose: 作为 Harness Governance 的长期入口，路由 security、context、promotion、project feedback、archive 和 self-check，并说明通用治理机制与具体项目治理实例、Report、Verification、Observability 的边界。
 scope:
   - governance
   - security
   - context
   - promotion
+  - project-feedback
   - archive
   - self-check
   - report-instance-boundary
@@ -20,8 +21,10 @@ relatedDocuments:
   - harness/verification/VerificationIndex.md
   - harness/observability/ObservabilityIndex.md
   - harness/governance/ArtifactLifecycle.md
+  - harness/governance/ProjectHarnessFeedbackPolicy.md
   - harness/governance/ReportArchivePolicy.md
   - harness/reports/ReportsIndex.md
+  - harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md
   - harness/tools/scripts/stable/test-harness-governance.ps1
   - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
 outputTo:
@@ -34,9 +37,9 @@ dependsOn:
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: project-specific-report-boundary-and-lifecycle-gate-confirmed
+  reviewedBy: agent
+  reviewedAt: 2026-07-05
+  decision: project-feedback-policy-routed
 ---
 # Governance 索引
 
@@ -51,6 +54,7 @@ review:
 | Security | `harness/governance/security/SandboxRuntimeSecurityModel.md`, `GatewayAuthorizationPolicy.md`, `RuntimeApprovalPolicy.md`, `CredentialBoundaryPolicy.md`, `ContextFileSecurityPolicy.md`, `IsolationDecisionMatrix.md`, `LocalIdentityAndGitBoundaryPolicy.md` |
 | Context | `harness/governance/context/ContextLoadingPolicy.md` |
 | Artifact Lifecycle | `harness/governance/ArtifactLifecycle.md` |
+| Project Feedback | `harness/governance/ProjectHarnessFeedbackPolicy.md`, `harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md` |
 | Promotion | `harness/governance/KnowledgePromotionPolicy.md`, `MemoryGovernance.md`, `SkillGovernance.md` |
 | Document and Index | `harness/governance/DocumentGovernance.md`, `IndexMaintenancePolicy.md` |
 | Cleanup and Schedule | `harness/governance/CleanupPolicy.md`, `ScheduledGovernance.md` |
@@ -75,10 +79,14 @@ Governance 不保存验证规则正文，不把 trace summary 当作事实源，
 
 ```text
 harness/governance/ArtifactLifecycle.md
+harness/governance/ProjectHarnessFeedbackPolicy.md
 harness/templates/governance/GovernanceCloseoutTemplate.md
+harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md
 ```
 
 候选类型包括 Project Fact、Knowledge、Memory、Skill、Tool、Template、Governance、Architecture、Report 或 RAG 更新。
+
+如果候选来源于真实项目反向优化，必须先使用 `ProjectHarnessFeedbackPolicy.md` 判断信号类型和目标资产，避免把项目事实、私有知识或一次性任务历史误写入通用 Harness。
 
 ## 4. 具体实例落点规则
 

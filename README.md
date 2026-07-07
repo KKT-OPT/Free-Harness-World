@@ -1,15 +1,16 @@
 ---
 documentName: README.md
-version: v1.4.1-h9-4-closeout
-updatedAt: 2026-07-05 00:00:00.000 +08:00
+version: v1.5.0-h9-5-code-review-usage
+updatedAt: 2026-07-07 11:45:00.000 +08:00
 status: active
-purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、Knowledge/RAG 使用、Memory 使用、常用命令、边界、贡献和 License。
+purpose: 作为 Harness Distribution Repo 的用户安装和使用手册，说明项目定位、安装、验证、卸载、快速开始、Knowledge/RAG 使用、Memory 使用、代码审查与实现闭环、项目反向优化 Harness、常用命令、边界、贡献和 License。
 scope:
   - user-manual
   - installation-guide
   - quick-start
   - knowledge-rag-user-guide
   - memory-user-guide
+  - code-review-user-guide
   - command-reference
   - contribution-guide
 prerequisites:
@@ -26,10 +27,16 @@ relatedDocuments:
   - harness/memory/MemoryIndex.md
   - harness/governance/MemoryGovernance.md
   - harness/governance/KnowledgePromotionPolicy.md
+  - harness/governance/ProjectHarnessFeedbackPolicy.md
   - harness/tools/docs/script-index/ScriptIndex.md
   - harness/skills/reviewed/rag-knowledge-use/SKILL.md
   - harness/skills/reviewed/memory-governance-use/SKILL.md
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/reviewed/code-review/SKILL.md
+  - harness/skills/reviewed/code-implementation/SKILL.md
+  - harness/skills/reviewed/code-review/references/java-code-standards.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
+  - harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1
+  - harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
   - user/knowledge/README.md
 outputTo:
   - README.md
@@ -45,15 +52,15 @@ dependsOn:
   - harness/governance/KnowledgePromotionPolicy.md
   - harness/governance/MemoryGovernance.md
 review:
-  reviewedBy: user
-  reviewedAt: 2026-07-05
-  decision: h9-4-closeout-confirmed
+  reviewedBy: agent
+  reviewedAt: 2026-07-07
+  decision: h9-5-code-review-implementation-usage-added
 ---
 # Free Harness World
 
 Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。它提供统一的入口规则、项目路由、工具资产、验证、自检、治理、知识库与 RAG 机制、Memory/Skill 机制和项目模板，用于把 Codex、Hermes 等执行主体接入到可审查、可迁移、可持续演进的本地工作区。
 
-当前仓库还不是正式产品化 release。H8 已完成 bootstrap、install、uninstall 和 `agent-git` 分支验证；H9 正在用真实项目验证 Skill、Governance、Knowledge/RAG 和 Memory 闭环。正式发布需要等待 H9 完整验收和后续 release gate。`main` 分支由用户维护，agent 只在 `agent-git` 分支提交和推送。
+当前仓库还不是正式产品化 release。H8 已完成 bootstrap、install、uninstall 和 `agent-git` 分支验证；H9 正在用真实项目验证 Skill、Governance、Knowledge/RAG、Memory 和项目反向优化 Harness 机制。正式发布需要等待 H9 完整验收和后续 release gate。`main` 分支由用户维护，agent 只在 `agent-git` 分支提交和推送。
 
 ## 1. 适用对象
 
@@ -68,7 +75,7 @@ Free Harness World 是一个面向 Agent Runtime 的通用 Harness 工作区。�
 
 ```text
 stage = H9 real project validation
-currentLoop = H9-5 summary and H10 gate assessment
+currentLoop = H9-5 project feedback and H10 gate assessment
 defaultAgentBranch = agent-git
 humanReleaseBranch = main
 license = MIT
@@ -85,7 +92,8 @@ license = MIT
 - 用真实项目验证项目 workflow evidence、Skill、Governance 和 Knowledge/RAG 机制；
 - Knowledge/RAG 已具备 raw -> candidate -> reviewed -> cleanup -> validation -> query 的稳定命令面和一键门禁；
 - Memory 已具备 candidate -> review -> reviewed/delete 的受控生命周期命令、reviewed Skill、store gate、self-test 和 governance self-check 集成；
-- H9-4 Knowledge/RAG 和 Memory 收口已由用户确认，当前进入 H9-5 汇总和 H10 门禁判定。
+- Code Review 和 Code Implementation 已具备真实项目 workflow evidence、用户审核、代码修改、复查、Javadoc 只读门禁和 Maven 验证闭环；
+- H9-4 Knowledge/RAG 和 Memory 收口已由用户确认，当前进入 H9-5 项目反向优化、汇总和 H10 门禁判定。
 
 ## 3. 系统要求
 
@@ -265,7 +273,7 @@ harness/skills/reviewed/rag-knowledge-use/SKILL.md
 当任务是“从 raw source 生成 candidate，并准备晋升为 reviewed Knowledge”时，让 Agent 同时读取：
 
 ```text
-harness/skills/rag-structured-ingestion/SKILL.md
+harness/skills/candidate/rag-structured-ingestion/SKILL.md
 harness/skills/reviewed/rag-knowledge-use/SKILL.md
 ```
 
@@ -361,7 +369,59 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 
 Memory 生命周期写入统一通过 `apply-review-decision` 或对应受控命令完成，不能手工移动文件替代。
 
-## 10. 常用命令
+## 10. Code Review / Code Implementation 快速使用
+
+Harness 的代码审查机制用于真实项目或通用仓库中的源码审查、规范检查、修复交接和复查闭环。真实项目任务必须把 Task Brief、范围、发现、用户审核、修改、验证和复查记录到项目 `docs/project/workflow/`，不能只在对话中完成。
+
+### 10.1 Agent 应读取的 Skill
+
+当任务是代码审查、Java 规范检查、目录级批量审查或修改后复查时，让 Agent 读取：
+
+```text
+harness/skills/reviewed/code-review/SKILL.md
+```
+
+当用户已经明确要求修复、实现或重构时，让 Agent 读取：
+
+```text
+harness/skills/reviewed/code-implementation/SKILL.md
+```
+
+Java 代码审查继续读取：
+
+```text
+harness/skills/reviewed/code-review/references/java-code-standards.md
+```
+
+### 10.2 证据和门禁
+
+真实项目代码审查的 workflow evidence 使用稳定脚本检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-code-review-workflow-evidence.ps1 `
+  -Root . `
+  -ProjectId <project-id> `
+  -WorkflowEvidence .\projects\<project-id>\docs\project\workflow\<workflow-evidence>.md
+```
+
+Java Javadoc 覆盖和格式检查使用只读门禁。该脚本只能证明结构覆盖，不能替代人工语义审查，也不能作为批量生成注释的工具。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stable\test-java-javadoc-coverage.ps1 `
+  -Root .\projects\<project-id> `
+  -Target <java-file-or-package> `
+  -ExpectedAuthor <author> `
+  -ExpectedVersion <version> `
+  -RequireClassAuthor `
+  -RequireClassSince `
+  -RequireClassVersion `
+  -RequirePublicMethodJavadocs `
+  -RequireParamTags `
+  -RequireReturnTags `
+  -ForbidBlankJavadocLines
+```
+
+## 11. 常用命令
 
 | 命令 | 用途 |
 |---|---|
@@ -384,6 +444,8 @@ Memory 生命周期写入统一通过 `apply-review-decision` 或对应受控命
 | `invoke-memory.ps1 -Command validate-memory-store` | 验证 Memory candidate、reviewed、archive、frontmatter、review、source evidence、重复和敏感边界。 |
 | `invoke-memory.ps1 -Command validate-memory-store -SelfTest` | 用负向 fixture 验证 Memory store gate 能检出典型坏样本。 |
 | `invoke-memory.ps1 -Command candidate-review-package` | 为候选 Memory 生成用户审核包。 |
+| `test-code-review-workflow-evidence.ps1` | 检查真实项目代码审查 workflow evidence 的 Task Brief、trace、findings、用户审核、修复、复查和闭环状态。 |
+| `test-java-javadoc-coverage.ps1` | 只读检查 Java Javadoc 结构覆盖、标签、章节和格式；不生成注释内容。 |
 | `clean-sandbox.ps1` | 清理运行态文件；默认 dry-run，`-Apply` 需要明确审批。 |
 | `publish-harness-agent-branch.ps1` | 在 `agent-git` 分支执行受控提交和推送。 |
 
@@ -412,7 +474,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -Goals test
 ```
 
-## 11. 目录结构
+## 12. 目录结构
 
 | 路径 | 说明 | Git 边界 |
 |---|---|---|
@@ -432,7 +494,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 | `user/` | 本地 registry、settings、auth、identity、knowledge 边界；除 README/example 外默认不进入通用 Git。 | local/private files ignored |
 | `var/` | 运行态日志、缓存、临时文件和 RAG index。 | ignored |
 
-## 12. 数据和安全边界
+## 13. 数据和安全边界
 
 不得提交或写入 tracked docs：
 
@@ -449,7 +511,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
 
 RAG Index 是可重建检索产物，不是事实源。Workflow Evidence 只产生候选事实，不能直接晋升为 Knowledge、Memory、Skill 或 Project Fact。
 
-## 13. 架构文档
+## 14. 架构文档
 
 长期架构权威：
 
@@ -469,7 +531,7 @@ General Harness 索引：
 harness/HarnessIndex.md
 ```
 
-## 14. 贡献
+## 15. 贡献
 
 当前贡献目标分支：
 
@@ -502,6 +564,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\harness\tools\scripts\stab
   -CommitMessage "<commit-message>"
 ```
 
-## 15. License
+## 16. License
 
 本项目使用 MIT License。详见 [LICENSE](LICENSE)。

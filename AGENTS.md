@@ -1,13 +1,14 @@
 ---
 documentName: AGENTS.md
-version: v1.0.0-target-navigation-entry
-updatedAt: 2026-06-18 14:30:00.000 +08:00
+version: v1.1.0-powershell-encoding-rule
+updatedAt: 2026-07-06 09:30:00.000 +08:00
 status: active
-purpose: 定义 Harness Root 的 Agent 入口契约、最高优先级硬约束、读取顺序和长期文档格式、语言规范治理规则。
+purpose: 定义 Harness Root 的 Agent 入口契约、最高优先级硬约束、读取顺序、PowerShell 编码规则和长期文档格式、语言规范治理规则。
 scope:
   - harness-root-entry
   - agent-loading-order
   - hard-constraints
+  - powershell-encoding-standard
   - important-document-frontmatter
   - document-language-standard
 prerequisites:
@@ -26,8 +27,8 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: mixed
-  reviewedAt: 2026-06-18
-  decision: user-requested-h5-language-rule
+  reviewedAt: 2026-07-06
+  decision: user-requested-powershell-encoding-rule
 ---
 # Harness Root 智能体入口
 
@@ -78,6 +79,8 @@ HARNESS_ROOT = <HARNESS_ROOT>
 10. Governance，中文解释是治理，相关变更、Skill 更新、Memory 更新、Knowledge 晋升和 Project Fact 变更，在成为长期资产前需要 review 或用户明确批准。
 11. 受 Git 管控的重要 Harness Markdown 文档必须维护基础 YAML frontmatter；文档状态必须使用 `draft`、`review`、`active`、`stale`、`deprecated`、`archived`、`superseded` 之一。
 12. 受 Git 管控的重要 Harness Markdown 文档应以中文作为文档主题说明语言；允许保留专业词、命令、路径、代码标识和通用技术名词的英文写法。
+13. 读取或写入包含中文的 Markdown、JSON、YAML、PowerShell 输出或项目文档时，在 PowerShell 中必须优先使用显式 UTF-8，例如 `Get-Content -Encoding UTF8`、`Set-Content -Encoding UTF8` 或对应工具参数；不要根据默认终端乱码判断原文损坏，也不要把乱码回写到受 Git 管控的文档或源码。
+14. 稳定 PowerShell 脚本应尽量保持源码 ASCII 化。确需中文文本、中文正则或中文字符串时，必须确认目标 Windows PowerShell 运行环境能按 UTF-8 正确解析；旧版 Windows PowerShell 对无 BOM UTF-8 `.ps1` 可能按本机代码页解析，导致中文字符串被破坏。脚本中的长期规则应优先使用机器字段、ASCII key、结构化配置或外部 UTF-8 文档数据，减少中文源码文本依赖。
 
 ## 4. 关键稳定记忆
 

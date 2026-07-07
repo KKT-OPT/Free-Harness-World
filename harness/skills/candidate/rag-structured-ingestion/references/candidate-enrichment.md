@@ -1,28 +1,28 @@
 ---
-documentName: harness/skills/rag-structured-ingestion/references/candidate-enrichment.md
-version: v1.1.0-llm-wiki-method
-updatedAt: 2026-06-30 19:14:00.837 +08:00
+documentName: harness/skills/candidate/rag-structured-ingestion/references/candidate-enrichment.md
+version: v1.1.1-candidate-path-normalized
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
 purpose: 定义 raw extraction 后如何补全 candidate wiki，并保持 candidate-only 边界。
 scope:
   - candidate-enrichment
   - rag-skill-reference
 prerequisites:
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
 relatedDocuments:
   - harness/rag/RAGIndex.md
   - user/knowledge/README.md
 outputTo:
-  - harness/skills/rag-structured-ingestion/references/candidate-enrichment.md
+  - harness/skills/candidate/rag-structured-ingestion/references/candidate-enrichment.md
 owner: mixed
 reviewAfter: 2026-07-22
 supersededBy:
 dependsOn:
-  - harness/skills/rag-structured-ingestion/SKILL.md
+  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-30
-  decision: phase-1-deterministic-absorption
+  reviewedAt: 2026-07-05
+  decision: moved-to-candidate-skill-boundary
 ---
 # Candidate Wiki 补全参考
 

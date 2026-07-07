@@ -1,9 +1,9 @@
 ﻿---
 documentName: harness/HarnessIndex.md
-version: v1.3.1-h9-4-closeout
+version: v1.4.0-project-feedback-policy
 updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告，并记录 Memory governance gate 当前入口。
+purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告，并记录 Memory governance gate 与项目反向优化 Harness 治理入口。
 scope:
   - harness-document
 prerequisites:
@@ -12,7 +12,9 @@ relatedDocuments:
   - INDEX.md
   - harness/architecture/HarnessEngineering.md
   - harness/architecture/PLANS.md
+  - harness/governance/ProjectHarnessFeedbackPolicy.md
   - harness/reports/ReportsIndex.md
+  - harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md
   - harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1
   - harness/tools/scripts/stable/invoke-memory.ps1
   - harness/skills/reviewed/memory-governance-use/SKILL.md
@@ -24,9 +26,9 @@ supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
-  reviewedBy: user
+  reviewedBy: agent
   reviewedAt: 2026-07-05
-  decision: h9-4-closeout-confirmed
+  decision: project-feedback-policy-routed
 ---
 # General Harness 索引
 
@@ -39,7 +41,7 @@ review:
 | Architecture | `harness/architecture/HarnessEngineering.md` | 已落地。 |
 | Architecture Plans | `harness/architecture/PLANS.md` | 已落地。 |
 | Bootstrap | `harness/bootstrap/BootstrapIndex.md` | H8 已落地；负责 workspace 初始化、bootstrap foundation 和 agent-git GitHub 管理恢复入口。 |
-| Governance | `harness/governance/GovernanceIndex.md` | 已落地；负责 artifact lifecycle、review、promotion、archive、cleanup 和 approval boundary。 |
+| Governance | `harness/governance/GovernanceIndex.md` | 已落地；负责 artifact lifecycle、project feedback、review、promotion、archive、cleanup 和 approval boundary。 |
 | Verification | `harness/verification/VerificationIndex.md` | H7 已落地；readiness、validation、regression 和 Harness validation cases 位于目标 verification 层。 |
 | Observability | `harness/observability/ObservabilityIndex.md` | H7 已落地；trace summary 和 failure attribution schema 位于目标 observability 层。 |
 | Templates | `harness/templates/` | 已落地；项目模板已在 H4 统一到 `harness/templates/project-template/`。 |
@@ -120,6 +122,7 @@ harness/governance/GovernanceIndex.md
 -> harness/governance/security/
 -> harness/governance/context/
 -> harness/governance/ArtifactLifecycle.md
+-> harness/governance/ProjectHarnessFeedbackPolicy.md
 -> harness/governance/KnowledgePromotionPolicy.md
 -> harness/governance/MemoryGovernance.md
 -> harness/governance/SkillGovernance.md

@@ -205,6 +205,56 @@ function Invoke-ProjectLifecycleEvidenceSelfTest {
     }
 }
 
+function Invoke-CodeReviewWorkflowEvidenceSelfTest {
+    param(
+        [string]$RootPath,
+        [System.Collections.ArrayList]$Findings
+    )
+
+    $script = Join-Path $RootPath "harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1"
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        Add-Finding -List $Findings -Severity "error" -Code "codeReviewWorkflowValidatorMissing" -Path "harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1" -Message "Code review workflow evidence validator is missing." -RepairSuggestion "Restore test-code-review-workflow-evidence.ps1 or update Code Review workflow validation docs."
+        return $null
+    }
+
+    try {
+        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Root $RootPath -SelfTest
+        $result = $raw | ConvertFrom-Json
+        if ($result.status -ne "passed") {
+            Add-Finding -List $Findings -Severity "error" -Code "codeReviewWorkflowValidatorSelfTestFailed" -Path "harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1" -Message "Code review workflow evidence validator self-test failed." -RepairSuggestion "Run test-code-review-workflow-evidence.ps1 -SelfTest and repair listed findings."
+        }
+        return $result
+    } catch {
+        Add-Finding -List $Findings -Severity "error" -Code "codeReviewWorkflowValidatorSelfTestError" -Path "harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1" -Message "Code review workflow evidence validator self-test errored: $($_.Exception.Message)" -RepairSuggestion "Fix the code review workflow validator script."
+        return $null
+    }
+}
+
+function Invoke-JavaJavadocCoverageSelfTest {
+    param(
+        [string]$RootPath,
+        [System.Collections.ArrayList]$Findings
+    )
+
+    $script = Join-Path $RootPath "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1"
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        Add-Finding -List $Findings -Severity "error" -Code "javaJavadocCoverageValidatorMissing" -Path "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1" -Message "Java Javadoc coverage validator is missing." -RepairSuggestion "Restore test-java-javadoc-coverage.ps1 or update Code Review workflow validation docs."
+        return $null
+    }
+
+    try {
+        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Root $RootPath -Target "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1" -SelfTest
+        $result = $raw | ConvertFrom-Json
+        if ($result.status -ne "passed") {
+            Add-Finding -List $Findings -Severity "error" -Code "javaJavadocCoverageValidatorSelfTestFailed" -Path "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1" -Message "Java Javadoc coverage validator self-test failed." -RepairSuggestion "Run test-java-javadoc-coverage.ps1 -SelfTest and repair listed findings."
+        }
+        return $result
+    } catch {
+        Add-Finding -List $Findings -Severity "error" -Code "javaJavadocCoverageValidatorSelfTestError" -Path "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1" -Message "Java Javadoc coverage validator self-test errored: $($_.Exception.Message)" -RepairSuggestion "Fix the Java Javadoc coverage validator script."
+        return $null
+    }
+}
+
 function Invoke-MemoryStoreGate {
     param(
         [string]$RootPath,
@@ -307,6 +357,8 @@ $requiredRoutes = @(
     "user/registry/projects.local.json",
     "harness/tools/scripts/stable/test-project-registry.ps1",
     "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1",
+    "harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1",
+    "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1",
     "harness/tools/scripts/stable/invoke-memory.ps1"
 )
 
@@ -424,6 +476,8 @@ foreach ($gitDir in $projectGitDirs) {
 
 $registryResult = Invoke-ProjectRegistryCheck -RootPath $rootPath -RegistryPath $Registry -Findings $findings
 $projectLifecycleSelfTestResult = Invoke-ProjectLifecycleEvidenceSelfTest -RootPath $rootPath -Findings $findings
+$codeReviewWorkflowSelfTestResult = Invoke-CodeReviewWorkflowEvidenceSelfTest -RootPath $rootPath -Findings $findings
+$javaJavadocCoverageSelfTestResult = Invoke-JavaJavadocCoverageSelfTest -RootPath $rootPath -Findings $findings
 $memoryStoreResult = Invoke-MemoryStoreGate -RootPath $rootPath -Findings $findings
 $memoryStoreSelfTestResult = Invoke-MemoryStoreSelfTest -RootPath $rootPath -Findings $findings
 
@@ -450,6 +504,8 @@ $output = [pscustomobject]@{
         severityCounts = $severityCounts
         registryStatus = if ($registryResult) { $registryResult.status } else { "not-run" }
         projectLifecycleEvidenceStatus = if ($projectLifecycleSelfTestResult) { $projectLifecycleSelfTestResult.status } else { "not-run" }
+        codeReviewWorkflowEvidenceStatus = if ($codeReviewWorkflowSelfTestResult) { $codeReviewWorkflowSelfTestResult.status } else { "not-run" }
+        javaJavadocCoverageStatus = if ($javaJavadocCoverageSelfTestResult) { $javaJavadocCoverageSelfTestResult.status } else { "not-run" }
         memoryStoreStatus = if ($memoryStoreResult) { $memoryStoreResult.state } else { "not-run" }
         memoryStoreSelfTestStatus = if ($memoryStoreSelfTestResult) { $memoryStoreSelfTestResult.state } else { "not-run" }
     }
@@ -465,6 +521,8 @@ $output = [pscustomobject]@{
         "repository-boundary",
         "project-registry",
         "project-lifecycle-evidence-self-test",
+        "code-review-workflow-evidence-self-test",
+        "java-javadoc-coverage-self-test",
         "memory-store-validation",
         "memory-store-self-test"
     )

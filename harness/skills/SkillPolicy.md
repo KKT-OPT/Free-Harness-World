@@ -1,9 +1,9 @@
 ---
 documentName: harness/skills/SkillPolicy.md
-version: v1.1.0-user-directed-skill-promotion
-updatedAt: 2026-07-02 18:08:00.000 +08:00
+version: v1.2.0-root-directory-normalization
+updatedAt: 2026-07-05 00:00:00.000 +08:00
 status: active
-purpose: 定义 Skill 创建、更新、用户指定触发、自动触发、候选审查、晋升、Git 管理和 usage sidecar 规则。
+purpose: 定义 Skill 创建、更新、用户指定触发、自动触发、候选审查、晋升、Git 管理、usage sidecar 和根目录规范规则。
 scope:
   - skill
   - skill-creation
@@ -12,6 +12,7 @@ scope:
   - skill-promotion
   - skill-git-management
   - usage-sidecar
+  - skill-root-normalization
 prerequisites:
   - AGENTS.md
   - harness/skills/SkillIndex.md
@@ -27,13 +28,34 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/skills/SkillIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: user-directed-skill-promotion-rules-added
+  reviewedBy: agent
+  reviewedAt: 2026-07-05
+  decision: skill-root-directory-normalization-added
 ---
 # Skill Policy（技能策略）
 
 Skill 是可复用工作流或程序性记忆，描述“在什么条件下，Agent 应如何执行一类任务”。
+
+## 0. 目录规范
+
+`harness/skills/` 根目录只允许：
+
+```text
+archive/
+candidate/
+reviewed/
+usage/
+SkillIndex.md
+SkillPolicy.md
+```
+
+规则：
+
+1. 未审核新 Skill、patch candidate、占位候选目录必须位于 `candidate/<skill-name>/`。
+2. 已审核通过的 Skill 必须位于 `reviewed/<skill-name>/`。
+3. 被拒绝、废弃或只保留历史价值的 Skill 位于 `archive/<skill-name>/`。
+4. 第三方克隆 Skill 语料、外部开发者文档和临时参考材料不放在 `harness/skills/`，应放在 `var/tmp/external-repos/` 或其他 local-only 外部参考边界。
+5. 根目录不得直接新增业务 Skill 包；否则会绕过 candidate-first 和 reviewed Git 管理门禁。
 
 ## 1. 创建或更新触发模式
 
