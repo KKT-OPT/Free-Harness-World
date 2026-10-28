@@ -37,6 +37,7 @@ metadata:
 | `projects/<project-id>/docs/project/workflow/` | 真实项目代码审查必须在这里创建或更新 workflow evidence，用于保存 Task Brief、trace、findings、用户审核、修复和复查记录。 |
 | `harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1` | 代码审查 workflow evidence 的稳定门禁；按阶段检查结构、用户审核、修复交接、复查和最终审核状态。 |
 | `harness/tools/scripts/stable/test-java-javadoc-coverage.ps1` | Java 包级/目录级注释覆盖稳定门禁；当注释完整性是审查或验收目标时，用脚本强制检查类级标签、必需类级章节、最少说明长度、public/protected 或全部显式声明方法 Javadoc、参数、返回值和空白星号行。 |
+| `harness/tools/scripts/stable/test-java-magic-values.ps1` | Java 数值字面量只读候选扫描器；用于生成完整候选清单，人工区分配置、版本化业务阈值、单位/数学常量、协议常量、测试夹具和可解释内联值。 |
 | `harness/skills/reviewed/code-implementation/SKILL.md` | 用户批准修复或实现后，代码修改阶段的 Skill；修改完成后必须交回本 Skill 复查。 |
 | `references/java-code-standards.md` | 审查 Java 代码时读取，作为企业级 Java 规范和项目风格适配参考。 |
 
@@ -51,6 +52,7 @@ metadata:
 7. 真实项目代码审查必须落到项目文档系统：创建或更新 `projects/<project-id>/docs/project/workflow/<task-id>.md`，否则不得宣称审查闭环完成。
 8. Findings 输出只是审查阶段结果；闭环完成必须记录用户审核、修复决策、代码修改或不修改原因、复查结果和再次审核状态。
 9. Java 注释审查中，Javadoc 覆盖脚本只能作为只读门禁和覆盖证据，不得被解释为可机械覆盖业务注释的生成器。发现注释缺口时，必须先读取现有注释、源码行为和必要历史版本，再判断如何保留或吸收原有业务语义。
+10. 魔法值扫描器只能发现数值字面量候选，不能独立判断业务语义，也不得自动提取或替换常量。每个候选必须结合配置来源、量纲、算法公式和测试意图完成分类与处置。
 
 ## 4. 审查流程
 
@@ -77,6 +79,7 @@ metadata:
 6. 如果文件数量过大导致本轮不能完整读取和审查，必须把任务状态标为 `partial`，说明未覆盖文件和原因，并请求用户拆分或确认抽样；不得把抽样结果写成全包审核完成。
 7. 用户明确要求“全部文件/整个包/批量修改”时，不允许自动降级为抽样审查。
 8. 批量注释审查必须区分“结构覆盖”和“语义质量”。脚本通过只能证明结构覆盖通过；若未逐文件吸收原业务注释和算法语义，只能记录为结构化修复，不能宣称语义精修完成。
+9. Java 目录级审查必须扫描数值字面量候选，并在 workflow evidence 中记录分类结果；不能把“提取为 `private static final`”本身当作消除魔法值的充分条件。
 
 ### 4.2 建立项目 workflow evidence
 
@@ -127,6 +130,18 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 
 其中 `ExpectedAuthor` 和 `ExpectedVersion` 必须来自用户确认、项目版本来源或项目文档；无法确认时先记录 open question，不能猜测。
 
+Java 数值字面量候选扫描时运行：
+
+```text
+harness/tools/scripts/stable/test-java-magic-values.ps1
+  -Root <PROJECT_ROOT>
+  -Target <java-file-or-package>
+  -ClassificationFile <reviewed-classification-json>
+  -FailOnUnclassified
+```
+
+首次扫描默认使用 report-only。先对每条候选记录 `configuration`、`domain-policy`、`unit-or-math`、`protocol-contract`、`test-fixture`、`justified-inline` 或 `unresolved`，再把可重复的审核结论保存为 `java-magic-value-classification-v1` JSON，并用 `-FailOnUnclassified` 关闭未处置缺口。只有目标范围禁止任何数值候选时才使用 `-FailOnFindings`。允许值列表只能豁免明确的数学或控制流恒等值，不能用大范围 `-AllowLiteral` 掩盖业务阈值。
+
 ### 4.3 读取上下文
 
 1. 读取目标项目 `AGENTS.md` 和 `ProjectIndex.md`。
@@ -150,8 +165,28 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 7. 可维护性：职责边界、模块耦合、命名、注释、复杂度、重复和测试性。
 8. 测试覆盖：单元、集成、回归、真实数据复跑、负向用例和断言质量。
 9. 语言规范：按对应 reference 检查命名、注释、编程规范和企业级约束。
+10. 配置与数值来源：检查数值字面量是否来自用户配置、版本化 policy、单位/数学定义、协议契约或测试夹具；检查默认值和阈值是否具有名称、来源、量纲、可配置性和边界验证。
+
+当功能同时包含总开关、更新标记、可选本轮输入和历史状态时，必须额外执行状态决策表审查：
+
+1. 明确列出每个独立输入维度，禁止把“输入是否存在”和“更新标记”隐式绑定为同一条件。
+2. 明确总开关优先级、请求输入与历史状态优先级、无输入降级行为、缓存更新条件和日志级别。
+3. 检查 warning/error 是否由掌握完整决策事实的层输出，避免入口层在历史状态尚未解析前误报。
+4. 要求自动回归覆盖有业务差异的组合；只有单个 happy path 不能证明状态优先级正确。
+5. workflow evidence 应保存决策表、覆盖场景和各场景断言，不只记录“测试通过”。
+
+当用户报告性能退化，或变更涉及排序、递归、批处理、空间索引和高频循环时，必须额外执行热路径审查：
+
+1. 建立同数据、同配置、同运行环境的控制组和实验组，至少记录总调用数、成功率、平均值、P50、P95 和总耗时；不能只比较单次日志或 max。
+2. 检查循环体、递归函数、排序 comparator、Stream pipeline 和查询路径中是否重复计算与本轮输入无关的不变量；可预计算派生值应在明确生命周期内只计算一次。
+3. 同时保留功能 oracle 和端到端性能证据。性能变快不能替代数值正确性，微基准通过也不能替代真实数据或代表性负载复跑。
+4. workflow evidence 应记录基线、根因、复杂度或调用次数放大方式、优化方案和前后对比结果。
 
 目录级审查必须把覆盖本身作为审查维度。若 workflow evidence 中没有文件覆盖矩阵和注释覆盖矩阵，本轮只能称为“局部审查”或“扫描”，不能称为“批量审核完成”。
+
+当审查涉及独立参考、指标计算、阶段资产清理或历史结论收口时，读取
+[审查可靠性专题检查](references/reliability-checks.md)。只读核验不能替代依赖审查，结构门禁也不能替代用户批准。
+在线跨轮与离线标签的评价边界由 `harness/skills/reviewed/stateful-algorithm-validation/SKILL.md`补充。
 
 ### 4.5 输出格式
 
@@ -229,6 +264,8 @@ harness/skills/reviewed/code-review/references/java-code-standards.md
 
 Java 注释和 Javadoc 审查必须同时覆盖类、方法、字段/常量和关键行内注释四个层级；`@version` 只能引用项目已有版本来源，无法确认时询问用户或记录 open question。
 
+Java 魔法值审查必须同时覆盖生产代码和本轮测试代码。重点不是“所有数字都变成常量”，而是防止用户可配置参数、算法阈值、时间窗口、单位换算和协议值以无来源字面量进入实现；明显的 `0/1` 恒等值、局部循环边界或夹具输入可保留，但应能从上下文解释。
+
 当审查目标是补齐或修复既有 Java 注释时，必须检查新注释是否保留了原注释中有价值的业务语义、算法约束、边界条件、降级规则、错误处理原因和运行假设。不得用通用模板句替换原有有信息量的注释。
 
 不要把 Java 规范硬套到其他语言。后续 Python、Cpp 等规范应分别新增 reference，并在本 Skill 中增加语言选择路由。
@@ -241,6 +278,8 @@ Java 注释和 Javadoc 审查必须同时覆盖类、方法、字段/常量和�
 - Java 目录级审查已记录注释覆盖矩阵；类级 Javadoc、方法级 Javadoc、字段/常量注释、关键行内注释均已检查或明确 defer 原因。
 - Java 包级 Javadoc 完整性作为验收目标时，已运行 `test-java-javadoc-coverage.ps1`，并在 workflow evidence 中记录 JSON 摘要。
 - Java 注释修复已明确区分结构覆盖和语义质量；若使用脚本检查 Javadoc，已说明该脚本是只读门禁，不是注释内容生成依据。
+- Java 目标范围已运行 `test-java-magic-values.ps1`；候选已分类并记录来源/量纲/处置，`unresolved` 候选未被误报为完成。
+- 多开关、可选本轮输入和历史状态共同决定行为时，已记录状态决策表并用自动回归覆盖关键组合。
 - 已使用 `test-code-review-workflow-evidence.ps1` 检查 workflow evidence；阶段尚未闭环时不启用 `-RequireClosedLoop`。
 - 已检查代码行为、异常、数据、并发、安全、可维护性和测试。
 - Java 代码已读取 Java reference。

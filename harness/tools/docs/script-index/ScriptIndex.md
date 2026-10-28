@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.24.0-java-javadoc-coverage-gate
-updatedAt: 2026-07-06 22:15:00.000 +08:00
+version: v1.28.0-artifact-cleanup-stable
+updatedAt: 2026-10-28
 status: active
-purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检中的 Memory gate。
+purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Java 数值字面量发现/分类门禁、Memory 流程状态和治理自检。
 scope:
   - script-index
   - stable-tool-contract
@@ -19,14 +19,14 @@ relatedDocuments:
 outputTo:
   - harness/tools/docs/script-index/ScriptIndex.md
 owner: mixed
-reviewAfter: 2026-07-18
+reviewAfter: 2026-11-11
 supersededBy:
 dependsOn:
   - harness/tools/ToolsIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-06
-  decision: java-javadoc-coverage-gate-added
+  reviewedBy: user
+  reviewedAt: 2026-10-28
+  decision: evidence-gate-fixes-validated-cleanup-tool-promoted
 ---
 # 脚本索引
 
@@ -44,7 +44,9 @@ review:
 | `harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1` | 只读校验真实项目任务的方案、开发、验证、报告、审核和验收证据闭环。 | yes |
 | `harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1` | 只读校验真实项目代码审查 workflow evidence 的审查、用户审核、修复交接、复查和最终审核证据闭环。 | yes |
 | `harness/tools/scripts/stable/test-java-javadoc-coverage.ps1` | 只读校验 Java 文件、目录或包的类级 Javadoc、作者、since、version、必需类级章节、最少说明长度、public/protected 或全部显式声明方法 Javadoc、参数、返回值和空白星号行。 | yes |
+| `harness/tools/scripts/stable/test-java-magic-values.ps1` | 只读扫描 Java 数值字面量候选；默认仅报告，要求人工分类，不执行自动提取或替换。 | yes |
 | `harness/tools/scripts/stable/test-harness-governance.ps1` | 运行 Harness Root 治理自检。 | yes |
+| `harness/tools/scripts/stable/verify-artifact-cleanup.py` | 按显式文件清单保存保护哈希并核验清理后身份，无删除功能。 | yes |
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | 通过稳定门面运行 RAG candidate 流程。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、residual gap disposition、canonical vault layout、one-click validation gate、schema context、LLM Wiki mechanism validation、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
@@ -120,6 +122,10 @@ review:
 
 ### `test-project-lifecycle-evidence.ps1`
 
+中文章节别名：任务简报、执行计划/方案设计、执行记录/文件变更摘要、验证报告/验证结果、治理候选/候选清单；
+report支持候选清单、审核与处置、非晋升边界、验证结果。中英文验收标题本身均不代表批准；
+显式finalUserReview优先，pending/rejected不得由历史批准覆盖；支持LF/CRLF。
+
 | 契约项 | 内容 |
 |---|---|
 | Inputs | `-Root`、`-Registry`、`-ProjectId`、`-WorkflowEvidence`、`-ProjectReport`、`-RequireReport`、`-RequireUserAcceptance`、`-SelfTest`。 |
@@ -132,6 +138,10 @@ review:
 | Validation Instruction | 先运行 `-SelfTest`；真实项目任务收口前，传入对应 `docs/project/workflow/` 和 `docs/project/reports/` 文件，必要时加 `-RequireReport -RequireUserAcceptance`。 |
 
 ### `test-code-review-workflow-evidence.ps1`
+
+中文章节别名：任务简报、审查范围、检查轨迹、审查发现、用户审核、修复交接、复查、最终审核。
+读取显式UTF-8；英文标识与原参数不变，`-RequireClosedLoop`要求accepted、明确成功复查及fixed/not-required修复处置。
+这些门禁检查结构/状态，不验证正文语义或代替用户审核。自测覆盖英文/中文与未接受、pending、缺证据反例。
 
 | 契约项 | 内容 |
 |---|---|
@@ -157,18 +167,46 @@ review:
 | Repair Suggestion | 补齐类级 Javadoc、作者、since、version、项目要求的类级章节、方法 Javadoc、`@param`、`@return`，并删除会触发 Javadoc/IDE 告警的空白星号行。 |
 | Validation Instruction | 先运行 `-SelfTest`；真实 Java 包级审查在项目 root 下传入目标包路径、用户确认的作者、版本、项目要求的类级章节和最少说明长度，必要时启用全部 strict switches，并把 JSON 摘要写入 workflow evidence。 |
 
-### `test-harness-governance.ps1`
+### `test-java-magic-values.ps1`
 
 | 契约项 | 内容 |
 |---|---|
-| Inputs | `-Root`、`-Registry`。 |
+| Inputs | `-Root`、`-Target`、`-AllowLiteral`、`-IgnorePath`、`-ClassificationFile`、`-FailOnUnclassified`、`-FailOnFindings`、`-SelfTest`。 |
+| Outputs | JSON status summary、扫描文件数、候选数、已分类/未分类数量和逐项数值字面量 finding。 |
+| Status Summary | status、mode、root、target、checkedAt、fileCount、findingCount、classifiedCount、unclassifiedCount、classificationRuleCount。 |
+| Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要写入项目 workflow evidence。 |
+| Sensitive Handling | 只读取目标 Java 源码；移除注释和字符串后扫描代码，不读取 settings/auth、运行态日志或业务数据。 |
+| Failure Mode | `input/root`、`input/target`、`input/classification`、`javaNumericLiteralCandidate`；`-FailOnUnclassified` 因未分类候选失败，`-FailOnFindings` 因任意候选失败。 |
+| Repair Suggestion | 人工把候选分类为用户配置、版本化业务阈值、单位/数学常量、协议常量、测试夹具或可解释内联身份；稳定分类写入 `java-magic-value-classification-v1` JSON，只有分类要求时才提取或迁移。 |
+| Validation Instruction | 先运行 `-SelfTest`；真实 Java 包先 report-only，再加载 `-ClassificationFile` 并以 `-FailOnUnclassified` 关闭未处置缺口；在 workflow evidence 记录规则数、已分类数和未分类数。不得把候选总数直接等同于缺陷数，也不得用脚本机械改写源码。 |
+
+### `verify-artifact-cleanup.py`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `snapshot --root --manifest --receipt`；`verify --root --receipt`，Python 3.9+标准库 |
+| Outputs / Status | stdout JSON与0/1/2退出码；snapshot仅排他创建新receipt，verify只读 |
+| Status JSON / Log | receipt放ignored运行目录；无另设日志，stdout可重定向运行态 |
+| Sensitive Handling | 精确相对路径与哈希，不保存正文或绝对根；禁止越界、重叠、链接/reparse和NTFS路径别名 |
+| Failure / Repair | `invalid-input-or-filesystem`、未删目标、保护文件变化/丢失；修复清单或恢复保护资产，不自动改写 |
+| Validation | `python -B -m unittest discover -s harness/tools/scripts/stable/tests -v`；完整[工具契约](../command-surfaces/ArtifactCleanupTool.md) |
+
+### `test-harness-governance.ps1`
+
+目录遍历在进入前剪枝projects/运行态/私有设置、auth、github和registry目录，不跟随reparse point；
+registry仍通过独立注册门禁校验，不在通用文本扫描中读取其正文。只检查项目根.git，不递归项目数据。
+`-SelfTest`使用临时夹具验证排除边界与正常文本/构建目录/占位文件可见性。
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Root`、`-Registry`、`-SelfTest`（仅扫描边界自测，不跑完整治理）。 |
 | Outputs | JSON status summary、severity counts、check list、findings 和 repair suggestions。 |
-| Status Summary | status、findingCount、error/warning/info counts、registryStatus、projectLifecycleEvidenceStatus、codeReviewWorkflowEvidenceStatus、javaJavadocCoverageStatus、memoryStoreStatus、memoryStoreSelfTestStatus。 |
+| Status Summary | status、findingCount、error/warning/info counts、registryStatus、projectLifecycleEvidenceStatus、codeReviewWorkflowEvidenceStatus、javaJavadocCoverageStatus、javaMagicValuesStatus、memoryStoreStatus、memoryStoreSelfTestStatus。 |
 | Redacted Log Path | 默认不写日志；stdout JSON 可作为安全摘要。 |
 | Sensitive Handling | 默认排除 `var/`、user-local、runtime、external、projects 等边界；不读取 credential 正文。 |
-| Failure Mode | `governance/route`、`governance/boundary`、`governance/gitignore`、`registry/*`、`projectLifecycleValidatorSelfTest*`、`codeReviewWorkflowValidatorSelfTest*`、`javaJavadocCoverageValidatorSelfTest*`、`memoryStoreValidation*`、`memoryStoreSelfTest*`。 |
+| Failure Mode | `governance/route`、`governance/boundary`、`governance/gitignore`、`registry/*`、`projectLifecycleValidatorSelfTest*`、`codeReviewWorkflowValidatorSelfTest*`、`javaJavadocCoverageValidatorSelfTest*`、`javaMagicValuesValidatorSelfTest*`、`memoryStoreValidation*`、`memoryStoreSelfTest*`。 |
 | Repair Suggestion | 根据 finding 的 `repairSuggestion` 更新索引、边界或 registry。 |
-| Validation Instruction | 在 Harness Root 运行 dry-run 自检，确认 required routes、Verification/Observability 目标路由、Git 边界、project lifecycle evidence self-test、code review workflow evidence self-test、Java Javadoc coverage self-test、Memory store validation 和 Memory store self-test 均通过。 |
+| Validation Instruction | 在 Harness Root 运行 dry-run 自检，确认 required routes、Verification/Observability 目标路由、Git 边界、project lifecycle evidence self-test、code review workflow evidence self-test、Java Javadoc coverage self-test、Java magic-value candidate self-test、Memory store validation 和 Memory store self-test 均通过。 |
 
 ### `bootstrap-harness-workspace.ps1`
 

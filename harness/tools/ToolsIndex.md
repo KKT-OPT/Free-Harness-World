@@ -1,9 +1,9 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.18.0-java-javadoc-coverage-gate
-updatedAt: 2026-07-06 22:15:00.000 +08:00
+version: v1.22.0-artifact-cleanup-stable
+updatedAt: 2026-10-28
 status: active
-purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
+purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 与数值字面量发现/分类只读门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
 scope:
   - tool-assets
   - stable-tool-contract
@@ -19,22 +19,27 @@ relatedDocuments:
   - harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
   - harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1
   - harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
+  - harness/tools/scripts/stable/test-java-magic-values.ps1
   - harness/architecture/PLANS.md
 outputTo:
   - harness/tools/ToolsIndex.md
 owner: mixed
-reviewAfter: 2026-07-18
+reviewAfter: 2026-11-11
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-06
-  decision: java-javadoc-coverage-gate-added
+  reviewedBy: user
+  reviewedAt: 2026-10-28
+  decision: evidence-gate-fixes-validated-cleanup-tool-promoted
 ---
 # 工具资产索引
+
+2026-10-28增量：已有workflow/lifecycle证据门禁增加中文章节和显式UTF-8读取，保留英文与机器状态契约；
+修复已验证，用户明确授权测试通过后晋升。[精确文件清理核验工具](docs/command-surfaces/ArtifactCleanupTool.md)
+已进入stable，仅保存哈希回执、核验保护文件，不删除文件。
 
 `harness/tools/` 是 Harness 的 Tool Asset，中文解释是工具资产，目标层。
 
@@ -111,6 +116,14 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 ```
 
 该脚本用于只读检查 Java 文件、目录或包的类级 Javadoc、作者、since、version、必需类级章节、最少类级说明长度、public/protected 或全部显式声明方法 Javadoc、`@param`、`@return` 和 Javadoc 空白星号行。真实项目的 Java 包级代码审查如果把注释完整性作为验收标准，必须在 workflow evidence 中记录该脚本的命令和 JSON 摘要。通用治理自检脚本 `test-harness-governance.ps1` 必须调用该脚本的 `-SelfTest`，确保 Java 注释覆盖不是只靠自然语言约束。
+
+Java 数值字面量候选门禁脚本：
+
+```text
+harness/tools/scripts/stable/test-java-magic-values.ps1
+```
+
+该脚本只读扫描 Java 文件或目录中的数值字面量候选，忽略注释、字符串、`static final` 声明和明确允许的恒等值；默认 report-only。项目可用 `java-magic-value-classification-v1` JSON 保存经人工审核的路径、字面量和类别规则，通过 `-ClassificationFile` 重放分类，并用 `-FailOnUnclassified` 阻止未处置候选；`-FailOnFindings` 仅适用于目标范围禁止任何候选的特殊场景。脚本不自动推断业务含义，也不改写源码。code review 必须把候选分类为配置、版本化业务 policy、单位/数学常量、协议常量、测试夹具、可解释内联值或 unresolved，并在 workflow evidence 中记录来源和处置。通用治理自检必须运行其 `-SelfTest`。
 
 Reviewed Knowledge access 稳定脚本：
 

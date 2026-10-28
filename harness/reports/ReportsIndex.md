@@ -1,7 +1,7 @@
 ---
 documentName: harness/reports/ReportsIndex.md
-version: v1.1.0-project-lifecycle-evidence-gate
-updatedAt: 2026-07-02 21:20:00.000 +08:00
+version: v1.3.0-engineering-feedback-promoted
+updatedAt: 2026-10-28
 status: active
 purpose: 定义 Harness Report 的通用机制入口，路由报告格式、规则、模板、命令面、应用场景和存放边界。
 scope:
@@ -27,17 +27,20 @@ relatedDocuments:
 outputTo:
   - harness/reports/ReportsIndex.md
 owner: mixed
-reviewAfter: 2026-07-23
+reviewAfter: 2026-11-11
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/governance/ReportArchivePolicy.md
 review:
-  reviewedBy: user
-  reviewedAt: 2026-07-02
-  decision: report-mechanism-boundary-and-lifecycle-gate-confirmed
+  reviewedBy: agent
+  reviewedAt: 2026-10-28
+  decision: engineering-feedback-route-added-existing-report-policy-preserved
 ---
 # Report 索引
+
+当前H9-5增量记录：[工程可靠性沉淀与晋升](redacted/H9-5EngineeringReliabilityFeedback.md)，
+记录用户条件批准、有效性测试及正式资产去向；项目数据/参数/效果不进入本目录。
 
 `harness/reports/` 是通用 Harness 报告机制入口和 Harness 自身脱敏报告边界。Report，中文解释是报告，是验证、治理、观测或问题分析的输出证据，不是事实源。
 

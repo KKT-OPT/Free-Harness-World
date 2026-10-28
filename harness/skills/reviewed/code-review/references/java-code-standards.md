@@ -1,7 +1,7 @@
 ---
 documentName: harness/skills/reviewed/code-review/references/java-code-standards.md
-version: v1.8.0-semantic-comment-preservation
-updatedAt: 2026-07-07 10:30:00.000 +08:00
+version: v1.10.0-java-magic-value-governance
+updatedAt: 2026-07-22 08:00:00.000 +08:00
 status: active
 purpose: 作为 code-review reviewed Skill 的 Java 代码审查规范参考，吸收阿里巴巴 P3C Java 开发手册、真实项目风格和用户定制规则，覆盖命名、Javadoc 格式、语义保留式注释修复、可执行 Javadoc 覆盖门禁、版本标签、字段常量注释、编程、工程结构、异常日志、安全、测试和项目风格适配。
 scope:
@@ -18,6 +18,8 @@ scope:
   - batch-comment-coverage-policy
   - semantic-comment-preservation-policy
   - executable-javadoc-gate
+  - hot-path-performance-policy
+  - java-magic-value-governance
 prerequisites:
   - harness/skills/reviewed/code-review/SKILL.md
 relatedDocuments:
@@ -25,6 +27,7 @@ relatedDocuments:
   - harness/skills/SkillPolicy.md
   - harness/governance/ProjectHarnessFeedbackPolicy.md
   - harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
+  - harness/tools/scripts/stable/test-java-magic-values.ps1
 outputTo:
   - harness/skills/reviewed/code-review/references/java-code-standards.md
 owner: mixed
@@ -34,8 +37,8 @@ dependsOn:
   - harness/skills/reviewed/code-review/SKILL.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-07
-  decision: semantic-comment-preservation-rule-added
+  reviewedAt: 2026-07-22
+  decision: java-magic-value-governance-added
 ---
 # Java Code Standards（Java 代码审查规范）
 
@@ -336,10 +339,26 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 
 ### 6.2 常量和枚举
 
-- 不允许魔法值直接散落在代码中；业务含义稳定的值应定义为常量、枚举或配置。
+- 不允许缺少来源、名称、量纲或边界语义的魔法值散落在代码中；但也不把所有数字机械提升为常量。
+- 用户可调整且会改变行为、性能、能力边界或输出契约的值必须来自类型化配置、JSON/YAML 配置或项目既有配置服务，并在加载时校验范围和组合约束。
+- 算法阈值、确认窗口、迟滞、容差和默认策略属于版本化业务 policy；应通过 policy/config 对象集中维护，或在确实不可配置时使用具名常量并说明来源、量纲和标定边界。
+- 单位换算、数学定义和物理常量可以使用具名常量；`0/1` 恒等值、清晰循环初值或显然数组边界可以内联，不应为了形式制造无语义常量。
+- 协议字段、schema 版本、错误码和外部规范常量必须有权威来源，不能因为“数值稳定”就散落在调用点。
+- 测试夹具允许内联场景输入和期望值，但测试名称、局部变量或夹具工厂必须说明其业务意图；同一阈值在多个测试重复时应进入测试专用常量或 fixture 配置。
+- `private static final` 只解决命名和作用域，不自动证明值合理。审查仍需追踪该值是否错误替代了用户配置、飞行器能力、业务 policy 或外部协议来源。
 - 不要用一个全局常量类维护所有常量；按功能和复用层次归类。
 - 仅在固定范围内变化的值优先用 enum 表达。
 - 常量不要过度提升复用层级。只在类内使用的常量定义在类内；跨模块共享的常量才进入公共 constant 包。
+
+Java 目录级审查使用只读扫描器生成候选：
+
+```text
+harness/tools/scripts/stable/test-java-magic-values.ps1
+  -Root <PROJECT_ROOT>
+  -Target <java-file-or-package>
+```
+
+候选必须分类为：`configuration`、`domain-policy`、`unit-or-math`、`protocol-contract`、`test-fixture`、`justified-inline` 或 `unresolved`。扫描器只提供覆盖证据，不理解业务语义，不得自动修改源码；`-FailOnFindings` 只适用于已经通过人工处置、目标确实要求零候选的范围。
 
 ### 6.3 OOP 和方法设计
 
@@ -384,6 +403,33 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 - IO、连接、流、锁使用 try-with-resources 或明确释放策略。
 - 外部调用设置超时、重试、熔断或失败边界。
 - 不在 finally 中覆盖原始异常。
+
+### 6.8 功能开关、更新标记和历史状态
+
+当业务行为由总开关、更新标记、可选本轮输入和历史状态共同决定时：
+
+- 修改前先写决策表，逐项说明是否执行功能、使用本轮输入还是历史输入、是否更新缓存、是否记录 warning/error。
+- 总开关应具有明确最高优先级；关闭时不得被更新标记、本轮输入或历史状态绕过。
+- 更新标记只表达“上游声明发生更新”，不能与 payload 是否存在混为一个变量；缺少 payload 时应按业务契约回退、跳过或失败。
+- 本轮输入和历史状态的优先级必须集中在一个稳定决策点，策略层、绑定层、执行层和状态投影层不得各自维护不一致规则。
+- warning 应在掌握完成判断所需事实的层输出。例如只有同时知道本轮输入和历史状态后，才能判断“无可用输入”；入口层不应提前误报。
+- 测试夹具必须能独立控制每个输入维度，不得为了构造首轮场景而在后续轮次悄悄改写被测配置。
+- 自动回归至少覆盖：总开关关闭、无本轮且无历史、本轮初始化、历史复用、未标记更新保留历史、显式更新替换历史，以及业务定义的降级路径。
+
+### 6.9 空间索引和数值量纲
+
+- KDTree、RTree、网格索引或其他空间加速结构的切分轴、距离函数、剪枝阈值必须使用可比较的同一坐标系和量纲。
+- 不把经纬度角度、高度米、平方距离和线性距离直接混合比较；变量名和注释应标明单位及是否为平方值。
+- 修改剪枝、近邻、插值、滤波或数值优化后，应增加简单可信的 oracle，例如暴力扫描、解析解或小规模参考实现，并对多组确定性输入比较结果。
+- “没有抛异常”或单个可视化样例不能证明数值算法正确；测试需要断言最近邻、误差范围、单调性、守恒量或业务不变量。
+
+### 6.10 热路径和性能回归
+
+- 循环、递归、排序 comparator、哈希 key 计算和高频查询中的不变量应预计算；禁止因代码简洁而对同一对象重复做坐标转换、解析、正则编译、序列化或昂贵派生计算。
+- 缓存派生值时必须明确生命周期、失效条件、线程安全和内存边界。请求内不可变缓存不应被误扩展为跨请求共享状态。
+- 性能优化先建立同数据、同配置、同 JVM 和同代码路径的基线，至少比较调用数、成功率、平均值、P50、P95 和总耗时；max 容易受类加载、GC 和系统调度影响，不能单独作为结论。
+- 数值或索引优化必须同时通过简单 oracle 和代表性端到端负载。减少计算量不能以错误剪枝、精度下降、状态遗漏或异常吞没为代价。
+- 性能结论、命令和前后数值进入项目 workflow evidence；长期规范只保存测量方法、稳定约束和验收边界。
 
 ## 7. Spring 和企业级 Java
 
@@ -456,6 +502,7 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 | 文件长度 | 是否超过 500 行？超过时是否有不可拆分理由和测试覆盖？ |
 | 职责拆分 | 是否混入不属于本类的校验、编排、计算、持久化、响应组装或工具逻辑？ |
 | 工具抽取 | 通用原子函数是否进入合适的 `util/` 或 helper？是否误把业务规则塞入工具类？ |
+| 数值来源 | 数值字面量是否经过候选扫描和人工分类？用户参数、飞行器/设备能力、算法阈值、单位、协议和测试夹具是否各自进入正确来源？具名常量是否仍错误掩盖了应读取的配置？ |
 | 行为 | 是否满足业务契约、边界输入和失败路径？ |
 | 分层 | 是否越层访问、循环依赖或写入不属于本层的状态？ |
 | 异常 | 是否区分业务失败和系统失败？外部响应是否安全？ |
@@ -464,6 +511,9 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 | 状态 | 是否存在重复处理、状态回退、共享状态污染？ |
 | 并发 | 单例、缓存、上下文和异步是否线程安全？ |
 | 数据 | 时间、精度、排序、去重、幂等是否明确？ |
+| 状态决策 | 总开关、更新标记、本轮输入和历史状态是否有明确决策表、单一优先级实现和组合回归？ |
+| 数值量纲 | 空间索引、距离、剪枝和插值是否使用一致坐标系/单位，并与简单 oracle 对比？ |
+| 热路径性能 | 循环、递归和 comparator 是否重复计算不变量？是否有同口径基线、分位数、成功率、功能 oracle 和真实负载前后对比？ |
 | 安全 | 输入、路径、反序列化、权限和依赖是否有边界？ |
 | 测试 | 是否有单元、集成或真实场景回归？测试是否自动、独立、可重复？ |
 | 注释 | 注释是否解释不变量、复杂意图和边界，而不是重复代码？关键流程是否有必要的行内注释？ |
@@ -479,6 +529,7 @@ harness/tools/scripts/stable/test-java-javadoc-coverage.ps1
 6. 如果本轮因为业务口径不明不修改注释，必须记录为 deferred finding 或 open question，不能从审查矩阵中省略。
 7. 当用户要求完整 Javadoc 时，必须运行 `test-java-javadoc-coverage.ps1` strict switches，并把 fileCount、findingCount 和最终 status 记录到 workflow evidence；脚本未通过时不能宣称批量注释修复完成。
 8. 当用户要求注释质量或语义精修时，必须记录每个文件是否完成原注释对比和语义吸收；仅 `findingCount=0` 不足以证明语义精修完成。
+9. 运行 `test-java-magic-values.ps1` 只能证明目标文件被扫描；必须在 coverage matrix 或 finding disposition 中记录每个候选的分类、来源、量纲和处置，才能宣称魔法值审查完成。
 
 ## 12. 风格适配规则
 

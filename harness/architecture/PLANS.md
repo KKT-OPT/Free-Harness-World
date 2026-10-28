@@ -1,7 +1,7 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.7.0-h9-5-project-feedback-policy
-updatedAt: 2026-07-05 00:00:00.000 +08:00
+version: v1.8.21-h9-5-engineering-feedback-promoted
+updatedAt: 2026-10-28
 status: active
 purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划、H9-4 Knowledge/RAG 和 Memory 收口完成结果，以及 H9-5 项目反向优化机制、汇总和 H10 门禁判定入口。
 scope:
@@ -30,6 +30,7 @@ scope:
   - h9-4-memory-closeout-review
   - h9-4-stage-docs-retired
   - h9-5-project-feedback-policy
+  - h9-5-feature-delivery-loop
   - llm-wiki-agent-absorption
 prerequisites:
   - AGENTS.md
@@ -57,6 +58,12 @@ relatedDocuments:
   - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
   - projects/lfms-decision/docs/project/workflow/20260702-h9-1-simulation-real-data-solver-binding-failure.md
   - projects/lfms-decision/docs/project/workflow/20260702-h9-1-duplicate-history-reuse-fix.md
+  - projects/lfms-decision/docs/project/workflow/20260714-h9-5-flight-motion-fact-feature-delivery.md
+  - projects/lfms-decision/docs/project/workflow/20260728-h9-5-flight-motion-fact-p2-contract-skeleton.md
+  - projects/lfms-decision/docs/project/workflow/20260729-h9-5-flight-motion-fact-p3-instant-motion-recognition.md
+  - projects/lfms-decision/docs/project/prd/FlightMotionFactRequirements.md
+  - projects/lfms-decision/docs/project/architecture/FlightMotionFactArchitecture.md
+  - projects/lfms-decision/docs/project/test/motionfact/FlightMotionFactTestPlan.md
   - harness/tools/scripts/stable/invoke-memory.ps1
   - harness/tools/scripts/stable/test-harness-governance.ps1
   - harness/memory/reviewed/harness-entry-reading-order.md
@@ -67,16 +74,16 @@ relatedDocuments:
 outputTo:
   - harness/architecture/PLANS.md
 owner: mixed
-reviewAfter: 2026-07-23
+reviewAfter: 2026-11-11
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-05
-  decision: h9-5-project-feedback-policy-created
+  reviewedBy: user
+  reviewedAt: 2026-10-28
+  decision: h9-5-engineering-feedback-promoted-after-validation
 ---
 # Harness 架构落地计划
 
@@ -85,8 +92,8 @@ review:
 ## 1. 当前状态
 
 ```text
-currentStage = H9-5 Project Feedback Mechanism and H10 Gate Assessment
-status = h9-5-in-progress-project-feedback-policy-created
+currentStage = H9-5 Project Feedback Mechanism and Feature Delivery Validation
+status = h9-5-engineering-feedback-batch-promoted
 lastCompletedStage = H9-4
 architectureAuthority = harness/architecture/HarnessEngineering.md
 targetArchitectureVersion = v2.10.0-project-feedback-governance
@@ -95,6 +102,11 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 ```
 
 当前目标架构口径：
+
+2026-10-28当前增量：[工程可靠性反馈审核包](../reports/redacted/H9-5EngineeringReliabilityFeedback.md)。
+本批已按用户“测试通过后晋升”的明确授权完成：有状态验证Skill晋reviewed、三个Skill补丁合入、清理核验工具晋stable及既有门禁修复。
+双Python运行时与双PowerShell正反例、治理/项目证据及资产路由验证见审核包；不改变项目算法/参数或新效果事实。
+H9-5未整体验收，不进入H10；本文件下文P2/P3等逐轮记录是历史轨迹，不能覆盖项目当前路由或成为重开旧任务的依据。
 
 - `INDEX.md` 是全局导航入口。
 - `harness/HarnessIndex.md` 是 General Harness 资产分层索引。
@@ -126,7 +138,7 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 | H9-2 | Skill 闭环验证 | complete | `simulation-failure-triage` 已经用户 approve，晋升到 reviewed Skill，并补齐 Git 管理门禁；SkillIndex、usage sidecar、审核记录和 Skill 机制文档已同步。 |
 | H9-3 | Governance 闭环验证 | complete | 已复用 H9-1 真实仿真任务生成项目级 Governance closeout report；用户确认后补齐生命周期证据门禁并完成收口。 |
 | H9-4 | Knowledge 和 Memory 闭环验证 | complete | Knowledge/RAG 已完成 raw -> candidate -> reviewed -> cleanup -> validation -> query 闭环；Memory 已完成 candidate -> review -> reviewed/delete 闭环并接入 governance self-check。 |
-| H9-5 | H9 汇总和 H10 门禁判定 | in-progress | 已先建立真实项目反向优化 Harness 的治理规则和 triage 模板；后续继续处理 code review Skill、测试 Skill、项目规范和剩余 release readiness 风险。 |
+| H9-5 | H9 汇总、真实功能交付和 H10 门禁判定 | in-progress | 已建立项目反向优化治理规则；当前新增 H9-5.1，用真实功能验证需求、方案、架构/API、开发、测试、指标、验收和 Skill 沉淀完整闭环。 |
 | H10 | Release Readiness 和 main 发布门禁 | pending | H9 全部子阶段验收后再判断是否具备 release candidate；`main` 合并、tag、正式发布只能由用户执行。 |
 
 ## 3. 当前沙盒 Harness 落地现状
@@ -477,6 +489,59 @@ H9-5 第一项长期机制已建立：
 | 项目反向优化 triage 模板 | `harness/templates/governance/ProjectHarnessFeedbackTriageTemplate.md` | 用于每个真实项目任务收口时记录来源证据、候选类型、目标资产、审批状态、验证门禁和处置结果。 |
 
 后续 H9-5 任务应优先使用上述策略对 `lfms-decision` 的 code review、测试、开发、项目知识和项目规范候选进行分类，再分别进入对应 Skill、Tool、Project Fact、Knowledge 或 Governance 闭环。
+
+#### 8.6.1 H9-5.1 项目功能交付与生命周期 Skill 验证
+
+目标：在 H9-5 内新增一个真实功能交付子阶段，以受管项目作为验证锚点，完整执行需求分析、解决方案设计、架构与接口设计、单元功能开发和测试、整体测试与指标设计、用户验收以及 Harness 反向沉淀。项目业务事实只进入项目文档和 workflow evidence，本计划只保存通用阶段规则与验收状态。
+
+阶段输出：
+
+| 阶段 | 主要输出 | 进入下一阶段门禁 |
+|---|---|---|
+| F0 任务接入与材料分析 | Task Brief、来源材料评估、现有架构/接口基线、待确认问题 | projectId、目标、材料来源和敏感边界明确 |
+| F1 需求对齐 | 项目需求文档、范围、非目标、术语、需求 ID、验收上下文 | 用户审核需求并确认范围和优先级 |
+| F2 方案与契约设计 | 解决方案、架构边界、接口和状态契约、降级策略、ADR 候选 | 用户审核方案；高风险架构/API 变更得到批准 |
+| F3 单元功能开发 | 分批实现、代码审查、单元测试、变更证据 | 编译和单元功能测试通过；无未处置阻断 finding |
+| F4 整体测试与指标 | 集成、连续多轮、仿真/回放、性能、正确性和状态体积指标 | 使用同口径数据和批准阈值完成验证，失败有归因 |
+| F5 项目验收 | 验收报告、残余风险、用户反馈和修订闭环 | 用户明确 approve、revise、reject 或 defer |
+| F6 Harness 反向沉淀 | Skill/Tool/Template/Verification/Governance candidates 与处置 | candidate-first；与既有资产去重；用户审核后方可晋升 |
+| F7 阶段收口 | 生命周期门禁、索引、Git 边界和 H9-5 状态更新 | 项目证据和 Harness 资产分别进入正确仓库边界 |
+
+完整工作流 Skill 的目标定位：
+
+```text
+project-feature-delivery
+= 需求 -> 方案 -> 架构/API -> 实现 -> 单元测试 -> 整体测试/指标 -> 用户验收的编排 Skill
+```
+
+该 Skill 不替代已有 `code-review`、`code-implementation` 和 `algorithm-performance-analysis`，而是负责阶段门禁、证据交接和用户审核状态。Skill 必须先通过当前真实功能完成 forward-test，再进入 candidate；不得先写成 reviewed Skill 后反向证明流程有效。
+
+H9-5.1 完成标准：
+
+1. 需求文档与解决方案文档由用户审核，推断内容和已确认事实分离。
+2. 架构、接口、状态、配置、错误/降级和兼容边界可追踪到需求 ID。
+3. 功能按可审核批次实现，每批有代码审查、测试和 workflow evidence。
+4. 单元、集成、多轮状态、仿真/回放、性能和业务指标按适用性完成；不适用项记录原因。
+5. 项目验收包含完成项、失败项、残余风险、指标结果和用户决策。
+6. `project-feature-delivery` 只在真实流程跑通后形成 candidate，并按 Skill Governance 完成审核或暂缓处置。
+7. 稳定脚本或程序覆盖可确定执行的阶段门禁；不能只依赖 Agent 阅读文档后自觉执行。
+8. 项目事实、项目报告和 workflow evidence 留在项目仓库；通用流程、模板、门禁和 Skill 留在 Harness 仓库。
+
+当前状态：
+
+```text
+subStage = H9-5.1 F4-A user review
+status = f3-and-f4-precondition-approved-f4-a-baseline-freeze-awaiting-user-review
+projectEvidence = projects/lfms-decision/docs/project/workflow/20260714-h9-5-flight-motion-fact-feature-delivery.md
+currentChildWorkflow = projects/lfms-decision/docs/project/workflow/20260804-h9-5-flight-motion-fact-f4-overall-validation.md
+formalRequirement = projects/lfms-decision/docs/project/prd/FlightMotionFactRequirements.md
+formalSolution = projects/lfms-decision/docs/project/architecture/FlightMotionFactArchitecture.md
+formalTestDesign = projects/lfms-decision/docs/project/test/motionfact/FlightMotionFactTestPlan.md
+requiredImplementationSkills = code-review + code-implementation
+testPrerequisite = Track Generator R1-R8 and P2-P6 approved; F4-A freezes current code/config/input/metrics and failure attribution protocol
+implementationAllowed = F4-A completed; no F4-B execution or production threshold change until F4-A is approved by the user
+skillCandidate = not-created-before-forward-test
+```
 
 ## 9. H10 目标
 

@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/scripts/candidate/README.md
-version: v1.0.0-h5-tool-layer
-updatedAt: 2026-06-18 14:30:00.000 +08:00
+version: v1.2.0-cleanup-candidate-promoted
+updatedAt: 2026-10-28
 status: active
 purpose: 定义候选脚本目录边界和晋升规则。
 scope:
@@ -16,17 +16,20 @@ relatedDocuments:
 outputTo:
   - harness/tools/scripts/candidate/README.md
 owner: mixed
-reviewAfter: 2026-07-18
+reviewAfter: 2026-11-11
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/tools/ToolsIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-06-18
-  decision: h5-complete
+  reviewedBy: user
+  reviewedAt: 2026-10-28
+  decision: cleanup-candidate-validated-and-promoted
 ---
 # 候选脚本
+
+`verify-artifact-cleanup.py`及测试已按用户授权晋升到stable，不在本目录保留活跃副本。
+调用、限制和测试见[稳定工具契约](../../docs/command-surfaces/ArtifactCleanupTool.md)。
 
 本目录保存 candidate tool scripts，中文解释是候选工具脚本。
 

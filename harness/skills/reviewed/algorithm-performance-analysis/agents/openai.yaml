@@ -1,0 +1,4 @@
+interface:
+  display_name: "算法性能分析"
+  short_description: "建立可复现基线，拆分冷启动与稳态并完成性能归因和验收"
+  default_prompt: "使用 $algorithm-performance-analysis 对目标算法建立基线、定位性能瓶颈并给出可验证的处置结论。"

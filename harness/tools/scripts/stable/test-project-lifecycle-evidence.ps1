@@ -122,7 +122,7 @@ function Test-MarkdownFrontMatter {
         return
     }
 
-    $statusMatch = [regex]::Match($Text, '(?m)^status:[ \t]*([a-zA-Z0-9_-]+)[ \t]*$')
+    $statusMatch = [regex]::Match($Text, '(?m)^status:[ \t]*([a-zA-Z0-9_-]+)[ \t]*(?:\r)?$')
     if (-not $statusMatch.Success) {
         Add-Finding -List $Findings -Severity "error" -Code "frontmatterStatusMissing" -Path $Path -Message "Markdown frontmatter is missing status." -RepairSuggestion "Set status to draft, review, active, stale, deprecated, archived or superseded."
         return
@@ -145,7 +145,7 @@ function Test-LifecycleTextCoverage {
     $checks = @(
         @{
             code = "lifecycleTaskBriefMissing"
-            pattern = '(?is)(^|\n)##\s*\d*\.?\s*Task Brief|\bTask Brief\b|taskId:'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u4efb\u52a1\u7b80\u62a5|\bTask Brief\b|taskId:'
             message = "Lifecycle evidence does not contain a Task Brief."
             repair = "Record goal, projectId, scope, acceptance criteria, validation plan, risk and approval requirement."
         },
@@ -157,25 +157,25 @@ function Test-LifecycleTextCoverage {
         },
         @{
             code = "lifecyclePlanMissing"
-            pattern = '(?is)Execution Plan|implementation plan|repair plan|design'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?(?:\u6267\u884c\u8ba1\u5212|\u65b9\u6848\u8bbe\u8ba1)|Execution Plan|implementation plan|repair plan|design'
             message = "Lifecycle evidence does not contain design or execution planning."
             repair = "Record the implementation plan or design decision before the execution record."
         },
         @{
             code = "lifecycleDevelopmentMissing"
-            pattern = '(?is)Execution Record|File Change Summary|file change|implementation'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?(?:\u6267\u884c\u8bb0\u5f55|\u6587\u4ef6\u53d8\u66f4\u6458\u8981)|Execution Record|File Change Summary|file change|implementation'
             message = "Lifecycle evidence does not contain development or file-change evidence."
             repair = "Record changed files, implementation summary and why each change was needed."
         },
         @{
             code = "lifecycleValidationMissing"
-            pattern = '(?is)Verification Report|validation result|validation command|Regression|test-compile|JAVA_MAIN_PASS'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?(?:\u9a8c\u8bc1\u62a5\u544a|\u9a8c\u8bc1\u7ed3\u679c)|Verification Report|validation result|validation command|Regression|test-compile|JAVA_MAIN_PASS'
             message = "Lifecycle evidence does not contain validation or regression evidence."
             repair = "Record validation command summaries, status, regression result and residual risk."
         },
         @{
             code = "lifecycleGovernanceMissing"
-            pattern = '(?is)Governance Candidates|Candidate Table|candidate-first|Non-Promotion|candidate'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?(?:\u6cbb\u7406\u5019\u9009|\u5019\u9009\u6e05\u5355)|Governance Candidates|Candidate Table|candidate-first|Non-Promotion|candidate'
             message = "Lifecycle evidence does not contain governance candidate or closeout evidence."
             repair = "Record governance candidates, dispositions, targets and approval requirements."
         }
@@ -187,11 +187,18 @@ function Test-LifecycleTextCoverage {
         }
     }
 
-    if ($RequireUserAcceptanceValue -and ($CombinedText -notmatch '(?is)User Acceptance|acceptedBy[ \t]*=[ \t]*user|decision:[ \t]*.*accepted|approved-by-user')) {
+    # A heading or an earlier approval cannot override an explicit pending/rejected final state.
+    $finalDecisions = @([regex]::Matches($CombinedText, '(?m)^finalUserReview:[ \t]*([^#\r\n]*)') |
+        ForEach-Object { $_.Groups[1].Value.Trim().Trim('"', "'") })
+    $acceptancePresent = $CombinedText -match '(?im)^acceptedBy[ \t]*=[ \t]*user[ \t]*\r?$|^decision:[ \t]*(accepted|approved|approved-by-user)[ \t]*\r?$'
+    if ($finalDecisions.Count -gt 0) {
+        $acceptancePresent = @($finalDecisions | Where-Object { $_ -notin @("accepted", "approved", "approved-by-user") }).Count -eq 0
+    }
+    if ($RequireUserAcceptanceValue -and -not $acceptancePresent) {
         Add-Finding -List $Findings -Severity "error" -Code "lifecycleAcceptanceMissing" -Path "workflow-evidence" -Message "Lifecycle evidence does not contain user acceptance." -RepairSuggestion "Record accepted yes/no/pending, user feedback and repair requirement."
     }
 
-    if ($CombinedText -notmatch '(?is)stable tools|stable command surface|invoke-java-main\.ps1|invoke-maven-project\.ps1|Tool Invocation Evidence') {
+    if ($CombinedText -notmatch '(?is)\u7a33\u5b9a\u5de5\u5177|stable tools|stable command surface|invoke-java-main\.ps1|invoke-maven-project\.ps1|Tool Invocation Evidence') {
         Add-Finding -List $Findings -Severity "warning" -Code "stableToolEvidenceMissing" -Path "workflow-evidence" -Message "Lifecycle evidence does not clearly show stable tool usage." -RepairSuggestion "Record the stable command surface used, or explain why the task did not require one."
     }
 }
@@ -206,25 +213,25 @@ function Test-ProjectReportTextCoverage {
     $checks = @(
         @{
             code = "reportCandidateTableMissing"
-            pattern = '(?is)Candidate Table|Governance Candidates'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?(?:\u5019\u9009\u6e05\u5355|\u6cbb\u7406\u5019\u9009)|Candidate Table|Governance Candidates'
             message = "Project report is missing candidate table or governance candidate summary."
             repair = "Add candidate id, type, proposal, source evidence, target asset, disposition and approval requirement."
         },
         @{
             code = "reportApprovalMissing"
-            pattern = '(?is)Approval|Human approval|review-first|already-approved|acceptedBy[ \t]*=[ \t]*user'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u5ba1\u6838\u4e0e\u5904\u7f6e|Approval|Human approval|review-first|already-approved|acceptedBy[ \t]*=[ \t]*user'
             message = "Project report is missing approval or review evidence."
             repair = "Record who approved, what was approved and what remains pending."
         },
         @{
             code = "reportBoundaryMissing"
-            pattern = '(?is)Non-Promotion|not a fact source|promotion boundary|Report is not a fact'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u975e\u664b\u5347\u8fb9\u754c|Non-Promotion|not a fact source|promotion boundary|Report is not a fact'
             message = "Project report is missing non-promotion or fact-boundary statement."
             repair = "State that report suggestions are not facts until absorbed into the target asset after review."
         },
         @{
             code = "reportValidationMissing"
-            pattern = '(?is)Validation|self-check|git diff --check'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u9a8c\u8bc1\u7ed3\u679c|Validation|self-check|git diff --check'
             message = "Project report is missing validation summary."
             repair = "Record validation commands, checks, residual findings and repair path."
         }
@@ -259,6 +266,7 @@ invoke-java-main.ps1 returned JAVA_MAIN_PASS.
 
 ## 5. User Acceptance
 User accepted the result.
+acceptedBy = user
 
 ## 6. Governance Candidates
 candidate-first closeout recorded.
@@ -292,6 +300,48 @@ git diff --check pass.
         }
     }
 
+    # Unicode escapes keep this script safe on Windows PowerShell without a BOM.
+    $localized = [regex]::Unescape(@'
+## 1. \u4efb\u52a1\u7b80\u62a5
+goal, scope and acceptance criteria recorded
+AGENTS.md ProjectIndex.md
+## 2. \u6267\u884c\u8ba1\u5212
+read the source before editing
+## 3. \u6587\u4ef6\u53d8\u66f4\u6458\u8981
+changed one file
+## 4. \u9a8c\u8bc1\u62a5\u544a
+commands and results recorded
+## 5. \u7528\u6237\u9a8c\u6536
+acceptedBy = user
+## 6. \u6cbb\u7406\u5019\u9009
+no automatic promotion
+\u7a33\u5b9a\u5de5\u5177
+'@)
+    $localizedReport = [regex]::Unescape(@'
+## \u5019\u9009\u6e05\u5355
+types, targets and validation recorded
+## \u5ba1\u6838\u4e0e\u5904\u7f6e
+pending new assets
+## \u975e\u664b\u5347\u8fb9\u754c
+no automatic fact promotion
+## \u9a8c\u8bc1\u7ed3\u679c
+commands passed
+'@)
+    Test-LifecycleTextCoverage -CombinedText $localized -Findings $findings -RequireUserAcceptanceValue $true
+    Test-ProjectReportTextCoverage -ReportText $localizedReport -Path "self-test-localized-report" -Findings $findings
+    foreach ($case in @(
+        @{ text = $localized.Replace("acceptedBy = user", "finalUserReview: pending"); code = "lifecycleAcceptanceMissing" },
+        @{ text = $goodWorkflow.Replace("acceptedBy = user", "finalUserReview: rejected"); code = "lifecycleAcceptanceMissing" },
+        @{ text = $goodWorkflow.Replace("acceptedBy = user", ""); code = "lifecycleAcceptanceMissing" },
+        @{ text = [regex]::Replace($localized, '(?m)^## 4\..*\r?\n', ''); code = "lifecycleValidationMissing" }
+    )) {
+        $actual = New-Object System.Collections.ArrayList
+        Test-LifecycleTextCoverage -CombinedText $case.text -Findings $actual -RequireUserAcceptanceValue $true
+        if (@($actual | ForEach-Object { $_.code }) -notcontains $case.code) {
+            Add-Finding -List $findings -Severity "error" -Code "selfTestLocalizedRejectionMissing" -Path "self-test" -Message "Missing rejection: $($case.code)." -RepairSuggestion "Repair bilingual coverage without accepting pending reviews."
+        }
+    }
+
     $status = "passed"
     if (@($findings | Where-Object { $_.severity -eq "error" }).Count -gt 0) {
         $status = "failed"
@@ -318,7 +368,7 @@ $registryPath = Join-Path $rootPath ($Registry -replace '/', '\')
 if (-not (Test-Path -LiteralPath $registryPath -PathType Leaf)) {
     Add-Finding -List $findings -Severity "error" -Code "registryMissing" -Path $Registry -Message "Project registry file does not exist." -RepairSuggestion "Create user/registry/projects.local.json or pass the correct -Registry path."
 } else {
-    $registryObject = Get-Content -Raw -LiteralPath $registryPath | ConvertFrom-Json
+    $registryObject = Get-Content -Raw -Encoding UTF8 -LiteralPath $registryPath | ConvertFrom-Json
     $projects = @($registryObject.projects)
     if ([string]::IsNullOrWhiteSpace($ProjectId)) {
         if ($projects.Count -eq 1) {
@@ -368,7 +418,7 @@ if (-not (Test-Path -LiteralPath $registryPath -PathType Leaf)) {
                 Add-Finding -List $findings -Severity "error" -Code "workflowEvidenceMissing" -Path $relative -Message "Workflow evidence file does not exist." -RepairSuggestion "Create the workflow evidence file or pass the correct path."
                 continue
             }
-            $text = Get-Content -Raw -LiteralPath $resolved
+            $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $resolved
             Test-MarkdownFrontMatter -Text $text -Path $relative -Findings $findings
             $combinedWorkflowText += "`n" + $text
         }
@@ -396,7 +446,7 @@ if (-not (Test-Path -LiteralPath $registryPath -PathType Leaf)) {
                 Add-Finding -List $findings -Severity "error" -Code "projectReportMissing" -Path $relative -Message "Project report file does not exist." -RepairSuggestion "Create the project report or pass the correct path."
                 continue
             }
-            $text = Get-Content -Raw -LiteralPath $resolved
+            $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $resolved
             Test-MarkdownFrontMatter -Text $text -Path $relative -Findings $findings
             Test-ProjectReportTextCoverage -ReportText $text -Path $relative -Findings $findings
         }

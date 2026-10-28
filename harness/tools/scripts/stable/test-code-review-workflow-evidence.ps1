@@ -174,49 +174,49 @@ function Test-CodeReviewEvidenceText {
     $checks = @(
         @{
             code = "codeReviewTaskBriefMissing"
-            pattern = '(?is)(^|\n)##\s*\d*\.?\s*Task Brief|\bTask Brief\b|taskId:'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u4efb\u52a1\u7b80\u62a5|\bTask Brief\b|taskId:'
             message = "Code review evidence does not contain a Task Brief."
             repair = "Record taskId, projectId, goal, scope, acceptance criteria, risk and approval requirement."
         },
         @{
             code = "codeReviewScopeMissing"
-            pattern = '(?is)reviewTarget|review target|Scope|targetFiles'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u5ba1\u67e5\u8303\u56f4|reviewTarget|review target|Scope|targetFiles'
             message = "Code review evidence does not define review scope or target files."
             repair = "Record review target files, context files, tests and forbidden paths."
         },
         @{
             code = "codeReviewTraceMissing"
-            pattern = '(?is)Trace|command summary|rg -n|git diff|Get-Content'
+            pattern = '(?im)^#{1,6}[^\r\n]*\u68c0\u67e5\u8f68\u8ff9|Trace|command summary|rg -n|git diff|Get-Content'
             message = "Code review evidence does not contain trace or command evidence."
             repair = "Record entry documents, searched symbols, inspected files and command summaries."
         },
         @{
             code = "codeReviewFindingsMissing"
-            pattern = '(?is)Findings|finding|\bP[0-3]\b|severity'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u5ba1\u67e5\u53d1\u73b0|Findings|finding|\bP[0-3]\b|severity'
             message = "Code review evidence does not contain review findings."
             repair = "Record findings with severity, file, line, evidence, impact and suggestion, or explicitly state no blocking findings."
         },
         @{
             code = "codeReviewUserReviewMissing"
-            pattern = '(?is)User Review|userFeedbackState|reviewedBy|decision:|approve|reject|revise|defer'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u7528\u6237\u5ba1\u6838|User Review|userFeedbackState|reviewedBy|decision:|approve|reject|revise|defer'
             message = "Code review evidence does not contain user review or feedback section."
             repair = "Record user decision for findings: approve, reject, revise, defer or pending."
         },
         @{
             code = "codeReviewFixHandoffMissing"
-            pattern = '(?is)Fix Handoff|Fix Plan|fixState|implementation'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u4fee\u590d\u4ea4\u63a5|Fix Handoff|Fix Plan|fixState|implementation'
             message = "Code review evidence does not contain fix handoff or implementation state."
             repair = "Record whether code modification is requested, not started, not required, partial, blocked or fixed pending recheck."
         },
         @{
             code = "codeReviewRecheckMissing"
-            pattern = '(?is)Recheck|recheckState'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u590d\u67e5|Recheck|recheckState'
             message = "Code review evidence does not contain recheck state."
             repair = "Record recheck state after implementation or mark it pending."
         },
         @{
             code = "codeReviewFinalReviewMissing"
-            pattern = '(?is)Final Review|finalUserReview'
+            pattern = '(?im)^#{1,6}\s*(?:\d+\.?\s*)?\u6700\u7ec8\u5ba1\u6838|Final Review|finalUserReview'
             message = "Code review evidence does not contain final user review state."
             repair = "Record final user review as pending, accepted, rejected or deferred."
         }
@@ -292,8 +292,11 @@ function Test-CodeReviewEvidenceText {
         if ($finalUserReview -notmatch '^(accepted|approved|approved-by-user)$') {
             Add-Finding -ListRef $FindingsRef -Severity "error" -Code "codeReviewFinalAcceptanceMissing" -Path $Path -Message "Closed loop is required but finalUserReview does not show acceptance." -RepairSuggestion "Record accepted final user review after recheck."
         }
-        if ($recheckState -match '^(pending|not-started)?$') {
-            Add-Finding -ListRef $FindingsRef -Severity "error" -Code "codeReviewClosedLoopRecheckMissing" -Path $Path -Message "Closed loop is required but recheckState is pending." -RepairSuggestion "Run and record recheck before closing the code review workflow."
+        if ($recheckState -notmatch '^(passed|approved|accepted)(-[a-z0-9-]+)?$') {
+            Add-Finding -ListRef $FindingsRef -Severity "error" -Code "codeReviewClosedLoopRecheckMissing" -Path $Path -Message "Closed loop requires an explicitly successful recheck." -RepairSuggestion "Resolve failed or incomplete rechecks before closing the workflow."
+        }
+        if ($fixState -notmatch '^(fixed|not-required|no-fix-required)$') {
+            Add-Finding -ListRef $FindingsRef -Severity "error" -Code "codeReviewClosedLoopFixIncomplete" -Path $Path -Message "Closed loop requires fixed or explicitly unnecessary implementation." -RepairSuggestion "Resolve blocked, partial or unfinished fixes before closing the workflow."
         }
     }
 }
@@ -312,7 +315,7 @@ function Resolve-ProjectFromRegistry {
         return $null
     }
 
-    $registryObject = Get-Content -Raw -LiteralPath $registryFullPath | ConvertFrom-Json
+    $registryObject = Get-Content -Raw -Encoding UTF8 -LiteralPath $registryFullPath | ConvertFrom-Json
     $projects = @($registryObject.projects)
     $effectiveProjectId = $RequestedProjectId
     if ([string]::IsNullOrWhiteSpace($effectiveProjectId)) {
@@ -454,6 +457,54 @@ taskId: bad
         $findings += (New-Finding -Severity "error" -Code "selfTestBadStateUnexpected" -Path "self-test-bad" -Message "Bad fixture unexpectedly contains codeReviewState." -RepairSuggestion "Repair self-test bad fixture.")
     }
 
+    # Exercise the real validator, including non-acceptance states, not just regex copies.
+    $localized = [regex]::Unescape(@'
+---
+status: review
+---
+## 1. \u4efb\u52a1\u7b80\u62a5
+sample goal and acceptance criteria
+## 2. \u5ba1\u67e5\u8303\u56f4
+src/sample.txt only
+## 3. \u68c0\u67e5\u8f68\u8ff9
+read src/sample.txt
+## 4. \u5ba1\u67e5\u53d1\u73b0
+no blocking issues
+## 5. \u7528\u6237\u5ba1\u6838
+approved scope
+## 6. \u4fee\u590d\u4ea4\u63a5
+no changes required
+## 7. \u590d\u67e5
+completed inspection
+## 8. \u6700\u7ec8\u5ba1\u6838
+accepted scope
+codeReviewState: accepted
+userFeedbackState: approved
+fixState: not-required
+recheckState: passed
+finalUserReview: accepted
+'@)
+    $combinedHeading = $localized.Replace("## 3.", "## 3. " + [regex]::Unescape('\u6267\u884c\u8ba1\u5212 /'))
+    foreach ($fixture in @($good, $localized, $combinedHeading)) {
+        $actual = New-Object System.Collections.ArrayList
+        Test-CodeReviewEvidenceText -Text $fixture -Path "self-test-positive" -FindingsRef (New-Object psobject -Property @{ Store = $actual }) -RequireUserReviewValue $true -RequireFixDispositionValue $true -RequireRecheckValue $true -RequireFinalReviewValue $true -RequireClosedLoopValue $true
+        $findings += @($actual)
+    }
+    foreach ($case in @(
+        @{ text = $localized.Replace("codeReviewState: accepted", "codeReviewState: rechecked"); code = "codeReviewClosedLoopNotAccepted" },
+        @{ text = $localized.Replace("finalUserReview: accepted", "finalUserReview: pending"); code = "codeReviewFinalAcceptanceMissing" },
+        @{ text = $localized.Replace("recheckState: passed", "recheckState: pending"); code = "codeReviewClosedLoopRecheckMissing" },
+        @{ text = $localized.Replace("recheckState: passed", "recheckState: failed"); code = "codeReviewClosedLoopRecheckMissing" },
+        @{ text = $localized.Replace("fixState: not-required", "fixState: partial"); code = "codeReviewClosedLoopFixIncomplete" },
+        @{ text = [regex]::Replace($localized, '(?m)^## 3\..*\r?\n', ''); code = "codeReviewTraceMissing" }
+    )) {
+        $actual = New-Object System.Collections.ArrayList
+        Test-CodeReviewEvidenceText -Text $case.text -Path "self-test-negative" -FindingsRef (New-Object psobject -Property @{ Store = $actual }) -RequireUserReviewValue $true -RequireFixDispositionValue $true -RequireRecheckValue $true -RequireFinalReviewValue $true -RequireClosedLoopValue $true
+        if (@($actual | ForEach-Object { $_.code }) -notcontains $case.code) {
+            $findings += (New-Finding -Severity "error" -Code "selfTestExpectedCodeMissing" -Path "self-test-negative" -Message "Missing rejection: $($case.code)." -RepairSuggestion "Repair the validator without weakening approval checks.")
+        }
+    }
+
     $status = "passed"
     if (@($findings | Where-Object { $_.severity -eq "error" }).Count -gt 0) {
         $status = "failed"
@@ -504,7 +555,7 @@ foreach ($item in $WorkflowEvidence) {
         continue
     }
 
-    $text = Get-Content -Raw -LiteralPath $resolved
+    $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $resolved
     Test-MarkdownFrontMatter -Text $text -Path $relative -FindingsRef (New-Object psobject -Property @{ Store = $findings })
     Test-CodeReviewEvidenceText -Text $text -Path $relative -FindingsRef (New-Object psobject -Property @{ Store = $findings }) -RequireUserReviewValue ([bool]$RequireUserReview) -RequireFixDispositionValue ([bool]$RequireFixDisposition) -RequireRecheckValue ([bool]$RequireRecheck) -RequireFinalReviewValue ([bool]$RequireFinalReview) -RequireClosedLoopValue ([bool]$RequireClosedLoop)
 }

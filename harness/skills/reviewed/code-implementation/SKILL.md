@@ -34,6 +34,7 @@ metadata:
 | `harness/skills/reviewed/code-review/references/java-code-standards.md` | 修改 Java 代码时读取，作为 Java 规范和项目风格适配参考。 |
 | `harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1` | 修改前后校验 code review workflow evidence 是否完整。 |
 | `harness/tools/scripts/stable/test-java-javadoc-coverage.ps1` | Java 注释或 Javadoc 修复后的覆盖门禁；当修复目标包含完整 Javadoc 时必须运行。 |
+| `harness/tools/scripts/stable/test-java-magic-values.ps1` | Java 实现完成后的数值字面量只读复查；只生成候选，不自动改写代码。 |
 | `projects/<project-id>/AGENTS.md` | 获取项目级代码边界、技术栈、Git 边界和验证入口。 |
 | `projects/<project-id>/docs/project/ProjectIndex.md` | 路由到项目架构、源码布局、测试策略、验证命令和 workflow evidence。 |
 | `projects/<project-id>/docs/project/workflow/<task-id>.md` | 真实项目实现任务必须更新的审查、修复、验证、复查和审核证据。 |
@@ -49,6 +50,7 @@ metadata:
 7. 实现完成不等于闭环完成；必须交回 code-review 复查，并等待用户再次审核。
 8. 遇到高风险重构、接口兼容、安全、数据迁移、并发模型或验收标准不清时，先补设计和确认，不直接改代码。
 9. Java 注释或 Javadoc 修复不得用批量脚本机械覆盖原有业务注释。脚本只能用于只读门禁、覆盖检查或报告生成；注释内容修改必须基于源码行为、现有注释和必要历史版本进行语义保留式编辑。
+10. 不得用脚本机械提取或替换数值字面量。用户可配置值必须进入项目配置契约；业务阈值进入版本化 policy 或具名常量；单位、数学和协议常量必须保留来源与量纲；测试夹具值必须表达场景意图。
 
 ## 4. 实现流程
 
@@ -97,6 +99,10 @@ harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1
 6. 修改 Java 注释或规范类 finding 时，按 code-review Java reference 复查类级 Javadoc、方法级 Javadoc、字段/常量注释、行内注释和版本标签来源，避免只修用户点名的一行。
 7. 修改既有注释时，先识别原注释是否包含业务规则、算法约束、边界条件、降级原因、错误归因或运行假设；有价值的信息必须吸收到新注释中，不能被模板化句子替换。
 
+涉及配置默认值、辅助服务隔离、状态减容、参数试验清理或IDE/迁移执行时，读取
+[实现可靠性专题检查](references/reliability-checks.md)。按实际变更风险选择验证，不因该专题机械扩大范围。
+跨轮在线算法与独立参考对比另使用 `harness/skills/reviewed/stateful-algorithm-validation/SKILL.md`。
+
 ### 4.3 执行修改
 
 执行时：
@@ -116,10 +122,15 @@ harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1
 |---|---|
 | 文档或注释改动 | `git diff --check`，必要时跑文档/治理脚本。 |
 | Java Javadoc 完整性修复 | 运行 `test-java-javadoc-coverage.ps1`，检查类级标签、方法 Javadoc、`@param`、`@return` 和空白星号行；用户要求每个子函数都有 Javadoc 时启用 all-method 模式。 |
+| Java 数值规则修复 | 运行 `test-java-magic-values.ps1` 生成候选；逐项复核配置来源、policy、量纲和夹具语义，把稳定结论写入 classification JSON，并用 `-FailOnUnclassified` 复查。脚本不得作为自动重写器。 |
 | Java 编译相关 | 使用 `invoke-maven-project.ps1` 或 `invoke-java-main.ps1`，至少覆盖 `test-compile` 或相关 main program。 |
 | 单元逻辑 | 运行目标测试或最小 main regression。 |
 | 真实数据或仿真 | 使用项目测试手册和稳定命令运行对应仿真/回放/业务指标链路。 |
 | 高风险共享行为 | 增加或更新回归测试，并说明未覆盖风险。 |
+| 多开关和历史状态 | 先固化决策表，再用自动断言覆盖总开关、更新标记、本轮输入、历史输入和降级路径的关键组合。 |
+| 默认值、状态减容或可选输出 | 按可靠性reference验证真实构造/反序列化默认、状态消费者和跨轮等价；展示关闭不等于必要计算被关闭。 |
+| 空间索引或数值优化 | 使用与优化实现同量纲的简单 oracle 或暴力基准对比，不能只断言程序未抛异常。 |
+| 热路径或性能回归 | 先保存同口径基线；避免在循环、递归或 comparator 中重复计算不变量；修改后用同数据比较平均值、P50、P95、总耗时和成功率，并保留功能 oracle。 |
 
 验证失败时，不掩盖失败；记录失败、原因、已尝试动作和下一步修复建议。
 
@@ -169,8 +180,10 @@ Workflow Evidence:
 - Java 注释或规范修复已按 code-review reference 复查同类规则的其它层级，例如类、方法、字段/常量、行内注释和版本标签来源。
 - Java 注释内容修改已保留或吸收原有业务语义；若只完成结构门禁，应在 workflow evidence 中明确标记，不宣称语义精修完成。
 - Java Javadoc 完整性修复已运行 `test-java-javadoc-coverage.ps1`，并把结果写回 workflow evidence。
+- Java 修改范围已运行 `test-java-magic-values.ps1`；所有新增或受影响候选均已分类、说明来源并处置，未用机械常量提取替代语义判断。
 - 已更新项目 workflow evidence 的 Fix Plan、File Change Summary、Validation Report、Fix State 和 Recheck Handoff。
 - 已交回 code-review Skill 复查；最终 accepted 状态等待用户再次审核。
+- 多开关或历史状态驱动功能已证明各输入维度可独立控制，测试夹具没有替被测代码隐式改写配置。
 
 ## 7. 当前限制
 

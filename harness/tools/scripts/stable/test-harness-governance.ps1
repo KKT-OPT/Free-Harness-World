@@ -1,6 +1,7 @@
 ﻿param(
     [string]$Root = ".",
-    [string]$Registry = "user/registry/projects.local.json"
+    [string]$Registry = "user/registry/projects.local.json",
+    [switch]$SelfTest
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,6 +59,9 @@ function Test-IsExcludedPath {
         ".git/",
         "var/",
         "user/settings/",
+        "user/auth/",
+        "user/github/",
+        "user/registry/",
         "user/knowledge/",
         "harness/tools/external/",
         "harness/tools/scripts/historical/",
@@ -82,14 +86,32 @@ function Test-IsExcludedPath {
     return $false
 }
 
+function Get-GovernanceScanItems {
+    param([string]$RootPath)
+
+    # Prune before descent: post-filtering -Recurse still walks excluded project/runtime trees.
+    $pending = New-Object 'System.Collections.Generic.Stack[string]'
+    $pending.Push($RootPath)
+    while ($pending.Count -gt 0) {
+        foreach ($item in (Get-ChildItem -LiteralPath $pending.Pop() -Force)) {
+            $relative = Convert-ToRelativePath -RootPath $RootPath -Path $item.FullName
+            $policyPath = if ($item.PSIsContainer) { $relative + "/" } else { $relative }
+            if (Test-IsExcludedPath -RelativePath $policyPath) { continue }
+            if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { continue }
+            $item
+            if ($item.PSIsContainer) { $pending.Push($item.FullName) }
+        }
+    }
+}
+
 function Get-TextFilesForGovernanceScan {
     param([string]$RootPath)
 
     $extensions = @(".md", ".json", ".yaml", ".yml", ".ps1", ".txt", ".gitignore")
-    Get-ChildItem -LiteralPath $RootPath -Recurse -File -Force |
+    Get-GovernanceScanItems -RootPath $RootPath |
         Where-Object {
             $relative = Convert-ToRelativePath -RootPath $RootPath -Path $_.FullName
-            -not (Test-IsExcludedPath -RelativePath $relative) -and
+            -not $_.PSIsContainer -and -not (Test-IsExcludedPath -RelativePath $relative) -and
             ($extensions -contains $_.Extension.ToLowerInvariant() -or $_.Name -eq ".gitignore")
         }
 }
@@ -140,7 +162,7 @@ function Test-StaleRouteCandidates {
     foreach ($routeFile in $routeFiles) {
         $path = Join-Path $RootPath ($routeFile -replace '/', '\')
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
-        $text = Get-Content -Raw -LiteralPath $path
+        $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $path
         $matches = [regex]::Matches($text, $pattern)
         foreach ($match in $matches) {
             $value = $match.Groups[1].Value.Trim()
@@ -255,6 +277,31 @@ function Invoke-JavaJavadocCoverageSelfTest {
     }
 }
 
+function Invoke-JavaMagicValuesSelfTest {
+    param(
+        [string]$RootPath,
+        [System.Collections.ArrayList]$Findings
+    )
+
+    $script = Join-Path $RootPath "harness/tools/scripts/stable/test-java-magic-values.ps1"
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        Add-Finding -List $Findings -Severity "error" -Code "javaMagicValuesValidatorMissing" -Path "harness/tools/scripts/stable/test-java-magic-values.ps1" -Message "Java magic-value candidate scanner is missing." -RepairSuggestion "Restore test-java-magic-values.ps1 or update Code Review workflow validation docs."
+        return $null
+    }
+
+    try {
+        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $script -Root $RootPath -Target "harness/tools/scripts/stable/test-java-magic-values.ps1" -SelfTest
+        $result = $raw | ConvertFrom-Json
+        if ($result.status -ne "passed") {
+            Add-Finding -List $Findings -Severity "error" -Code "javaMagicValuesValidatorSelfTestFailed" -Path "harness/tools/scripts/stable/test-java-magic-values.ps1" -Message "Java magic-value candidate scanner self-test failed." -RepairSuggestion "Run test-java-magic-values.ps1 -SelfTest and repair listed findings."
+        }
+        return $result
+    } catch {
+        Add-Finding -List $Findings -Severity "error" -Code "javaMagicValuesValidatorSelfTestError" -Path "harness/tools/scripts/stable/test-java-magic-values.ps1" -Message "Java magic-value candidate scanner self-test errored: $($_.Exception.Message)" -RepairSuggestion "Fix the Java magic-value candidate scanner script."
+        return $null
+    }
+}
+
 function Invoke-MemoryStoreGate {
     param(
         [string]$RootPath,
@@ -303,6 +350,35 @@ function Invoke-MemoryStoreSelfTest {
         Add-Finding -List $Findings -Severity "error" -Code "memoryStoreSelfTestError" -Path "harness/tools/scripts/stable/invoke-memory.ps1" -Message "Memory store validator self-test errored: $($_.Exception.Message)" -RepairSuggestion "Fix the Memory validator self-test."
         return $null
     }
+}
+
+if ($SelfTest) {
+    $tempParent = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('\', '/')
+    $fixture = Join-Path $tempParent ("harness-governance-scan-" + [guid]::NewGuid().ToString("N"))
+    try {
+        foreach ($directory in @("harness/target", "projects/private/deep", "var/cache/deep", ".git/objects", "user/auth", "user/settings", "user/github", "user/registry")) {
+            [void](New-Item -ItemType Directory -Path (Join-Path $fixture $directory) -Force)
+        }
+        foreach ($name in @("harness/index.md", "harness/.gitkeep", "projects/private/deep/leak.md", "var/cache/deep/leak.md", ".git/objects/leak.md", "user/auth/private.json", "user/settings/local.json", "user/github/local.json", "user/registry/private.local.json")) {
+            Set-Content -LiteralPath (Join-Path $fixture $name) -Value "fixture" -Encoding UTF8
+        }
+        $items = @(Get-GovernanceScanItems -RootPath $fixture)
+        $relativeItems = @($items | ForEach-Object { Convert-ToRelativePath -RootPath $fixture -Path $_.FullName })
+        if ($relativeItems.Count -ne 5 -or $relativeItems -notcontains "harness/target" -or $relativeItems -notcontains "harness/.gitkeep") {
+            throw "Scan pruning lost included entries or visited excluded trees."
+        }
+        $texts = @(Get-TextFilesForGovernanceScan -RootPath $fixture)
+        if ($texts.Count -ne 1 -or $texts[0].Name -ne "index.md") { throw "Text scan boundary mismatch." }
+        [pscustomobject]@{ status = "passed"; mode = "scan-self-test"; includedItemCount = $items.Count; textFileCount = $texts.Count } | ConvertTo-Json
+    } finally {
+        $resolvedFixture = [System.IO.Path]::GetFullPath($fixture)
+        $expectedPrefix = $tempParent + [System.IO.Path]::DirectorySeparatorChar + "harness-governance-scan-"
+        if (-not $resolvedFixture.StartsWith($expectedPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw "Refusing cleanup outside the verified temporary fixture."
+        }
+        if (Test-Path -LiteralPath $resolvedFixture) { Remove-Item -LiteralPath $resolvedFixture -Recurse -Force }
+    }
+    exit 0
 }
 
 $rootPath = (Resolve-Path -LiteralPath $Root).Path
@@ -359,6 +435,7 @@ $requiredRoutes = @(
     "harness/tools/scripts/stable/test-project-lifecycle-evidence.ps1",
     "harness/tools/scripts/stable/test-code-review-workflow-evidence.ps1",
     "harness/tools/scripts/stable/test-java-javadoc-coverage.ps1",
+    "harness/tools/scripts/stable/test-java-magic-values.ps1",
     "harness/tools/scripts/stable/invoke-memory.ps1"
 )
 
@@ -396,14 +473,15 @@ if (Test-Path -LiteralPath $docsRoot -PathType Container) {
     $docsFiles = Get-ChildItem -LiteralPath $docsRoot -Recurse -File -Force
     foreach ($file in $docsFiles) {
         $relative = Convert-ToRelativePath -RootPath $rootPath -Path $file.FullName
-        $text = Get-Content -Raw -LiteralPath $file.FullName
+        $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $file.FullName
         if ($text -notmatch 'compatibility-stub|Compatibility Stub') {
             Add-Finding -List $findings -Severity "warning" -Code "legacyDocsNonStubFilePresent" -Path $relative -Message "Legacy docs root contains a non-stub file." -RepairSuggestion "Move durable content to the target path, then keep only compatibility stubs or delete the legacy docs route after review."
         }
     }
 }
 
-$gitkeepFiles = Get-ChildItem -LiteralPath $rootPath -Recurse -File -Force -Filter ".gitkeep" | Where-Object { -not (Test-IsExcludedPath -RelativePath (Convert-ToRelativePath -RootPath $rootPath -Path $_.FullName)) }
+$scanItems = @(Get-GovernanceScanItems -RootPath $rootPath)
+$gitkeepFiles = $scanItems | Where-Object { -not $_.PSIsContainer -and $_.Name -eq ".gitkeep" }
 foreach ($file in $gitkeepFiles) {
     if ($file.Length -ne 0) {
         Add-Finding -List $findings -Severity "error" -Code "gitkeepNotEmpty" -Path (Convert-ToRelativePath -RootPath $rootPath -Path $file.FullName) -Message ".gitkeep must be empty." -RepairSuggestion "Clear the .gitkeep file content."
@@ -425,7 +503,7 @@ $privatePathPattern = '[A-Za-z]:\\[A-Za-z0-9_. $(){}\[\]-]'
 $textFiles = @(Get-TextFilesForGovernanceScan -RootPath $rootPath)
 foreach ($file in $textFiles) {
     $relative = Convert-ToRelativePath -RootPath $rootPath -Path $file.FullName
-    $text = Get-Content -Raw -LiteralPath $file.FullName
+    $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $file.FullName
 
     if ($text -match $privatePathPattern) {
         Add-Finding -List $findings -Severity "error" -Code "concretePrivatePath" -Path $relative -Message "Concrete private path detected in a default scanned text asset." -RepairSuggestion "Replace concrete private paths with a reviewed placeholder or move the value into user-local config."
@@ -436,10 +514,10 @@ foreach ($file in $textFiles) {
     }
 }
 
-$buildOutputDirs = Get-ChildItem -LiteralPath $rootPath -Recurse -Directory -Force |
+$buildOutputDirs = $scanItems |
     Where-Object {
         $relative = Convert-ToRelativePath -RootPath $rootPath -Path $_.FullName
-        -not (Test-IsExcludedPath -RelativePath $relative) -and
+        $_.PSIsContainer -and -not (Test-IsExcludedPath -RelativePath $relative) -and
         ($_.Name -in @("target", "build", "dist", "out"))
     }
 foreach ($dir in $buildOutputDirs) {
@@ -448,7 +526,7 @@ foreach ($dir in $buildOutputDirs) {
 
 $indexPath = Join-Path $rootPath "INDEX.md"
 if (Test-Path -LiteralPath $indexPath -PathType Leaf) {
-    $indexText = Get-Content -Raw -LiteralPath $indexPath
+    $indexText = Get-Content -Raw -Encoding UTF8 -LiteralPath $indexPath
     if ($indexText -notmatch [regex]::Escape("harness/architecture/PLANS.md")) {
         Add-Finding -List $findings -Severity "warning" -Code "indexPlansRouteMissing" -Path "INDEX.md" -Message "INDEX.md does not route to harness/architecture/PLANS.md." -RepairSuggestion "Keep phase status in harness/architecture/PLANS.md and route to it from the long-term index."
     }
@@ -461,7 +539,7 @@ $gitignorePath = Join-Path $rootPath ".gitignore"
 if (-not (Test-Path -LiteralPath $gitignorePath -PathType Leaf)) {
     Add-Finding -List $findings -Severity "warning" -Code "gitignoreMissing" -Path ".gitignore" -Message "Root .gitignore is missing." -RepairSuggestion "Add .gitignore before GitHub management so runtime state, local settings and project work copies stay out of the Harness Root repo."
 } else {
-    $gitignoreText = Get-Content -Raw -LiteralPath $gitignorePath
+    $gitignoreText = Get-Content -Raw -Encoding UTF8 -LiteralPath $gitignorePath
     foreach ($requiredPattern in @("/var/", "/user/settings/", "/user/github/", "/user/auth/", "/user/knowledge/**", "/user/registry/*.local.json", "/harness/tools/scripts/runtime/**", "/harness/tools/external/", "/projects/*/", "/.obsidian/workspace.json")) {
         if ($gitignoreText -notmatch [regex]::Escape($requiredPattern)) {
             Add-Finding -List $findings -Severity "warning" -Code "gitignorePatternMissing" -Path ".gitignore" -Message "Required gitignore pattern is missing: $requiredPattern" -RepairSuggestion "Add the pattern to keep local/runtime/project/editor data out of the Harness Root repo."
@@ -469,7 +547,9 @@ if (-not (Test-Path -LiteralPath $gitignorePath -PathType Leaf)) {
     }
 }
 
-$projectGitDirs = @(Get-ChildItem -LiteralPath (Join-Path $rootPath "projects") -Recurse -Directory -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq ".git" })
+$projectGitDirs = @(Get-ChildItem -LiteralPath (Join-Path $rootPath "projects") -Directory -Force -ErrorAction SilentlyContinue |
+    Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0 } |
+    ForEach-Object { Get-Item -LiteralPath (Join-Path $_.FullName ".git") -Force -ErrorAction SilentlyContinue })
 foreach ($gitDir in $projectGitDirs) {
     Add-Finding -List $findings -Severity "info" -Code "managedProjectSeparateGit" -Path (Convert-ToRelativePath -RootPath $rootPath -Path $gitDir.FullName) -Message "Managed project has its own .git directory." -RepairSuggestion "Keep project repository separate from the Harness Root repository."
 }
@@ -478,6 +558,7 @@ $registryResult = Invoke-ProjectRegistryCheck -RootPath $rootPath -RegistryPath 
 $projectLifecycleSelfTestResult = Invoke-ProjectLifecycleEvidenceSelfTest -RootPath $rootPath -Findings $findings
 $codeReviewWorkflowSelfTestResult = Invoke-CodeReviewWorkflowEvidenceSelfTest -RootPath $rootPath -Findings $findings
 $javaJavadocCoverageSelfTestResult = Invoke-JavaJavadocCoverageSelfTest -RootPath $rootPath -Findings $findings
+$javaMagicValuesSelfTestResult = Invoke-JavaMagicValuesSelfTest -RootPath $rootPath -Findings $findings
 $memoryStoreResult = Invoke-MemoryStoreGate -RootPath $rootPath -Findings $findings
 $memoryStoreSelfTestResult = Invoke-MemoryStoreSelfTest -RootPath $rootPath -Findings $findings
 
@@ -506,6 +587,7 @@ $output = [pscustomobject]@{
         projectLifecycleEvidenceStatus = if ($projectLifecycleSelfTestResult) { $projectLifecycleSelfTestResult.status } else { "not-run" }
         codeReviewWorkflowEvidenceStatus = if ($codeReviewWorkflowSelfTestResult) { $codeReviewWorkflowSelfTestResult.status } else { "not-run" }
         javaJavadocCoverageStatus = if ($javaJavadocCoverageSelfTestResult) { $javaJavadocCoverageSelfTestResult.status } else { "not-run" }
+        javaMagicValuesStatus = if ($javaMagicValuesSelfTestResult) { $javaMagicValuesSelfTestResult.status } else { "not-run" }
         memoryStoreStatus = if ($memoryStoreResult) { $memoryStoreResult.state } else { "not-run" }
         memoryStoreSelfTestStatus = if ($memoryStoreSelfTestResult) { $memoryStoreSelfTestResult.state } else { "not-run" }
     }
@@ -523,6 +605,7 @@ $output = [pscustomobject]@{
         "project-lifecycle-evidence-self-test",
         "code-review-workflow-evidence-self-test",
         "java-javadoc-coverage-self-test",
+        "java-magic-values-self-test",
         "memory-store-validation",
         "memory-store-self-test"
     )
