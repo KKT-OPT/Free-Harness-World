@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("init-obsidian-vault", "sync-reviewed-index", "build-reviewed-graph", "health-reviewed", "query-reviewed", "audit-query-evaluation", "reviewed-gap-plan", "govern-reviewed-duplicates", "dispose-residual-gaps", "canonicalize-vault-layout", "validate-knowledge-vault", "schema-context", "validate-llm-wiki-mechanisms", "candidate-cleanup-plan", "candidate-cleanup-apply", "enrich-gap-candidates", "gap-review-package", "promote-gap-candidates", "govern-vault", "pipeline-smoke")]
+    [ValidateSet("init-obsidian-vault", "sync-reviewed-index", "build-reviewed-graph", "health-reviewed", "query-reviewed", "audit-query-evaluation", "query-regression", "reviewed-gap-plan", "govern-reviewed-duplicates", "dispose-residual-gaps", "canonicalize-vault-layout", "validate-knowledge-vault", "schema-context", "validate-llm-wiki-mechanisms", "candidate-cleanup-plan", "candidate-cleanup-apply", "enrich-gap-candidates", "gap-review-package", "promote-gap-candidates", "govern-vault", "pipeline-smoke")]
     [string]$Command,
 
     [string]$Root = ".",
@@ -30,6 +30,9 @@ param(
     [string]$Mode = "knowledge-only",
     [string]$SourcePrefix = "",
     [string]$EvaluationRecord = "",
+    [string]$Cases = "",
+    [ValidateRange(1, 120)]
+    [int]$QueryTimeout = 60,
     [int]$Limit = 10,
     [string]$Scope = "user-private",
     [string]$Reviewer = "",
@@ -78,6 +81,12 @@ if (-not [string]::IsNullOrWhiteSpace($RunId)) {
 }
 
 switch ($Command) {
+    "query-regression" {
+        if (-not $Cases -or -not $RunId) { throw "query-regression requires -Cases and -RunId." }
+        $argsList += @("--cases", $Cases, "--limit", [string]$Limit, "--timeout", [string]$QueryTimeout)
+        if ($AsOf) { $argsList += @("--as-of", $AsOf) }
+        if ($Graph) { $argsList += @("--graph", $Graph) }
+    }
     "init-obsidian-vault" {
     }
     "sync-reviewed-index" {

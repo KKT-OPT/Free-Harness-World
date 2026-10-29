@@ -20,8 +20,10 @@ def source_matches(text: str, prefix: str | None) -> bool:
         raise ValueError('source prefix must be an ASCII identifier family')
     fm = frontmatter(text)
     title = next((line[2:] for line in text.splitlines() if line.startswith('# ')), '')
-    identifier = str((fm.get('sourceVersion') or {}).get('standardId') or fm.get('sourceIdentifier') or title)
-    match = re.match(r'^([A-Za-z]+(?:/[A-Za-z]+)?)\s*-?\s*\d', identifier.strip())
+    version = fm.get('sourceVersion') or {}
+    identifier = str(version.get('standardId') or fm.get('sourceIdentifier') or title)
+    number = r'(?:\d|[X\u00d7]{2,})' if version.get('sourceDocumentState') in {'approval-draft', 'unnumbered-draft', 'draft'} else r'\d'
+    match = re.match(r'^([A-Za-z]+(?:/[A-Za-z]+)?)\s*-?\s*' + number, identifier.strip(), re.I)
     family = match[1].upper() if match else ''
     requested = prefix.upper()
     return family == requested or family.startswith(requested + '/')
@@ -32,6 +34,12 @@ def _line_context(lines: list[str]) -> list[tuple[int | None, str]]:
     for i, line in enumerate(lines):
         if line.startswith(('```', '~~~')):
             fence = not fence
+        if not fence and line.strip() in {'<!-- harness:reviewed-source-text:start -->', '<!-- harness:reviewed-source-text:end -->'}:
+            page, state = None, 'reviewed-text'
+        # Older pages may append synthesis after the source block. A peer or
+        # parent heading ends the physical-page scope even without a sentinel.
+        if not fence and page is not None and re.match(r'^#{1,2}\s+(?!PDF 第 \d+ 页\s*$)', line):
+            page, state = None, 'reviewed-text'
         physical = re.fullmatch(r'#{1,6}\s+PDF 第 (\d+) 页\s*', line) if not fence else None
         if physical:
             page = int(physical[1])

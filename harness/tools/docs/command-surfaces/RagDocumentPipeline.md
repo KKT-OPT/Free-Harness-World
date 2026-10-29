@@ -1,6 +1,6 @@
 ---
 documentName: harness/tools/docs/command-surfaces/RagDocumentPipeline.md
-version: v1.3.0-evaluation-boundary
+version: v1.4.0-batch-construction-tools
 updatedAt: 2026-10-29
 status: active
 purpose: 定义现有 RAG 命令下的逐页 PDF、来源绑定摄取、精确内容批量晋升和只读语料核验契约。
@@ -18,15 +18,15 @@ relatedDocuments:
 outputTo:
   - harness/tools/docs/command-surfaces/RagDocumentPipeline.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: 2026-11-29
 supersededBy: null
 dependsOn:
   - harness/tools/scripts/stable/invoke-rag-candidate.ps1
   - harness/tools/scripts/stable/invoke-rag-knowledge.ps1
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: 2026-10-29
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 
 # RAG 文档工具契约
@@ -104,6 +104,22 @@ review:
 
 `ContentProfile` 可省略。需要单独校录条款或维护版本事实时，配置 `sources` 列表，每项绑定 `sourceHashSha256` 和 `normalizedHashSha256`；`sections` 每项包含 `heading`、`text`、`physicalPages`、`reviewedBy` 和 `evidence`。`verification` 可区分原页校录与官方状态核验。`sourceVersion` 可记录标准标识、发布日期、实施日期、核验状态、核验日期、官方证据与适用事项。真实条款、来源清单及配置只留在用户边界。
 
+新PDF来源先由Agent补全candidate，再使用同一命令增加`-Wiki`与`-TargetMap`。TargetMap的items只含sourceId和target，必须完整覆盖本批来源，目标应位于Reviewed目录内且尚不存在；旧来源修复不传这两个参数。工具从已补全候选生成UTF-8/LF草稿、追加完整正文并输出含draft的PromotionMap，不再需要直接调用format_reviewed或自行重组frontmatter。
+
+```powershell
+& harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command prepare-reviewed-content `
+  -Manifest 'var/rag/<ingest-run>/extracted/metadata-manifest.json' `
+  -Wiki 'user/knowledge/candidate/<ingest-run>/wiki' `
+  -Reviewed 'user/knowledge/reviewed/<domain>' -TargetMap '<local-target-map.json>' `
+  -ContentProfile '<local-content-profile.json>' -RunId '<new-draft-run>' -Reviewer '<reviewer>'
+```
+
+草稿准备只写candidate和var，不执行晋升。缺少来源摘要、框架和适用边界时仍然阻断，不从文件名自动生成知识。质量说明和补充条款统一放在完整来源正文块之前；检索在来源块结束、后续独立章节处清除物理页上下文，综合说明不继承最后一页的页码或校录级别。
+
+profile还可保存aliases与secondarySources。副本项需原件路径、SHA-256、关系、审核人和证据，写入Source Trace及sourceRefs；原件和规范化哈希继续绑定主来源。审核快照包含草稿中全部sourceRefs，副本改变也必须重新审核。模板见[ReviewedContentProfile.example.json](../../../rag/manifests/ReviewedContentProfile.example.json)；不能把副本处置当成第二个独立封印来源。
+
+sections未填写verification时只标记“来源条款审读，未声明整页校录”；不能默认升级为视觉校核或整页校录。确已按图核对时明确填写实际范围，源页级校录仍由规范化pageOverride单独记录。
+
 完整文本覆盖属于转换与来源一致性检查，不能证明全部数值、公式和图示已经语义审核；各页保留校核级别。已核验的条款应在 reviewed 内表达完整条件与结论，不要求日常问答再次回查原件。尚未可靠转写的内容作为知识缺口进入候选补强。
 
 `query-reviewed -Question '<question>' -AsOf 'YYYY-MM-DD'` 按实际命中的条款排序并返回 reviewed 内的正文、行号及版本上下文；不再按整页词频优先返回前几个章节。`AsOf` 默认当前日期，不使用 `reviewedAt` 代替标准实施日。尚未实施或尚未发布分别标记；已到实施日但缺最新官方核验时，不自动宣称现行。先确认同一事项、适用范围和替代关系，再比较时间；不同分类轴不自动覆盖。
@@ -134,7 +150,28 @@ review:
 
 ## 归档与入口
 
+需要比较同号同版的不同PDF副本时，先运行只读比较命令：
+
+```powershell
+& harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command compare-pdf-copies `
+  -InputPath @('user/knowledge/raw/<domain>/<copy-a>.pdf', 'user/knowledge/raw/<domain>/<copy-b>.pdf') `
+  -RunId '<copy-review-run>' -ComparisonDpi 72
+```
+
+输出位于var/rag下，记录两份文件哈希、物理页数、逐页原生文本哈希、空文本页、渲染差异和像素差值。去空白文字相等不证明版式、图示、版次或法律效力相同；无原生文字的扫描页尤其不能按空字符串自动合并。工具不自动选择主来源，不移动或修改PDF；审核人核对后才在私有profile和目录导航中处置副本。
+
+收尾使用显式证据清单进行保真归档：
+
+```powershell
+& harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command archive-build-evidence `
+  -EvidenceManifest '<private-evidence-manifest.json>' -RunId '<new-audit-run>'
+```
+
+清单每项明确source、target、sha256，见[EvidenceBundle.example.json](../../../rag/manifests/EvidenceBundle.example.json)。来源限于var/rag或candidate，目标限于candidate/_audit；默认在post-promotion下新建以RunId命名的目录。全部哈希与路径预检后才复制原字节并生成ArtifactManifest.json。已有归档不覆盖，失败结果与后续重验分别保存；该命令不解释通过/失败、不生成批准、不更改知识或仓库文件。IO故障可能留下部分新归档，必须保留诊断并使用新RunId，不能声称磁盘复制具备数据库事务能力。
+
 `govern-vault -ArchiveInactiveCandidates` 直接按 source-centered 结构归档，更新活跃 manifest 的路径，保留不可变晋升记录，并使已归档审核快照失效。候选完整语料的删除或移出 vault 仍走 cleanup-plan 与既有批准边界。
+
+审核证据应保留每批实际使用的profile原始字节及文件哈希，不能用后来增加规则的合并profile替代旧批使用版本。normalizer的configHash与JSON文件字节哈希分别记录；配置从临时候选位置收敛到_audit时保留对应关系，不改写历史事务记录。
 
 Home 中不逐张列出 `normalized/assets/` 的生成图片；原始图片资料及 normalized 文档仍保留入口。
 
@@ -149,6 +186,20 @@ Home 中不逐张列出 `normalized/assets/` 的生成图片；原始图片资�
 - 结构通过而语义未核对：保留 `semanticState` 与待核页码，不声明逐字正确。
 
 ## 查询模式与评测记录
+
+建设后已知用例的批量回归使用稳定入口：
+
+```powershell
+& harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command query-regression `
+  -Cases '<private-regression-cases.json>' -RunId '<new-regression-run>' `
+  -AsOf 'YYYY-MM-DD' -Limit 10 -QueryTimeout 60
+```
+
+模板见[QueryRegressionCases.example.json](../../../rag/evals/QueryRegressionCases.example.json)。每项提供id、question、target和可选prefix、maxRank。required、requiredGroups、tableRows、tableCells、versionEquals、unpagedHeadings分别检查文字、择一条件、表格行、含空单元格的完整行、版本事实和综合说明页码边界；forbidden检查不应出现的文字。实质问题不能只配目标路径，必须声明内容或版本断言。工具不内置真实题目、标准号、答案或词表。
+
+工具先冻结全部reviewed Markdown与用例文件，再逐项调用同一检索实现的独立Python工作进程，检查目标排名、实质正文、完整断言与引用行号。工作进程用诊断guard阻止网络、非reviewed知识读取及知识写入；其覆盖只限该工作进程，不证明父进程或整个Agent回合合规。输出包含原用例、基线、逐项查询、guard、增量结果及summary，均位于var/rag/<run-id>/query-regression；失败退出码非零，旧RunId拒绝覆盖。
+
+用例文件或reviewed文件新增、删除、变化都会使本次回归失败。已知用例回归与整轮audit-query-evaluation是不同验收项；断言和引用成立也不等于完整语义答案正确，仍需审核。测试断言本身写错时，保留初次失败、旧用例与原因，使用新RunId重验，不能原地改报告或覆盖失败。发生知识补强则重新冻结，不能称原基线通过。
 
 ```powershell
 & harness/tools/scripts/stable/invoke-rag-knowledge.ps1 -Command query-reviewed `

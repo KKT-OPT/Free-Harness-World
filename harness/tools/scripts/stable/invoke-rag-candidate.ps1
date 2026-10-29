@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("ingest", "health", "lint", "build-graph", "query", "enrichment-plan", "review-package", "promotion-plan", "promote-reviewed", "stale-plan", "normalize-pdf", "audit-corpus", "prepare-reviewed-content")]
+    [ValidateSet("ingest", "health", "lint", "build-graph", "query", "enrichment-plan", "review-package", "promotion-plan", "promote-reviewed", "stale-plan", "normalize-pdf", "audit-corpus", "prepare-reviewed-content", "compare-pdf-copies", "archive-build-evidence")]
     [string]$Command,
 
     [string]$Root = ".",
@@ -15,6 +15,11 @@ param(
     [string]$NormalizedDir = "",
     [string]$PdfProfile = "",
     [string]$ContentProfile = "",
+    [string]$TargetMap = "",
+    [string]$EvidenceManifest = "",
+    [string]$AuditDir = "user/knowledge/candidate/_audit/post-promotion",
+    [ValidateRange(36, 144)]
+    [int]$ComparisonDpi = 72,
     [ValidateSet("auto", "none", "windows")]
     [string]$OcrMode = "auto",
     [string]$OcrLanguage = "auto",
@@ -72,10 +77,23 @@ $env:PYTHONUTF8 = "1"
 $argsList = @("-m", "rag_candidate.cli", $Command, "--root", $rootPath)
 
 switch ($Command) {
+    "compare-pdf-copies" {
+        if ($InputPath.Count -ne 2 -or -not $RunId) { throw "compare-pdf-copies requires two -InputPath values and -RunId." }
+        $argsList += $InputPath
+        $argsList += @("--run-id", $RunId, "--dpi", [string]$ComparisonDpi)
+    }
+    "archive-build-evidence" {
+        if (-not $EvidenceManifest -or -not $RunId) { throw "archive-build-evidence requires -EvidenceManifest and -RunId." }
+        $argsList += @("--evidence-manifest", $EvidenceManifest, "--audit-dir", $AuditDir, "--run-id", $RunId)
+    }
     "prepare-reviewed-content" {
         if (-not $Manifest -or -not $Reviewed -or -not $RunId -or -not $Reviewer) { throw "prepare-reviewed-content requires -Manifest, -Reviewed, -RunId and -Reviewer." }
         $argsList += @("--manifest", $Manifest, "--reviewed", $Reviewed, "--run-id", $RunId, "--reviewer", $Reviewer)
         if ($ContentProfile) { $argsList += @("--content-profile", $ContentProfile) }
+        if ($Wiki) { $argsList += @("--wiki", $Wiki) }
+        if ($TargetMap) { $argsList += @("--target-map", $TargetMap) }
+        $argsList += @("--scope", $Scope)
+        if ($ReviewAfter) { $argsList += @("--review-after", $ReviewAfter) }
     }
     "ingest" {
         if ($InputPath.Count -eq 0 -and [string]::IsNullOrWhiteSpace($NormalizationManifest)) { throw "ingest requires -InputPath or -NormalizationManifest." }

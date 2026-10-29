@@ -98,7 +98,11 @@ def review_snapshot(root: Path, manifest_path: Path, wiki: Path, bindings: list[
             if source.get(key):
                 files.add(under(root, source[key]))
     for item in bindings:
-        files.add(under(root, item["draft"]))
+        draft = under(root, item["draft"])
+        files.add(draft)
+        # Secondary copies are review inputs too, not just documentary links.
+        for ref in list_values(metadata(read_text(draft)).get('sourceRefs')):
+            files.add(under(root, ref))
     material = {"bindings": bindings, "files": sorted((rel(root, path), sha256_file(path) if path.is_file() else "missing") for path in files)}
     return sha256_text(json.dumps(material, sort_keys=True, ensure_ascii=False))
 
@@ -177,6 +181,18 @@ def validate_draft(root: Path, source: dict, target: Path, text: str) -> None:
         path = under(root, ref)
         if not path.exists():
             raise ValueError("draft sourceRef missing: " + ref)
+    secondary = fm.get('secondarySources') or []
+    if not isinstance(secondary, list):
+        raise ValueError('secondarySources must be a list')
+    seen = set()
+    for item in secondary:
+        ref = item.get('sourceRef')
+        if not ref or ref == source['sourceRef'] or ref in seen or ref not in refs:
+            raise ValueError('secondary source must be unique and included in sourceRefs')
+        path = under(root, ref, root/'user/knowledge/raw')
+        if not item.get('sourceHashSha256') or sha256_file(path) != item['sourceHashSha256']:
+            raise ValueError('secondary source hash mismatch')
+        seen.add(ref)
     if source.get("qualityState") == "needs-review" and not ("## 转换质量" in text or "## Conversion Quality" in text):
         raise ValueError("draft must disclose PDF/OCR conversion quality")
     from .reviewed_content import validate_content

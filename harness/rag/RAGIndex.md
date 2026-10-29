@@ -1,6 +1,6 @@
 ---
 documentName: harness/rag/RAGIndex.md
-version: v2.13.0-query-evaluation-boundary
+version: v2.14.0-batch-knowledge-tools
 updatedAt: 2026-10-29
 status: active
 purpose: 路由 Harness RAG 摄取机制资产，并定义真实知识、候选知识和运行态索引的边界。
@@ -27,16 +27,16 @@ relatedDocuments:
 outputTo:
   - harness/rag/RAGIndex.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: 2026-11-29
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: 2026-10-29
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 
 # RAG 机制索引
@@ -143,3 +143,8 @@ harness/tools/scripts/stable/invoke-rag-knowledge.ps1
 纯库测试、正式混合使用及补强的来源规则见 [知识查询与评测来源边界](policies/KnowledgeQueryEvaluationPolicy.md)。测试不得搜索网页补状态或日期；库内未核实信息保留缺口。正式使用可以结合外部证据并分别归属来源。
 
 稳定query-reviewed返回模式契约与可选来源前缀筛选；audit-query-evaluation校验提供的整轮记录。局部查询函数的文件守卫只证明局部行为，不能证明整轮没有外部访问；记录不完整不可认定纯库通过。运行态事件和真实知识不进入通用仓库。
+
+
+## 连续批次构建入口
+
+批量构建优先复用`prepare-reviewed-content`的新来源模式、`compare-pdf-copies`、`query-regression`及`archive-build-evidence`，避免每批手写草稿格式、测试循环和证据复制脚本。命令与输出边界见[统一工具契约](../tools/docs/command-surfaces/RagDocumentPipeline.md)。非私有配置结构由[manifest入口](manifests/README.md)和[eval入口](evals/README.md)路由。Source Trace、次要副本哈希与实际profile版本作为审核输入；图谱、比较结果和回归报告继续属于证据，不晋升为知识事实。

@@ -1,0 +1,37 @@
+{
+  "sources": [
+    {
+      "sourceHashSha256": "<actual-original-file-sha256>",
+      "normalizedHashSha256": "<actual-normalized-file-sha256>",
+      "sourceVersion": {
+        "standardId": "ZZ/T XXXXX—XXXX",
+        "publishedOn": null,
+        "effectiveOn": null,
+        "sourceDocumentState": "approval-draft",
+        "officialStatus": "not-verified",
+        "statusVerifiedOn": null,
+        "evidence": "<reviewed-cover-evidence>"
+      },
+      "aliases": ["<supplied-copy-file-name>"],
+      "secondarySources": [
+        {
+          "sourceRef": "user/knowledge/raw/<domain>/<copy>.pdf",
+          "sourceHashSha256": "<actual-secondary-file-sha256>",
+          "relationship": "same-edition-copy",
+          "reviewedBy": "<reviewer>",
+          "evidence": "<comparison-record-and-visual-review>"
+        }
+      ],
+      "sections": [
+        {
+          "heading": "<verified-clause-heading>",
+          "text": "<complete-source-grounded-clause>",
+          "physicalPages": [1, 2],
+          "reviewedBy": "<reviewer>",
+          "verification": "<actual-review-coverage>",
+          "evidence": "<page-review-evidence>"
+        }
+      ]
+    }
+  ]
+}

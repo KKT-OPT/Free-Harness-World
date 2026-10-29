@@ -91,6 +91,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 | `build-reviewed-graph` | 重建 reviewed graph runtime。 |
 | `query-reviewed` | 对 authoritative reviewed Knowledge 做 deterministic lookup。 |
 | `audit-query-evaluation` | 校验整轮评测输入记录、来源事件、证据哈希与行号；不提供运行时隔离或日志真实性证明。 |
+| `query-regression` | 使用私有用例配置冻结reviewed并执行建设后已知用例回归，保留断言、引用和工作进程guard；不替代整轮审计。 |
 | `reviewed-gap-plan` | 把 reviewed 文档里的 unresolved wikilinks 转为 candidate enrichment plan。 |
 | `dispose-residual-gaps` | 把已知 workflow / mechanism residual gap 归并到 policy / Skill / template 机制引用，不执行 reviewed Knowledge 晋升。 |
 | `canonicalize-vault-layout` | 把 local-only knowledge vault 收敛为 source-centered、domain-aware、semantic-name 布局。 |
@@ -154,11 +155,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 
 多源晋升先准备完整 `PromotionMap`，为每个 source 显式指定 `sourceId`、`target` 与 `draft`；单源也应提交审核过的草稿。草稿保留原件和规范化副本的 `sourceRefs`。运行 `review-package` 后再 `promote-reviewed`，两次使用相同绑定参数；来源或草稿变化后重新审核。晋升后核对正文哈希，不再用脚本覆盖目标。
 
+新PDF来源已补全candidate时，使用candidate门面的`prepare-reviewed-content -Wiki <wiki> -TargetMap <map>`准备UTF-8/LF草稿及PromotionMap；已有页修复沿用原模式。不再手工调用内部format_reviewed重组正文。版本、完整条款和次要副本关系通过来源哈希绑定的ContentProfile提供，不能从文件名猜测正式编号或日期。
+
+需要比较副本时使用`compare-pdf-copies`取得逐页文字及渲染差异，再审核是否共用主来源，保留各原件哈希和追溯；工具不自动合并。需要批量复验时使用`query-regression -Cases <private-cases> -RunId <new-run>`，实质问题须配置完整条件、数值、表格或版本断言；不能只验证目录召回。收尾可用`archive-build-evidence`按显式哈希清单保真归档。配置、边界及模板统一由[RAG工具契约](../../../tools/docs/command-surfaces/RagDocumentPipeline.md)维护。
+
 结构门禁、转换质量检查和语义审核分别记录。`audit-corpus -RequireSealed` 可要求正文与历史晋升记录一致；缺少旧记录只能报告未封印，不能补造历史批准。机器检查不能证明摘要、数值、引文或法规状态准确。
 
 PDF 来源页必须有可独立查询的条款正文和适用条件，不能只有章节入口。已有来源页可用 candidate 门面的 `prepare-reviewed-content` 准备逐页来源对齐草稿和完整 PromotionMap，再经审核晋升。`contentCoverage` 检查文本覆盖，页级校核标记表达语义复核范围。验收应包含实际问答和仅开放 reviewed 的读取测试，核对完整结论、数值边界和引用行号；不只检查命中文档。
 
 测试先冻结知识版本与来源范围，失败时保留问题。原件核验、联网补强、草稿修订及晋升属于后续构建流程；不能改好知识后把同一冻结基线记为通过。跨页逻辑条款必须保留完整条件；同一回答的网页来源审计与局部I/O守卫分别记录。
+
+建设后已知用例回归不称独立盲测或整轮纯库通过。若断言误引原文，保留初测失败、旧配置及修正原因，以新RunId重验；不能覆写旧记录。profile实际使用版本、文件哈希与工具配置标识分别归档，不能用后续合并配置替代旧批证据。综合说明不继承来源正文最后一页的页码和校录状态。
 
 - 已使用 `invoke-rag-knowledge.ps1`，不手动调用 Python internals。
 - reviewed query 返回命中页，且 agent 已阅读命中页再回答。
@@ -184,8 +191,8 @@ PDF 来源页必须有可独立查询的条款正文和适用条件，不能只�
 | 检查项 | 规则 |
 |---|---|
 | 文档 | `harness/skills/reviewed/rag-knowledge-use/SKILL.md` |
-| 版本 | `v1.4.0-query-evaluation-boundary` |
-| 最近复查 | 2026-10-29，用户审核通过构建规则和评测边界并授权沉淀及提交；双PowerShell各67项回归与工具审查见 `harness/reports/redacted/RagToolReliabilityReview.md`。 |
+| 版本 | `v1.5.0-batch-construction-tools` |
+| 最近复查 | 2026-10-29，按用户工具、脚本及相关文档沉淀要求形成窄范围candidate补丁，更新已有稳定命令路由；agent复查与双PowerShell回归见 `harness/reports/redacted/RagToolReliabilityReview.md`。 |
 | 状态 | `active` |
 | 资产状态 | reviewed |
 | 关联文档 | 已在正文列出 Harness 入口、SkillIndex、SkillPolicy、SkillGovernance、RAGIndex、KnowledgePromotionPolicy、插件边界、candidate cleanup、LLM Wiki 机制吸收、ScriptIndex 和 raw-to-candidate Skill。 |

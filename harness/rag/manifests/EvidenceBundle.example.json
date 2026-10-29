@@ -1,0 +1,14 @@
+{
+  "artifacts": [
+    {
+      "source": "var/rag/<regression-run>/query-regression/summary.json",
+      "target": "QueryRegressionSummary.json",
+      "sha256": "<actual-file-sha256>"
+    },
+    {
+      "source": "var/rag/<promotion-run>/promotions/<transaction>/result.json",
+      "target": "PromotionRecord.json",
+      "sha256": "<actual-file-sha256>"
+    }
+  ]
+}

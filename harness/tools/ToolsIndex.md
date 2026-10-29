@@ -1,6 +1,6 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.25.0-query-evaluation-boundary
+version: v1.26.0-batch-knowledge-tools
 updatedAt: 2026-10-29
 status: active
 purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 与数值字面量发现/分类只读门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
@@ -25,16 +25,16 @@ relatedDocuments:
 outputTo:
   - harness/tools/ToolsIndex.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: 2026-11-29
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: 2026-10-29
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 
 # 工具资产索引
@@ -161,3 +161,8 @@ harness/tools/scripts/stable/invoke-memory.ps1
 ## 评测来源审计工具
 
 knowledge门面提供query-reviewed的Mode与SourcePrefix，以及audit-query-evaluation。前者给出命令范围的来源契约，后者校验完整评测输入记录；二者都不能替代Agent运行时的实际工具限制与全量事件采集。模板和能力边界见 [评测策略](../rag/policies/KnowledgeQueryEvaluationPolicy.md) 与 [命令契约](docs/command-surfaces/RagDocumentPipeline.md)。
+
+
+## 批量知识构建补充
+
+`prepare-reviewed-content`增加新来源TargetMap模式；`compare-pdf-copies`只生成原生文字和渲染比较证据；`query-regression`冻结知识与用例并逐项验证引用和断言；`archive-build-evidence`保真归档显式哈希清单。均复用现有candidate/knowledge门面，详见[RAG命令契约](docs/command-surfaces/RagDocumentPipeline.md)。来源内容、校录配置及真实用例保持local-only，临时批次脚本不再成为下一批默认入口。

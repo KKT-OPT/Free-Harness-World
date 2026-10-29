@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {
+      "id": "source-discovery",
+      "kind": "source-discovery",
+      "question": "<source-title-or-declared-alias>",
+      "target": "user/knowledge/reviewed/<domain>/<source>.md",
+      "prefix": "ZZ/T",
+      "maxRank": 5,
+      "versionEquals": {"officialStatus": "not-verified"}
+    },
+    {
+      "id": "bounded-clause",
+      "kind": "substantive-question",
+      "question": "<question-about-complete-conditions>",
+      "target": "user/knowledge/reviewed/<domain>/<source>.md",
+      "required": ["<complete-condition-with-unit-and-exception>"],
+      "tableCells": [{"label": "<row-label>", "cells": ["<required>", "", "<optional>"]}],
+      "versionEquals": {"publishedOn": null, "effectiveOn": null},
+      "unpagedHeadings": ["<synthesis-heading>"]
+    }
+  ]
+}

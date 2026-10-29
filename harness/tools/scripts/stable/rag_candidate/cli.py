@@ -19,6 +19,7 @@ from .common import execute_cli
 from .pdf_normalize import run_normalize_pdf
 from .corpus_audit import run_audit_corpus
 from .reviewed_content import run_prepare_reviewed_content
+from .evidence import run_compare_pdf_copies, run_archive_build_evidence
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -128,6 +129,10 @@ def build_parser() -> argparse.ArgumentParser:
     content.add_argument("--run-id", required=True)
     content.add_argument("--reviewer", required=True)
     content.add_argument("--content-profile", default=None, help="source/hash-bound verified clauses and version context")
+    content.add_argument("--wiki", default=None, help="enriched candidate wiki for new sources")
+    content.add_argument("--target-map", default=None, help="complete sourceId/target map for new sources")
+    content.add_argument("--scope", default="user-private", choices=["global", "domain", "project-reviewed", "user-private"])
+    content.add_argument("--review-after", default="source-updated")
     content.set_defaults(func=run_prepare_reviewed_content)
 
     normalize = sub.add_parser("normalize-pdf", help="preserve PDF pages and quality evidence; optional offline OCR")
@@ -151,6 +156,20 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--export-manifest", default=None)
     audit.add_argument("--report", default=None)
     audit.set_defaults(func=run_audit_corpus)
+
+    copies = sub.add_parser('compare-pdf-copies', help='compare raw PDF text and rendering; no canonical selection')
+    copies.add_argument('inputs', nargs=2)
+    copies.add_argument('--root', default='.')
+    copies.add_argument('--run-id', required=True)
+    copies.add_argument('--dpi', type=int, choices=range(36, 145), default=72)
+    copies.set_defaults(func=run_compare_pdf_copies)
+
+    evidence = sub.add_parser('archive-build-evidence', help='archive explicit hash-bound private evidence; no reinterpretation')
+    evidence.add_argument('--root', default='.')
+    evidence.add_argument('--run-id', required=True)
+    evidence.add_argument('--evidence-manifest', required=True)
+    evidence.add_argument('--audit-dir', default='user/knowledge/candidate/_audit/post-promotion')
+    evidence.set_defaults(func=run_archive_build_evidence)
     return parser
 
 

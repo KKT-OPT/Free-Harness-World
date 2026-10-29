@@ -1,6 +1,6 @@
 ---
 documentName: harness/rag/pipelines/PdfNormalizationContract.md
-version: v1.1.0-reviewed-page-overrides
+version: v1.2.0-copy-comparison-and-profile-retention
 updatedAt: 2026-10-29
 status: active
 purpose: 定义逐页 PDF 转换、离线 OCR、来源绑定的水印与校正配置，以及转换质量证据边界。
@@ -15,14 +15,14 @@ relatedDocuments:
 outputTo:
   - harness/rag/pipelines/PdfNormalizationContract.md
 owner: mixed
-reviewAfter: 2026-11-12
+reviewAfter: 2026-11-29
 supersededBy:
 dependsOn:
   - harness/tools/scripts/stable/rag_candidate/pdf_normalize.py
 review:
   reviewedBy: agent
   reviewedAt: 2026-10-29
-  decision: user-requested-tool-integration-with-regression-review
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 # PDF 逐页转换契约
 
@@ -94,3 +94,10 @@ review:
 通过结果只证明该项机器核验通过。`semanticState` 明确为结构检查不能证明的状态；关键词命中、无替换字符或页数相等，不能证明术语、数值、公式和引用页码全部正确。
 
 `validate-knowledge-vault` 对声明此逐页契约的派生稿增加 `normalized-source-quality` 检查。旧版未声明逐页契约的 normalized 文档单独列为 legacy，不伪造物理页证据，也不把它们自动改写为新格式。
+
+
+## 副本比较与配置保留
+
+`compare-pdf-copies`只读比较两份raw PDF的文件哈希、逐页原生文字与固定DPI渲染。空原生文字、去空白文字相等或很小的像素差值均不单独证明同版；图像水印、图表和版次需人工核对。确认共用一个本地权威来源页后，仍保留各原件及哈希、别名、次要Source Trace和导航，不把副本虚报为第二份独立封印来源。
+
+每批保存实际使用的完整profile版本，分别记录文件字节哈希和工具配置标识；临时路径收敛至私有审计目录时记录原路径与新路径对应，不改写不可变晋升记录。完整校录、OCR、文字水印过滤统计分别记录；覆盖页不意味着其余OCR、公式或图示逐字正确。

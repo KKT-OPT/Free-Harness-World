@@ -1,6 +1,6 @@
 ---
 documentName: harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
-version: v1.0.0
+version: v1.1.0-known-case-regression-boundary
 updatedAt: 2026-10-29
 status: active
 purpose: 定义知识库测试、正式混合查询与知识补强的来源边界和验收证据。
@@ -17,9 +17,9 @@ reviewAfter: 2026-11-29
 supersededBy: null
 dependsOn: [harness/tools/scripts/stable/rag_knowledge/evaluation.py]
 review:
-  reviewedBy: user
+  reviewedBy: agent
   reviewedAt: 2026-10-29
-  decision: user-approved-source-boundary-and-rag-asset-consolidation
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 # 知识查询与评测来源边界
 
@@ -60,3 +60,12 @@ reviewed 必须具有实际条款、完整条件、单位、数值边界及必�
 `audit-query-evaluation` 校验提供的记录、事件分类、证据路径、哈希与行号，并绑定输入记录哈希。它不会联网、不会补全答案，也不能证明未提供的事件不存在；其输出明确为“输入记录校验”，不等同于运行时隔离或真实性证明。有效的全量事件采集由运行时提供，或由审核人对完整工具记录确认。语义结论仍需审核，引用存在不代表推理正确。
 
 发现外部来源越界时，将该次纯库评测标为无效，保留原始记录和诊断，不据此宣布知识本身错误或所有局部测试失败。正式混合使用可以保留合法外部证据，但不能改变纯库测试的验收口径。
+
+
+## 建设后已知用例与测试断言修正
+
+`query-regression`是建设后已知用例的局部检索回归。它冻结reviewed及用例文件，检查召回、断言、行号与工作进程的读取事件；其通过不等于独立盲测、全答案语义正确或整个Agent回合纯库合规。整轮验收仍按前述事件审计规则执行。
+
+若测试断言本身误引原文，应保留原用例、失败输出、修正原因和对应正文证据，使用新RunId重验。没有修改知识也不能覆盖原失败记录；若修改过知识，则必须明确重新冻结。不能通过弱化断言、省略例外或把实质问题改成单纯来源发现来制造通过。
+
+来源前缀允许显式标注为draft、approval-draft或unnumbered-draft的占位编号（X/x/×）；这只表示原件声明的系列，不把报批稿转成正式编号，也不从文件名补造发布日期、实施日期和现行状态。

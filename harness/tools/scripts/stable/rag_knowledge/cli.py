@@ -5,6 +5,7 @@ import sys
 
 from rag_candidate.common import execute_cli
 from .evaluation import run_audit_query_evaluation
+from .regression import run_query_regression
 
 from .commands import (
     run_build_reviewed_graph,
@@ -86,6 +87,18 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--report", default=None)
     audit.add_argument("--run-id", default="query-evaluation")
     audit.set_defaults(func=run_audit_query_evaluation)
+
+    regression = sub.add_parser('query-regression', help='frozen known-case reviewed query regression; not whole-turn evaluation')
+    regression.add_argument('--root', default='.')
+    regression.add_argument('--vault', default='user/knowledge')
+    regression.add_argument('--reviewed', default='user/knowledge/reviewed')
+    regression.add_argument('--cases', required=True)
+    regression.add_argument('--run-id', required=True)
+    regression.add_argument('--graph', default=None)
+    regression.add_argument('--as-of', default=None)
+    regression.add_argument('--limit', type=int, default=10)
+    regression.add_argument('--timeout', type=int, choices=range(1, 121), default=60)
+    regression.set_defaults(func=run_query_regression)
 
     gaps = sub.add_parser(
         "reviewed-gap-plan",

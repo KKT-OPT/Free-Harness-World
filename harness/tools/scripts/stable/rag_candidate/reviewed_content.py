@@ -78,6 +78,71 @@ def validate_content(root: Path, source: dict, target: Path, text: str) -> None:
         raise ValueError('reviewed-content-coverage: require current source-aligned page text, not only chapter links')
 
 
+def _new_targets(root: Path, manifest: dict, args) -> dict[str, Path] | None:
+    mapping, wiki = getattr(args, 'target_map', None), getattr(args, 'wiki', None)
+    if not mapping and not wiki:
+        return None
+    if not mapping or not wiki:
+        raise ValueError('new-source preparation requires both --wiki and --target-map')
+    under(root, wiki, root/'user/knowledge/candidate')
+    value = json.loads(read_text(under(root, mapping)))
+    items = value.get('items', []) if isinstance(value, dict) else value
+    if not isinstance(items, list) or not items:
+        raise ValueError('target map requires a nonempty items list')
+    targets, paths = {}, set()
+    for item in items:
+        identity = item['sourceId']
+        target = under(root, item['target'], under(root, args.reviewed, root/'user/knowledge/reviewed'))
+        if identity in targets or str(target).casefold() in paths or target.suffix.lower() != '.md':
+            raise ValueError('duplicate or invalid preparation target')
+        if target.exists():
+            raise FileExistsError('new-source target exists; use existing-source repair mode')
+        targets[identity] = target
+        paths.add(str(target).casefold())
+    if set(targets) != {s['id'] for s in manifest.get('sources', [])}:
+        raise ValueError('target map must cover every manifest source exactly once')
+    return targets
+
+
+def _apply_extra(root: Path, source: dict, fm: dict, text: str, extra: dict, coverage: dict) -> tuple[dict, str]:
+    if not extra:
+        return fm, text
+    if extra.get('normalizedHashSha256') != source['normalizedHashSha256']:
+        raise ValueError('content profile normalized hash mismatch')
+    if extra.get('sourceVersion'):
+        if not isinstance(extra['sourceVersion'], dict):
+            raise ValueError('sourceVersion must be a mapping')
+        fm['sourceVersion'] = extra['sourceVersion']
+    if extra.get('aliases'):
+        if not isinstance(extra['aliases'], list) or any(not isinstance(x, str) for x in extra['aliases']):
+            raise ValueError('aliases must be a list of strings')
+        fm['aliases'] = list(dict.fromkeys(list_values(fm.get('aliases')) + extra['aliases']))
+    if extra.get('secondarySources'):
+        seen = set()
+        for item in extra['secondarySources']:
+            if any(not item.get(k) for k in ['sourceRef', 'sourceHashSha256', 'relationship', 'reviewedBy', 'evidence']):
+                raise ValueError('secondary copy requires hash, relationship, reviewer and evidence')
+            ref = item['sourceRef']
+            if ref == source['sourceRef'] or ref in seen:
+                raise ValueError('duplicate secondary source')
+            if sha256_file(under(root, ref, root/'user/knowledge/raw')) != item['sourceHashSha256']:
+                raise ValueError('secondary source hash mismatch')
+            seen.add(ref)
+        fm['secondarySources'] = extra['secondarySources']
+        fm['dependsOn'] = list(dict.fromkeys(list_values(fm.get('dependsOn')) + [s['sourceRef'] for s in extra['secondarySources']]))
+        trace = '\n'.join('- `' + item['sourceRef'] + '`（副本关系与校核证据见secondarySources）' for item in extra['secondarySources'])
+        text = re.sub(r'(?m)^## Source Trace[ \t]*$', lambda m: m[0]+'\n\n'+trace, text, count=1)
+    for section in extra.get('sections', []):
+        if any(not section.get(k) for k in ['heading', 'text', 'reviewedBy', 'evidence', 'physicalPages']):
+            raise ValueError('verified section requires reviewer, source evidence and physical pages')
+        if any(type(p) is not int or p not in coverage['includedPages'] for p in section['physicalPages']):
+            raise ValueError('verified section refers to absent physical page')
+        if '\n' in section['heading'] or any(m in section['text'] for m in [START, END]):
+            raise ValueError('verified sections cannot inject source block sentinels')
+        text += '\n## '+section['heading']+'\n\n校核级别：'+section.get('verification', '来源条款审读，未声明整页校录')+'。\n\n'+section['text']+'\n\n出处：PDF物理第'+', '.join(map(str, section['physicalPages']))+'页；审核：'+section['reviewedBy']+'。'+section['evidence']+'\n'
+    return fm, text
+
+
 def run_prepare_reviewed_content(args) -> dict:
     root = Path(args.root).resolve()
     run = safe_run_id(args.run_id)
@@ -87,8 +152,9 @@ def run_prepare_reviewed_content(args) -> dict:
     if len(profiles) != len(profile.get('sources',[])) or set(profiles)-{s['sourceHashSha256'] for s in manifest.get('sources',[])}:
         raise ValueError('content profile contains duplicate or unknown source hashes')
     reviewed = under(root, args.reviewed, root/'user/knowledge/reviewed')
+    new_targets = _new_targets(root, manifest, args)
     refs = {}
-    for page in reviewed.rglob('*.md'):
+    for page in ([] if new_targets is not None else reviewed.rglob('*.md')):
         fm = frontmatter(read_text(page))
         if fm.get('knowledgeRole') != 'authoritative' or fm.get('authoritative') is not True:
             continue
@@ -99,11 +165,21 @@ def run_prepare_reviewed_content(args) -> dict:
         raise FileExistsError('draft preparation requires a new run id; preserve previous review evidence')
     planned = []
     for source in manifest.get('sources', []):
-        targets = refs.get(source['sourceRef'], [])
-        if len(targets) != 1:
-            raise ValueError('expected exactly one existing reviewed source page: ' + source['id'])
-        target = targets[0]
-        text = read_text(target)
+        if new_targets is not None:
+            from .promotion import format_reviewed, source_issues
+            issues = source_issues(root, {'sources': [source]})
+            if issues:
+                raise ValueError('; '.join(issues))
+            target = new_targets[source['id']]
+            text = format_reviewed(root, {'sources': [source]}, under(root, args.wiki), target,
+                                   getattr(args, 'scope', 'user-private'), args.reviewer,
+                                   '候选准备；晋升仍需完整审核与明确授权。', getattr(args, 'review_after', 'source-updated'))
+        else:
+            targets = refs.get(source['sourceRef'], [])
+            if len(targets) != 1:
+                raise ValueError('expected exactly one existing reviewed source page: ' + source['id'])
+            target = targets[0]
+            text = read_text(target)
         if frontmatter(text).get('sourceSha256') != source.get('sourceHashSha256'):
             raise ValueError('original changed or prior reviewed source hash missing; re-review preserved claims first')
         block, coverage = rendered_content(root, source, target)
@@ -111,24 +187,17 @@ def run_prepare_reviewed_content(args) -> dict:
         fm = frontmatter(text)
         fm.update(version='v1.2.0-retrievable-content', updatedAt=today(), contentCoverage=coverage)
         fm['review'] = {'reviewedBy': args.reviewer, 'reviewedAt': today(), 'decision': 'source-aligned-content-repair-reviewed-before-promotion'}
-        extra = profiles.get(source['sourceHashSha256'],{})
-        if extra:
-            if extra.get('normalizedHashSha256') != source['normalizedHashSha256']:
-                raise ValueError('content profile normalized hash mismatch')
-            if extra.get('sourceVersion'):
-                fm['sourceVersion'] = extra['sourceVersion']
-            for section in extra.get('sections',[]):
-                if any(not section.get(k) for k in ['heading','text','reviewedBy','evidence','physicalPages']):
-                    raise ValueError('verified section requires reviewer, source evidence and physical pages')
-                if any(p not in coverage['includedPages'] for p in section['physicalPages']):
-                    raise ValueError('verified section refers to absent physical page')
-                text += '\n## '+section['heading']+'\n\n校核级别：'+section.get('verification','原页完整校录')+'。\n\n'+section['text']+'\n\n出处：PDF物理第'+', '.join(map(str,section['physicalPages']))+'页；审核：'+section['reviewedBy']+'。'+section['evidence']+'\n'
+        fm, text = _apply_extra(root, source, fm, text, profiles.get(source['sourceHashSha256'], {}), coverage)
+        if source.get('qualityState') == 'needs-review' and not re.search(r'(?m)^## (?:转换质量|Conversion Quality)\s*$', text):
+            text += '\n## 转换质量\n\n来源包含OCR或图表转换。逐页文字对齐不等于全部语义已校核；未标记完整校录的表格、单位、数值和公式仍需按质量提示使用。\n'
         text = re.sub(r'\A\ufeff?---\n.*?\n---', lambda _: '---\n'+dump_mapping(fm)+'\n---', text, count=1, flags=re.S)
         for match in re.finditer(r'(?ms)^```yaml\n(.*?)^```',text):
             meta = load_mapping(match[1])
             if 'knowledgeId' in meta:
                 meta.update(reviewedAt=today(),reviewedBy=args.reviewer,
                             reviewScope='来源哈希、逐页检索正文覆盖及标记的原页校录；未逐字校勘其他OCR、图表和公式。')
+                if fm.get('secondarySources'):
+                    meta['sourceRefs'] = list(dict.fromkeys(list_values(meta.get('sourceRefs')) + [s['sourceRef'] for s in fm['secondarySources']]))
                 text=text[:match.start(1)]+dump_mapping(meta)+'\n'+text[match.end(1):]
                 break
         text += '\n' + block + '\n'

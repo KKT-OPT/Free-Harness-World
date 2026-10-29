@@ -1,6 +1,6 @@
 ---
 documentName: harness/HarnessIndex.md
-version: v1.7.0-query-evaluation-boundary
+version: v1.8.0-batch-knowledge-tools
 updatedAt: 2026-10-29
 status: active
 purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告，并记录 Memory governance gate 与项目反向优化 Harness 治理入口。
@@ -22,14 +22,14 @@ relatedDocuments:
 outputTo:
   - harness/HarnessIndex.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: 2026-11-29
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: 2026-10-29
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 
 # General Harness 索引
@@ -176,3 +176,8 @@ harness/skills/usage/skill-usage.json
 ## 知识查询测试边界
 
 查询测试与正式混合使用的模式、时序证据、整轮审计及缺口处置，见 [知识查询与评测来源边界](rag/policies/KnowledgeQueryEvaluationPolicy.md)；模板由 [评测入口](rag/evals/README.md) 路由。
+
+
+## 批量知识构建与回归工具
+
+新来源草稿、PDF副本比较、已知用例离线回归和证据归档均通过现有稳定门面调用，参数与私有配置模板见[RAG文档工具契约](tools/docs/command-surfaces/RagDocumentPipeline.md)。副本不自动合并；已知用例回归不替代整轮评测审计。

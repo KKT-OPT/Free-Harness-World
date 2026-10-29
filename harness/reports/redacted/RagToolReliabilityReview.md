@@ -1,6 +1,6 @@
 ---
 documentName: harness/reports/redacted/RagToolReliabilityReview.md
-version: v1.3.0-query-evaluation-boundary
+version: v1.4.0-batch-construction-tools
 updatedAt: 2026-10-29
 status: active
 purpose: 记录临时文档转换脚本与稳定 RAG 工具的审查、通用能力沉淀和既有知识库的合规边界。
@@ -26,9 +26,9 @@ supersededBy: null
 dependsOn:
   - harness/governance/KnowledgePromotionPolicy.md
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: 2026-10-29
+  decision: user-requested-batch-tools-validated-and-reviewed
 ---
 
 # RAG 工具可靠性复查
@@ -115,3 +115,26 @@ Skill 采用已有条目补丁，删除把原件回查视为正常问答成功�
 稳定知识门面增加显式模式、来源前缀与评测记录审计；查询区分逻辑条款和物理分页，并避免文档标题重复主导条款相关性。审计检查实际提交的事件与证据，输出明确限定为记录校验，不宣称运行时隔离、日志真实性或语义正确性。
 
 长期规则进入评测策略、既有Knowledge Promotion Policy、RAG索引、命令契约及reviewed Skill。真实资料、校录表、清单、原始工具日志和本地设置继续留在user/var边界；仓库只保留通用机制和合成回归。双PowerShell环境各67项工具回归通过，Skill元数据校验通过。回归包含元数据网页核验越界、局部日志不足、模式归属、证据变化、跨页混合校核标记和图谱不得越过来源范围等反例。阶段与最终治理收口由PLANS维护。
+
+
+## 连续批次构建的通用沉淀
+
+本增量按用户要求复查连续构建期间的重复脚本，使用已有稳定门面接入通用实现，不复制具体资料、原文校录、标准号清单和预设答案到工具。
+
+| 重复工作或问题 | 工具及文档处置 |
+|---|---|
+| 新来源需要直接调用内部格式化函数，再手工组织版本、完整条款和质量说明 | prepare-reviewed-content增加完整TargetMap模式，复用已补全candidate生成UTF-8/LF草稿；哈希绑定profile携带版本、条款和副本关系，仍需审核晋升 |
+| 条款profile未声明校核范围却默认标成整页校录 | 默认仅记条款审读；整页校录需明确声明，并与转换页级记录分别维护 |
+| 后追加的综合说明可能继承最后一页物理页码和视觉校录状态 | 来源正文边界与独立后续章节清除页码上下文，保留真实reviewed行号 |
+| 明确为草稿的占位编号被来源前缀过滤 | 仅在明确draft状态下识别X/x/×占位编号，不从文件名推断正式编号、日期或效力 |
+| 同版不同字节副本依赖每次重写文本与图像差异脚本 | compare-pdf-copies保存文件哈希、原生文字、空文本页和渲染差异；只提供审核证据，不自动判同版或合并 |
+| 次要副本只有sourceRefs链接，审核快照没有覆盖其字节变化 | 草稿全部sourceRefs加入快照；secondarySources绑定原件哈希，变化后重新审核 |
+| 每批复制查询循环和内置答案断言，可能只验证来源命中 | query-regression读取私有用例配置，冻结知识与用例、独立工作进程查询，检查完整断言、表格空格、版本与引用；工具不硬编码领域答案 |
+| 收尾手工复制报告，初次失败和后续修正难以追溯 | archive-build-evidence按显式哈希清单保留原字节，拒绝覆盖；归档不重新解释通过/失败或制造批准 |
+| 后续合并profile替代旧批使用版本 | 保留实际使用版本、文件哈希、工具configHash和路径收敛映射，历史事务记录保持不变 |
+
+验证：Windows PowerShell 5.1与PowerShell 7各90项回归通过，无平台跳过；新增23项覆盖新来源草稿、副本变更、前缀占位、页码边界、引用和表格反例、失败保存、知识新增使基线失效、guard及双门面参数。既有真实用例与新增草稿系列边界共51项通过，耗时与逐项证据保存在私有边界；这属于建设后已知用例回归，不是独立盲测或整轮纯库证明。
+
+实际副本比较稳定入口已只读验证：能够区分原生文字一致与渲染有差异。草稿与归档命令双PowerShell入口均通过合成正反例。现有reviewed正文保持字节不变；来源特定配置、问题、回答、原件及运行记录仍为local-only。未重写旧知识，也未通过过滤无关目录使全库验收变为通过。
+
+Skill使用已有rag-knowledge-use的窄范围candidate补丁，更新工具路由与边界，无新增知识晋升权限；经agent复查合入，补丁记录归档，usage sidecar同步。机器断言和引用成立不证明全部语义或法规状态正确；Python工作进程guard不证明父进程或Agent整轮来源合规。后续实际使用优先调用稳定命令，历史批次脚本仅保留原始审计用途。

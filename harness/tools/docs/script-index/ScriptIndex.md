@@ -1,6 +1,6 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.31.0-query-evaluation-boundary
+version: v1.32.0-batch-knowledge-tools
 updatedAt: 2026-10-29
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Java 数值字面量发现/分类门禁、Memory 流程状态和治理自检。
@@ -20,14 +20,14 @@ relatedDocuments:
 outputTo:
   - harness/tools/docs/script-index/ScriptIndex.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: 2026-11-29
 supersededBy: null
 dependsOn:
   - harness/tools/ToolsIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: 2026-10-29
+  decision: user-requested-batch-tool-consolidation-reviewed
 ---
 
 # 脚本索引
@@ -321,3 +321,15 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 ## 查询评测参数与门禁
 
 `invoke-rag-knowledge.ps1 -Command query-reviewed`新增 `-Mode knowledge-only|mixed` 与 `-SourcePrefix <family>`，返回对应sourceBoundary；纯库模式禁止Agent额外网页核验。`-Command audit-query-evaluation -EvaluationRecord <var-record.json>`校验整轮事件分类及答题证据哈希/行号。运行失败为非零退出码，报告位于var/rag；不联网、不晋升、不写知识。局部I/O守卫与Agent自报均不能单独证明整轮来源合规。详见统一命令契约和RAG评测策略。
+
+
+## 批量知识构建命令补充
+
+| 门面 | 新增或增强输入 | 输出与边界 |
+|---|---|---|
+| candidate `prepare-reviewed-content` | `-Wiki -TargetMap`及可选`-ContentProfile` | 新来源UTF-8/LF草稿、完整PromotionMap；只写candidate/var，既有页修复模式保留 |
+| candidate `compare-pdf-copies` | 两份`-InputPath`、新`-RunId`、`-ComparisonDpi` | 原件哈希、逐页原生文字及渲染差异；不选主来源、不自动合并 |
+| knowledge `query-regression` | `-Cases -RunId`及可选`-AsOf -Limit -QueryTimeout` | 冻结基线、查询/guard/断言及耗时；不作整轮合规证明，失败非零且不覆盖原记录 |
+| candidate `archive-build-evidence` | `-EvidenceManifest -RunId`及可选`-AuditDir` | candidate/_audit新目录与ArtifactManifest；哈希或路径错误在复制前阻断，存在目录拒绝覆盖 |
+
+完整配置、状态、失败修复和验证见[RAG工具契约](../command-surfaces/RagDocumentPipeline.md)。归档只证明字节保存；不重算或修改原始评测结论。
