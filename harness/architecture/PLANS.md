@@ -1,7 +1,7 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.8.21-h9-5-engineering-feedback-promoted
-updatedAt: 2026-10-28
+version: v1.8.23-query-evaluation-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划、H9-4 Knowledge/RAG 和 Memory 收口完成结果，以及 H9-5 项目反向优化机制、汇总和 H10 门禁判定入口。
 scope:
@@ -100,6 +100,10 @@ targetArchitectureVersion = v2.10.0-project-feedback-governance
 h9ValidationAnchor = projects/lfms-decision
 h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 ```
+
+2026-10-29 RAG 正文查询增量：稳定工具增加来源页正文覆盖、条款检索、日期上下文与 reviewed-only 问答验收；双 PowerShell 47 项回归通过。通用审查见 `harness/reports/redacted/RagToolReliabilityReview.md`，真实来源与查询证据留在本地边界。本增量不改变 H9-5 整体验收或 H10 门禁。
+
+2026-10-29 RAG 审核收口：用户批准构建与评测来源边界并授权提交；稳定工具补齐查询模式、来源前缀、跨页条款和评测记录审计，双PowerShell各67项回归通过。纯库测试不得额外网页核验，正式混合使用单独归属外部证据；局部守卫不作整轮证明。规则见 `harness/rag/policies/KnowledgeQueryEvaluationPolicy.md`。本收口不改变H9-5整体验收和H10门禁。
 
 当前目标架构口径：
 

@@ -1,7 +1,7 @@
 ---
 documentName: harness/skills/SkillIndex.md
-version: v2.4.0-stateful-validation-reviewed
-updatedAt: 2026-10-28
+version: v2.6.0-query-evaluation-boundary
+updatedAt: '2026-10-29'
 status: active
 purpose: 作为 Harness Skill 入口，路由 Skill policy、candidate、reviewed、archive、usage sidecar、Memory governance、Code Review、Code Implementation、Algorithm Performance Analysis 和现有 Skill 包，并定义根目录规范。
 scope:
@@ -33,15 +33,16 @@ relatedDocuments:
 outputTo:
   - harness/skills/SkillIndex.md
 owner: mixed
-reviewAfter: 2026-11-11
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-10-28
-  decision: engineering-feedback-promoted-after-validation
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # Skill 索引
 
 `harness/skills/` 保存可复用 workflow 或程序性经验。Skill 不是 Knowledge、不是 Memory、不是 Tool Asset，也不是一次性任务记录。
@@ -68,7 +69,7 @@ review:
 | Code Review | `harness/skills/reviewed/code-review/SKILL.md` | 代码审查 reviewed Skill；包含 Java 规范 reference，用于真实项目源码、diff、补丁、测试和规范沉淀审查，已通过真实项目 forward-test、用户 revise 和最终条件批准。 |
 | Code Implementation | `harness/skills/reviewed/code-implementation/SKILL.md` | 代码实现 reviewed Skill；用于用户批准后的 code review finding 修复、功能实现、测试修复和实现后验证，必须更新项目 workflow evidence 并交回 code-review 复查，已与 code-review 一起通过用户审核。 |
 | Memory Governance Use | `harness/skills/reviewed/memory-governance-use/SKILL.md` | Memory Update Flow 到稳定命令的流程状态机、Memory store 只读验证、candidate review package、用户决策记录和未工具化生命周期缺口识别；已由用户 approve 并晋升为 reviewed Skill。 |
-| RAG Knowledge Use | `harness/skills/reviewed/rag-knowledge-use/SKILL.md` | reviewed Knowledge 查询、Obsidian 阅读入口、reviewed gap candidate plan、重复治理、post-promotion cleanup 和一键验证流程；已完成用户指定 review 并晋升为 reviewed Skill。 |
+| RAG Knowledge Use | `harness/skills/reviewed/rag-knowledge-use/SKILL.md` | 纯库测试与正式混合查询边界、条款/行号/日期上下文、来源前缀、整轮记录审计、来源绑定摄取与封印晋升。 |
 | Simulation Failure Triage | `harness/skills/reviewed/simulation-failure-triage/SKILL.md` | 用户指定触发并经完整 candidate、revise、approve、promotion 流程审核通过的仿真失败排查流程；正文包含笔记属性和关联文档读取路径。 |
 
 占位候选目录包括 `architecture-design/`、`failure-attribution/` 和 `java-feature-implementation/`。这些目录只表示可能的候选方向；没有 `SKILL.md` 前不视为 active Skill。

@@ -1,7 +1,7 @@
 ---
 documentName: harness/governance/KnowledgePromotionPolicy.md
-version: v2.1.0-normalized-source-depth
-updatedAt: 2026-07-04 00:00:00.000 +08:00
+version: v2.2.0-source-content-and-query-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 定义 raw source、extracted artifacts、candidate knowledge、reviewed knowledge 和 RAG index 的晋升边界。
 scope:
@@ -13,6 +13,7 @@ prerequisites:
   - AGENTS.md
   - harness/rag/RAGIndex.md
 relatedDocuments:
+  - harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
   - harness/rag/RAGIndex.md
   - harness/rag/policies/ObsidianLlmWikiPluginBoundary.md
   - harness/rag/policies/CandidatePostPromotionCleanupPolicy.md
@@ -24,16 +25,17 @@ relatedDocuments:
 outputTo:
   - harness/governance/KnowledgePromotionPolicy.md
 owner: mixed
-reviewAfter: 2026-07-23
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/rag/RAGIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-03
-  decision: normalized-source-and-reviewed-depth-rules-added
+  reviewedBy: user
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # Knowledge Promotion Policy（知识晋升策略）
 
 本文定义 raw source 如何成为 candidate knowledge、reviewed knowledge，以及 reviewed source 如何重建 RAG index。RAG Index 是可重建检索产物，不是事实源。
@@ -132,3 +134,9 @@ plugin config or query history -> tracked Harness docs
 post-promotion full candidate corpus -> permanent Obsidian graph node without audit decision
 LLM Wiki auto maintenance -> direct reviewed Knowledge write
 ```
+
+## 正文与测试证据治理
+
+PDF来源页须提供可独立查询的实际条款与完整条件，来源对齐全文通过contentCoverage约束页序、正文与规范化哈希；结构和文本覆盖不替代语义审核。校录配置绑定原件、物理页及审核证据，来源变化后复审，不自动继承旧结论。多源晋升完整映射，审核包绑定实际输入，晋升按审核字节写入并记录最终哈希；不能在晋升后覆盖正文沿用旧封印。
+
+查询测试与知识构建分别冻结和验收。纯库测试只能用reviewed证据与推理；外查标准现行状态也是越界，不能作为元数据例外。正式混合使用可以引用外部来源，写入长期知识时仍走candidate、review与promotion。全部查询来源、日期和审计边界见 [查询评测策略](../rag/policies/KnowledgeQueryEvaluationPolicy.md)。

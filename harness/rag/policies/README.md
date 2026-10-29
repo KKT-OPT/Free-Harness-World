@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/policies/README.md
-version: v1.3.0-executable-cleanup-and-mechanism-gates
-updatedAt: 2026-07-03 23:30:00.000 +08:00
+version: v1.4.0-query-evaluation-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 说明 RAG chunking、citation、review、promotion、插件和运行态边界规则。
 scope:
@@ -15,6 +15,7 @@ prerequisites:
   - AGENTS.md
   - harness/rag/RAGIndex.md
 relatedDocuments:
+  - harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
   - harness/rag/RAGIndex.md
   - harness/rag/policies/ObsidianLlmWikiPluginBoundary.md
   - harness/rag/policies/CandidatePostPromotionCleanupPolicy.md
@@ -24,15 +25,16 @@ relatedDocuments:
 outputTo:
   - harness/rag/policies/README.md
 owner: mixed
-reviewAfter: 2026-07-22
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/rag/RAGIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-03
-  decision: executable-cleanup-and-mechanism-gates-linked
+  reviewedBy: user
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # RAG Policy（RAG 策略）
 
 本目录保存 RAG 机制层 policy。长期规则：
@@ -54,3 +56,4 @@ review:
 | `ObsidianLlmWikiPluginBoundary.md` | 定义 Obsidian / LLM Wiki 类插件的允许用途、禁止路径、local-only 配置边界、reviewed 写入门禁和 `reviewed/_archive` 处置规则。 |
 | `CandidatePostPromotionCleanupPolicy.md` | 定义 candidate 晋升、拒绝或归档后的 full corpus 清理规则、轻量审计记录要求、`candidate-cleanup-plan` dry-run 命令和 `candidate-cleanup-apply` 显式批准命令。 |
 | `LlmWikiMechanismAbsorptionPolicy.md` | 定义从 obsidian-llm-wiki 吸收到 Harness RAG/Knowledge 的 schema、granularity、tag vocabulary、source gate、source fingerprint、alias dedup、graph retrieval 和 auto maintenance 边界。 |
+| `KnowledgeQueryEvaluationPolicy.md` | 定义纯知识库测试、正式混合查询、时间证据、完整条款与整轮来源审计；禁止在纯库测试中用网页核验元数据补证。 |

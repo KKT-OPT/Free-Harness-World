@@ -41,14 +41,16 @@ def safe_run_id(value: str) -> str:
 
 
 def slugify(value: str) -> str:
-    value = Path(value).stem.lower()
+    # Callers pass a stem plus fingerprint, not a filename. Treating the last dot
+    # as an extension used to discard standard part numbers AND the fingerprint.
+    value = value.lower().replace(".", "-")
     value = re.sub(r"[^\w\s-]", "", value)
     value = re.sub(r"[\s_]+", "-", value).strip("-")
     return value or "source"
 
 
 def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="replace")
+    return path.read_text(encoding="utf-8-sig")
 
 
 def write_text(path: Path, text: str) -> None:
@@ -173,6 +175,29 @@ def update_status(root: Path, run_id: str | None, values: dict[str, Any]) -> Non
 
 def print_json(value: dict[str, Any]) -> None:
     print(json.dumps(value, indent=2, ensure_ascii=False))
+
+
+def execute_cli(func, args) -> int:
+    """Emit exactly one JSON object, including commands that report then raise."""
+    from contextlib import redirect_stdout
+    from io import StringIO
+
+    output = StringIO()
+    try:
+        with redirect_stdout(output):
+            result = func(args)
+    except Exception as exc:
+        try:
+            result, _ = json.JSONDecoder().raw_decode(output.getvalue().lstrip())
+        except (ValueError, TypeError):
+            result = {}
+        if not isinstance(result, dict):
+            result = {}
+        result.update(state="failed", error=str(exc))
+        print_json(result)
+        return 1
+    print_json(result)
+    return 0
 
 
 def scan_sensitive_text(root: Path, files: list[Path]) -> list[dict[str, str]]:

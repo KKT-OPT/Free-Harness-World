@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.28.0-artifact-cleanup-stable
-updatedAt: 2026-10-28
+version: v1.31.0-query-evaluation-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Java 数值字面量发现/分类门禁、Memory 流程状态和治理自检。
 scope:
@@ -12,6 +12,7 @@ prerequisites:
   - AGENTS.md
   - harness/tools/ToolsIndex.md
 relatedDocuments:
+  - harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
   - harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
   - harness/tools/docs/command-surfaces/JavaMavenCommandSurface.md
   - harness/verification/HarnessValidationPlan.md
@@ -19,15 +20,16 @@ relatedDocuments:
 outputTo:
   - harness/tools/docs/script-index/ScriptIndex.md
 owner: mixed
-reviewAfter: 2026-11-11
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-10-28
-  decision: evidence-gate-fixes-validated-cleanup-tool-promoted
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # 脚本索引
 
 本文按稳定性和默认暴露范围索引 Harness 脚本。stable scripts 是 Tool Assets，中文解释是工具资产；candidate、runtime、historical 和 external 资产不是默认命令门面。
@@ -48,7 +50,8 @@ review:
 | `harness/tools/scripts/stable/test-harness-governance.ps1` | 运行 Harness Root 治理自检。 | yes |
 | `harness/tools/scripts/stable/verify-artifact-cleanup.py` | 按显式文件清单保存保护哈希并核验清理后身份，无删除功能。 | yes |
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
-| `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | 通过稳定门面运行 RAG candidate 流程。 | yes |
+| `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | PDF 规范化、candidate 摄取、审核快照、映射晋升和语料审计。 | yes |
+| `harness/tools/scripts/stable/test-rag-tools.ps1` | 验证 RAG 解析、OCR、来源绑定、审核晋升、失败回滚及归档契约。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、residual gap disposition、canonical vault layout、one-click validation gate、schema context、LLM Wiki mechanism validation、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
 | `harness/tools/scripts/stable/invoke-memory.ps1` | 通过稳定门面运行 Memory flow status、Memory store 只读验证和 candidate review package。 | yes |
 | `harness/tools/scripts/stable/publish-harness-agent-branch.ps1` | 管理 agent-owned Git branch、提交和推送。 | yes，写操作需审批 |
@@ -223,18 +226,22 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 
 ### `invoke-rag-candidate.ps1`
 
+完整契约与参数示例见 [RAG 文档流水线](../command-surfaces/RagDocumentPipeline.md)。新增 `normalize-pdf`、`audit-corpus`，以及 `-NormalizationManifest`、`-NormalizedDir`、`-PdfProfile`、`-OcrMode`、`-OcrLanguage`、`-Dpi`、`-PromotionMap`、`-ReviewedDraft`、`-SourceId`、`-Reviewed`、`-PromotionRecord`、`-RequireSealed`、`-ExportManifest`。审核包绑定当前字节；完整多源映射通过后一次预检，再写入带正文哈希的晋升记录。
+
 | 契约项 | 内容 |
 |---|---|
 | Inputs | `-Command`、`-Root`、`-InputPath`、`-RunId`、`-RawDomain`、`-Wiki`、`-Report`、`-Graph`、`-Question`、`-Manifest`、`-ExtractionGranularity`、`-EntityCap`、`-ConceptCap`、`-BatchStrategy`、`-TagVocabularyMode`、`-AllowedTag`。 |
 | Outputs | stdout JSON、`var/rag/<run-id>/extracted/`、`user/knowledge/candidate/<run-id>/wiki`、`var/rag/<run-id>/evals/`、runtime graph、status JSON、source gate accepted/blocked records、source fingerprint、body hash、extraction granularity 和 tag vocabulary manifest 字段。 |
 | Status Summary | command、runId、artifact paths、state。 |
 | Redacted Log Path | `var/logs/<run-id>.json` 或对应 runtime path；tracked docs 只记录路径。 |
-| Sensitive Handling | 只写 user-local candidate 和 runtime artifacts，不写 reviewed knowledge、Memory 或 Project Facts；空文件、frontmatter-only、不兼容类型和重复 body hash 在候选生成前被 source gate 拦截。 |
+| Sensitive Handling | 默认写 raw normalized derivative、candidate 和 runtime artifacts；`promote-reviewed` 需要审核包、审核人及明确批准，才能写入映射中的 reviewed 目标；不写 Memory 或 Project Facts。水印和纠错配置绑定原件哈希并留在 local-only。 |
 | Failure Mode | `rag/input`、`rag/pipeline`、`rag/lint`、`rag/query`、`tool/execution`。 |
 | Repair Suggestion | 修正 input path、manifest、candidate wiki、graph 或 pipeline 配置。 |
 | Validation Instruction | 使用非敏感样例运行 `health` 或 candidate ingest，确认只生成候选和运行态产物。 |
 
 ### `invoke-rag-knowledge.ps1`
+
+`pipeline-smoke` 必须额外传入 `-ReviewedDraft`，只晋升已审核草稿；不根据关键词编造正文或附带晋升 concept。现有 RunId 不会被 `-Overwrite` 清除。全库门禁增加 `normalized-source-quality` 检查；结构、转换质量和语义审核分别报告。
 
 | 契约项 | 内容 |
 |---|---|
@@ -246,6 +253,19 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 | Failure Mode | `rag/knowledge-vault`、`rag/reviewed-query`、`rag/graph`、`tool/execution`。 |
 | Repair Suggestion | 修正 vault/reviewed path，重新运行 `sync-reviewed-index`、`health-reviewed`、`build-reviewed-graph` 或对 gap candidate wiki 运行 candidate `health` / `lint` / `build-graph`。 |
 | Validation Instruction | 使用已审核 reviewed 文档运行 `init-obsidian-vault`、`health-reviewed`、`query-reviewed`、`reviewed-gap-plan -WriteCandidates`、`dispose-residual-gaps`、`canonicalize-vault-layout`、`validate-knowledge-vault`、`schema-context`、`validate-llm-wiki-mechanisms`、`candidate-cleanup-plan`、`candidate-cleanup-apply`、`govern-reviewed-duplicates`、`enrich-gap-candidates`、`gap-review-package`、`promote-gap-candidates`、`govern-vault -ArchiveInactiveCandidates` 和 `pipeline-smoke`，确认 Obsidian `Home.md` 单入口可打开、query 只返回 authoritative reviewed Knowledge、task-scoped schema context 可生成、LLM Wiki 吸收机制全部通过、residual workflow gap 已处置且 reviewed graph broken link count 为 0、正式 reviewed page 使用语义命名、domain schema 存在、candidate full corpus 清理后只保留轻量审计记录、validation gate 检查全通过、candidate cleanup dry-run 能列出 full corpus、轻量审计记录和推荐清理动作、apply 后 full corpus 为 0、duplicate group 只有一个 authoritative page、gap candidate wiki 仍停留在 candidate boundary，candidate health / lint / graph 通过，review package 状态可进入 human review，approved concepts 可晋升 reviewed pages，full pipeline smoke 能从 raw 生成 candidate、晋升 reviewed、刷新 vault 并查询命中新 reviewed target，vault governance 只做非破坏性归档和 source trace 同步。 |
+
+### `test-rag-tools.ps1`
+
+| 契约项 | 内容 |
+|---|---|
+| Inputs | `-Root`；本地 RAG Python 环境及 PyYAML、PyMuPDF，OCR 检查需要 Windows 对应语言包。 |
+| Outputs | unittest 结果、退出码；隔离 fixture 位于 `var/rag/rag-tool-tests/`，检查后清理。 |
+| Status Summary | 测试数、成功、失败和平台跳过项。 |
+| Redacted Log Path | 默认 stdout/stderr；需要保留时重定向至 `var/rag/<run-id>/`。 |
+| Sensitive Handling | 使用合成文档和隔离知识库；不改写真实 reviewed 内容。 |
+| Failure Mode | 来源哈希、中文编码、审核快照、批次映射、IO 回滚、归档、OCR 或查询契约失败。 |
+| Repair Suggestion | 修复失败契约后复验；不删除真实知识或伪造审核记录。 |
+| Validation Instruction | Windows PowerShell 与 PowerShell 7 均运行本脚本；检查 skipped 项后再陈述覆盖范围。 |
 
 ### `invoke-memory.ps1`
 
@@ -293,3 +313,11 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 3. runtime 和 external 资产默认 local-only，不提交正文。
 4. historical script 只能作为背景或归档证据，不作为默认工具。
 5. 工具文档以中文说明为主题，专业词、命令、路径和代码标识可以保留英文。
+
+## Reviewed 正文与条款查询增量
+
+`invoke-rag-candidate.ps1 -Command prepare-reviewed-content` 接受 `-Manifest`、`-Reviewed`、新 `-RunId`、`-Reviewer` 和可选 `-ContentProfile`，仅生成候选草稿与 PromotionMap。`invoke-rag-knowledge.ps1 -Command query-reviewed -AsOf YYYY-MM-DD` 输出具体条款、reviewed 行号及适用日期上下文。执行、输出与失败边界见 [统一契约](../command-surfaces/RagDocumentPipeline.md)。
+
+## 查询评测参数与门禁
+
+`invoke-rag-knowledge.ps1 -Command query-reviewed`新增 `-Mode knowledge-only|mixed` 与 `-SourcePrefix <family>`，返回对应sourceBoundary；纯库模式禁止Agent额外网页核验。`-Command audit-query-evaluation -EvaluationRecord <var-record.json>`校验整轮事件分类及答题证据哈希/行号。运行失败为非零退出码，报告位于var/rag；不联网、不晋升、不写知识。局部I/O守卫与Agent自报均不能单独证明整轮来源合规。详见统一命令契约和RAG评测策略。

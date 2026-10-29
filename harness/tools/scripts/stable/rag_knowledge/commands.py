@@ -12,6 +12,8 @@ from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
 
+from rag_candidate.metadata import frontmatter as parse_frontmatter, metadata as parse_metadata, scalar, list_values
+
 from rag_candidate.commands import (
     _source_gate as _candidate_source_gate,
     run_build_graph as _run_candidate_build_graph,
@@ -361,7 +363,17 @@ def run_query_reviewed(args) -> dict:
     reviewed = _resolve_under_root(root, args.reviewed)
     graph = _resolve_under_root(root, args.graph)
     report = _resolve_under_root(root, args.report) if args.report else None
-    result = _query_reviewed(root, vault, reviewed, graph, args.question, args.limit)
+    result = _query_reviewed(root, vault, reviewed, graph, args.question, args.limit,
+                             getattr(args, 'as_of', None), getattr(args, 'source_prefix', None))
+    mode = getattr(args, 'mode', 'knowledge-only')
+    result['queryMode'] = mode
+    result['sourceBoundary'] = {
+        'knowledgeFacts': 'authoritative-reviewed-only',
+        'externalToolPolicy': 'forbidden-for-evaluation' if mode == 'knowledge-only' else 'separately-attributed-formal-usage',
+        'externalRetrievalByThisCommand': False,
+        'coverage': 'command-scope-only-not-whole-turn-proof',
+        'unknownVersionEvidence': 'report-gap-do-not-verify-externally-in-test',
+    }
     if report:
         result["report"] = rel(root, report)
         write_text(report, _format_query_report(result))
@@ -759,6 +771,7 @@ def run_validate_knowledge_vault(args) -> dict:
             },
         ),
         _validate_source_trace(root, reviewed),
+        _validate_normalized_source_quality(root, reviewed),
         _validation_check(
             "reviewed-graph-links",
             graph.get("state") == "passed" and graph.get("brokenLinkCount") == 0 and graph.get("orphanCount") == 0,
@@ -1422,6 +1435,7 @@ def run_govern_vault(args) -> dict:
 
 
 def run_pipeline_smoke(args) -> dict:
+    from rag_candidate.pdf_normalize import under
     root = Path(args.root).resolve()
     vault = _resolve_under_root(root, args.vault)
     reviewed = _resolve_under_root(root, args.reviewed)
@@ -1437,6 +1451,11 @@ def run_pipeline_smoke(args) -> dict:
         raise ValueError("pipeline-smoke requires approval note")
     if not args.question.strip():
         raise ValueError("pipeline-smoke requires question")
+    if not getattr(args, "reviewed_draft", None):
+        raise ValueError("pipeline-smoke requires an explicit --reviewed-draft; topic-based automatic enrichment is disabled")
+    draft = under(root, args.reviewed_draft, root / "user/knowledge/candidate")
+    if not draft.is_file():
+        raise ValueError("reviewed draft missing")
 
     input_paths = [_resolve_under_root(root, value) for value in args.inputs]
     candidate_wiki = candidate_root / run_id / "wiki"
@@ -1444,8 +1463,10 @@ def run_pipeline_smoke(args) -> dict:
     eval_dir = run_var / "evals"
     graph_dir = run_var / "graph"
     manifest = run_var / "extracted" / "metadata-manifest.json"
-    domain = safe_run_id(getattr(args, "domain", None) or "agent")
-    target = _resolve_under_root(root, args.target or f"user/knowledge/reviewed/{domain}/{run_id}.md")
+    domain = getattr(args, "domain", None) or "agent"
+    if Path(domain).name != domain or domain.startswith("."):
+        raise ValueError("domain must be a single name")
+    target = under(root, args.target or parse_frontmatter(read_text(draft))["documentName"], root / "user/knowledge/reviewed")
     report = _resolve_under_root(root, args.report or f"var/rag/{run_id}/evals/pipeline-smoke.md")
 
     _prepare_pipeline_smoke_run(
@@ -1477,6 +1498,7 @@ def run_pipeline_smoke(args) -> dict:
         run_id=run_id,
         manifest_path=manifest,
         wiki=candidate_wiki,
+        draft=draft,
     )
     steps["candidateHealth"] = _quiet_call(_run_candidate_health, SimpleNamespace(
         root=str(root),
@@ -1510,6 +1532,7 @@ def run_pipeline_smoke(args) -> dict:
         wiki=str(candidate_wiki),
         report=str(eval_dir / "review-package.md"),
         run_id=run_id,
+        reviewed_draft=rel(root, draft),
     ))
     steps["promotionPlan"] = _quiet_call(_run_candidate_promotion_plan, SimpleNamespace(
         root=str(root),
@@ -1532,6 +1555,7 @@ def run_pipeline_smoke(args) -> dict:
         report=str(eval_dir / "promotion-result.md"),
         run_id=run_id,
         overwrite=bool(args.overwrite),
+        reviewed_draft=rel(root, draft),
     ))
     steps["promoteReviewedConcepts"] = _promote_pipeline_concepts(
         root=root,
@@ -1625,24 +1649,15 @@ def _quiet_call(func, args) -> dict:
         return func(args)
 
 
-def _prepare_pipeline_smoke_run(
-    root: Path,
-    run_id: str,
-    candidate_run_dir: Path,
-    run_var: Path,
-    target: Path,
-    overwrite: bool,
-) -> None:
-    status = root / "var" / "logs" / f"{run_id}.json"
-    existing = [path for path in [candidate_run_dir, run_var, status, target] if path.exists()]
-    if existing and not overwrite:
-        refs = ", ".join(rel(root, path) for path in existing)
-        raise FileExistsError(f"pipeline-smoke run already has outputs; pass -Overwrite or use a new -RunId: {refs}")
-    if not overwrite:
-        return
-    _remove_path_under(root, candidate_run_dir, [root / "user" / "knowledge" / "candidate"])
-    _remove_path_under(root, run_var, [root / "var" / "rag"])
-    _remove_path_under(root, status, [root / "var" / "logs"])
+def _prepare_pipeline_smoke_run(root, run_id, candidate_run_dir, run_var, target, overwrite):
+    # Overwrite may replace a reviewed target after validation; it must never
+    # delete existing candidate evidence, drafts, runtime or review snapshots.
+    status = root / "var/logs" / (run_id + ".json")
+    existing = [path for path in (candidate_run_dir, run_var, status) if path.exists()]
+    if existing:
+        raise FileExistsError("pipeline run already exists; choose a new RunId, preserving previous evidence")
+    if target.exists() and not overwrite:
+        raise FileExistsError("reviewed target exists; reviewed overwrite requires explicit --overwrite")
 
 
 def _remove_path_under(root: Path, path: Path, allowed_roots: list[Path]) -> None:
@@ -1664,58 +1679,9 @@ def _pipeline_concept_catalog() -> dict[str, tuple[str, list[str]]]:
     return catalog
 
 
-def _promote_pipeline_concepts(
-    root: Path,
-    reviewed: Path,
-    domain: str,
-    wiki: Path,
-    target: Path,
-    scope: str,
-    reviewer: str,
-    approval_note: str,
-    review_after: str,
-) -> dict:
-    concept_dir = reviewed / domain / "concepts"
-    concept_dir.mkdir(parents=True, exist_ok=True)
-    source_stem = target.stem
-    catalog = _pipeline_concept_catalog()
-    promoted = []
-    existing = []
-    for candidate_page in sorted((wiki / "concepts").glob("*.md")):
-        concept = candidate_page.stem
-        if concept in {"CandidateKnowledge", "StructuredIngestion"}:
-            continue
-        definition = _section_by_heading(read_text(candidate_page), "Candidate Definition") or catalog.get(concept, ("", []))[0]
-        neighbors = catalog.get(concept, ("", []))[1]
-        reviewed_page = concept_dir / f"{concept}.md"
-        if reviewed_page.exists():
-            existing.append(rel(root, reviewed_page))
-            continue
-        write_text(reviewed_page, _format_pipeline_reviewed_concept_page(
-            root=root,
-            concept=concept,
-            definition=definition,
-            neighbors=neighbors,
-            domain=domain,
-            source_page=target,
-            source_stem=source_stem,
-            scope=scope,
-            reviewer=reviewer,
-            approval_note=approval_note,
-            review_after=review_after,
-        ))
-        promoted.append(rel(root, reviewed_page))
-    result = {
-        "state": "passed" if promoted or existing else "partial",
-        "domain": domain,
-        "promotedCount": len(promoted),
-        "existingCount": len(existing),
-        "promotedPages": promoted,
-        "existingPages": existing,
-        "boundary": "approved-pipeline-concept-promotion-source-traced-to-reviewed-page",
-    }
-    update_status(root, source_stem, {"pipelineSmokeConceptPromotion": result})
-    return result
+def _promote_pipeline_concepts(**kwargs):
+    return {"state": "passed", "promotedCount": 0, "existingCount": 0,
+            "boundary": "source-only-concepts-require-separate-reviewed-flow"}
 
 
 def _format_pipeline_reviewed_concept_page(
@@ -1847,7 +1813,10 @@ def _ensure_reviewed_domain(
     if not schema.exists():
         write_text(schema, _format_domain_schema(root, domain, tags))
     index = domain_dir / "index.md"
-    write_text(index, _format_domain_index(root, domain, target, concepts_dir))
+    if not index.exists():
+        write_text(index, _format_domain_index(root, domain, target, concepts_dir))
+    elif not any(Path(link).stem == target.stem for link in extract_wikilinks(read_text(index))):
+        write_text(index, read_text(index).rstrip() + f"\n\n- [[{target.stem}]]\n")
     registry_updated = _upsert_registry_domain(root, registry, domain)
     result = {
         "state": "passed",
@@ -2077,66 +2046,33 @@ def _upsert_registry_domain(root: Path, registry: Path, domain: str) -> bool:
     return changed
 
 
-def _enrich_pipeline_smoke_candidate(root: Path, run_id: str, manifest_path: Path, wiki: Path) -> dict:
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"manifest not found: {rel(root, manifest_path)}")
+def _enrich_pipeline_smoke_candidate(root, run_id, manifest_path, wiki, draft):
+    from rag_candidate.promotion import validate_draft
+    from rag_candidate.metadata import frontmatter
     manifest = json.loads(read_text(manifest_path))
-    sources = manifest.get("sources", [])
-    enriched_sources = []
-    concept_names: set[str] = set()
-    for source in sources:
-        candidate_page = _resolve_under_root(root, source.get("candidatePage", ""))
-        extracted_path = _resolve_under_root(root, source.get("extractedMarkdown", ""))
-        source_text = read_text(candidate_page) if candidate_page.exists() else ""
-        extracted = read_text(extracted_path) if extracted_path.exists() else ""
-        title = _page_title(source_text, Path(source.get("sourceRef", "source")).stem)
-        selected = _pipeline_concepts_for_source(title, extracted)
-        concept_names.update(selected)
-        write_text(candidate_page, _format_pipeline_source_page(
-            existing=source_text,
-            title=title,
-            run_id=run_id,
-            source_ref=source.get("sourceRef", ""),
-            extracted_ref=source.get("extractedMarkdown", ""),
-            extracted=extracted,
-            concepts=selected,
-        ))
-        enriched_sources.append({
-            "sourceId": source.get("id"),
-            "candidatePage": rel(root, candidate_page),
-            "extractedMarkdown": source.get("extractedMarkdown"),
-            "conceptCount": len(selected),
-        })
-
-    concept_refs = []
-    source_stems = [Path(item.get("candidatePage", "source")).stem for item in sources]
-    catalog = _pipeline_concept_catalog()
-    for concept in sorted(concept_names):
-        definition, neighbors = catalog[concept]
-        page = wiki / "concepts" / f"{concept}.md"
-        write_text(page, _format_pipeline_concept_page(
-            concept=concept,
-            definition=definition,
-            neighbors=neighbors,
-            source_stems=source_stems,
-            run_id=run_id,
-        ))
-        concept_refs.append(rel(root, page))
-
-    _write_pipeline_candidate_index(root, wiki)
-    _append_pipeline_enrichment_log(wiki, run_id, enriched_sources, sorted(concept_names))
-    result = {
-        "state": "passed" if enriched_sources else "partial",
-        "runId": run_id,
-        "wiki": rel(root, wiki),
-        "sourceCount": len(enriched_sources),
-        "conceptCount": len(concept_refs),
-        "enrichedSources": enriched_sources,
-        "conceptPages": concept_refs,
-        "boundary": "candidate-only-smoke-enrichment-no-reviewed-write",
+    if len(manifest.get("sources", [])) != 1:
+        raise ValueError("pipeline-smoke requires one source and its reviewed draft; use PromotionMap for batches")
+    source = manifest["sources"][0]
+    content = read_text(draft)
+    target = _resolve_under_root(root, frontmatter(content)["documentName"])
+    validate_draft(root, source, target, content)
+    page = _resolve_under_root(root, source["candidatePage"])
+    original = read_text(page)
+    heading = original.split("## Candidate Summary", 1)[0]
+    sections = {
+        "Candidate Summary": _section_by_heading(content, "Statement"),
+        "Key Claims": _section_by_heading(content, "Core Framework"),
+        "Entities": _section_by_heading(content, "Key Concepts"),
+        "Concepts": "- [[StructuredIngestion]]\n- [[CandidateKnowledge]]",
+        "Contradictions": _section_by_heading(content, "Governance Notes"),
+        "Applicability": _section_by_heading(content, "Applicability"),
+        "Non-Applicability": _section_by_heading(content, "Non-Applicability"),
+        "Source Overview": _section_by_heading(content, "Source Overview"),
+        "Core Framework": _section_by_heading(content, "Core Framework"),
+        "Review Checklist": "用户明确提供草稿及晋升授权；工具核对来源和结构，不把机器检查冒充语义审核。",
     }
-    update_status(root, run_id, {"pipelineSmokeCandidateEnrichment": result})
-    return result
+    write_text(page, heading + "\n".join("## " + key + "\n\n" + value + "\n" for key, value in sections.items()))
+    return {"state": "passed", "sourceCount": 1, "boundary": "candidate-derived-from-explicit-reviewed-draft"}
 
 
 def _pipeline_concepts_for_source(title: str, extracted: str) -> list[str]:
@@ -2496,43 +2432,25 @@ def _sync_reviewed_index(root: Path, vault: Path, reviewed: Path) -> dict:
     }
 
 
-def _query_reviewed(root: Path, vault: Path, reviewed: Path, graph_path: Path, question: str, limit: int) -> dict:
+def _query_reviewed(root: Path, vault: Path, reviewed: Path, graph_path: Path, question: str, limit: int, as_of: str | None = None, source_prefix: str | None = None) -> dict:
     pages = _reviewed_pages(reviewed)
     terms = _query_terms(question)
-    scored: dict[Path, dict] = {}
-    for page in pages:
-        text = read_text(page)
-        title = _page_title(text, page.stem)
-        haystacks = {
-            "title": title,
-            "path": rel(vault, page),
-            "body": text,
-        }
-        score = 0.0
-        reasons = []
-        for term in terms:
-            term_lower = term.lower()
-            for field, value in haystacks.items():
-                hits = value.lower().count(term_lower)
-                if not hits:
-                    continue
-                weight = 5 if field == "title" else 2 if field == "path" else 1
-                score += hits * weight
-                reasons.append(f"{field}:{term}")
-        if score > 0:
-            scored[page] = {
-                "page": rel(root, page),
-                "vaultPath": rel(vault, page),
-                "title": title,
-                "score": round(score, 3),
-                "reason": sorted(set(reasons)),
-                "reviewedAt": _frontmatter_value(text, "reviewedAt") or _nested_reviewed_at(text),
-                "reviewedBy": _frontmatter_value(text, "reviewedBy") or _nested_reviewed_by(text),
-                "matchedSections": _matched_sections(text, terms),
-                "wikilinks": sorted(set(extract_wikilinks(text)))[:20],
-            }
+    from .retrieval import rank_pages, version_context, source_matches, passages
+    pages = [page for page in pages if source_matches(read_text(page), source_prefix)]
+    as_of = as_of or today()
+    scored = rank_pages(root, vault, pages, terms, as_of)
 
     _expand_query_from_graph(root, vault, graph_path, scored)
+    # Graph expansion cannot bypass an explicitly scoped reviewed root.
+    allowed_pages = {p.resolve() for p in pages}
+    scored = {p: item for p, item in scored.items() if p.resolve() in allowed_pages}
+    for page, item in scored.items():
+        if 'documentVersion' not in item:
+            item['documentVersion'] = version_context(parse_frontmatter(read_text(page)), as_of)
+        if item.get('reason') == ['graph-ppr']:
+            item['contentEvidence'] = 'graph-navigation-only'
+            item['matchedSections'] = [{**{k:v for k,v in section.items() if k not in {'text','navigation'}},
+                                        'excerpt':section['text']} for section in passages(read_text(page))[:1]]
     matches = sorted(scored.values(), key=lambda item: (-item["score"], item["vaultPath"]))[:limit]
     return {
         "state": "passed",
@@ -2541,7 +2459,9 @@ def _query_reviewed(root: Path, vault: Path, reviewed: Path, graph_path: Path, q
         "terms": terms,
         "matchCount": len(matches),
         "matches": matches,
-        "answerInstruction": "Agent must read matched reviewed pages before answering. Do not cite raw/candidate/chunks as facts.",
+        "asOf": as_of,
+        "sourcePrefix": source_prefix,
+        "answerInstruction": "Answer from returned reviewed passages or their cited reviewed lines. Preserve scope, date and verification limits. Missing substantive evidence is a knowledge gap; raw/PDF/image lookup is not a successful reviewed-only answer.",
     }
 
 
@@ -3287,6 +3207,37 @@ def _validate_source_trace(root: Path, reviewed: Path) -> dict:
                 issues.append(f"{page_ref} non-authoritative page must reference existing authoritativePage")
 
     return _validation_check("source-trace", not issues, f"checkedPages={checked_pages}", issues, {"checkedPages": checked_pages})
+
+
+def _validate_normalized_source_quality(root: Path, reviewed: Path) -> dict:
+    from rag_candidate.corpus_audit import audit_corpus
+    sources, seen, legacy = [], set(), []
+    for page in _reviewed_pages(reviewed):
+        text = read_text(page)
+        if _knowledge_role(text) in {"domain-index", "domain-schema"}:
+            continue
+        for ref in _metadata_list_values(text, "sourceRefs"):
+            if "/normalized/" not in ref or not (root / ref).is_file() or ref in seen:
+                continue
+            seen.add(ref)
+            header = parse_frontmatter(read_text(root / ref))
+            if header.get("assetRole") != "normalized-source-derivative":
+                legacy.append(ref)
+                continue
+            source_ref = header.get("source")
+            if not source_ref:
+                continue
+            sources.append({"id": Path(ref).stem, "sourceRef": source_ref, "normalizedMarkdown": ref,
+                            "sourceHashSha256": parse_frontmatter(text).get("sourceSha256") or header.get("sourceSha256")})
+    if not sources:
+        return _validation_check("normalized-source-quality", True, "no page-contract derivatives; legacy sources need separate review",
+                                 details={"checkedSources": 0, "legacySources": legacy, "semanticState": "not-proven"})
+    audit = audit_corpus(root, {"sources": sources}, reviewed)
+    issues = [f"{item.get('sourceId')}: {issue}" for item in audit["issues"] for issue in item["issues"]]
+    return _validation_check("normalized-source-quality", not issues,
+                             f"sources={audit['sourceCount']}, physicalPages={audit['pdfPageCount']}", issues,
+                             {"checkedSources": audit["sourceCount"], "legacySources": legacy,
+                              "warningSourceCount": len(audit["warnings"]), "semanticState": audit["semanticState"]})
 
 
 def _graph_gate_issues(graph_json: Path, graph_result: dict) -> list[str]:
@@ -5735,12 +5686,7 @@ def _controlled_tag_vocabulary(schema_text: str) -> set[str]:
 
 
 def _reviewed_tags(text: str) -> list[str]:
-    tags = []
-    inline = _frontmatter_value(text, "tags")
-    if inline and inline.startswith("[") and inline.endswith("]"):
-        tags.extend(item.strip().strip("\"'`") for item in inline.strip("[]").split(",") if item.strip())
-    tags.extend(_metadata_list_values(text, "tags"))
-    return _dedupe_preserve_order([tag for tag in tags if tag])
+    return list_values(parse_frontmatter(text).get("tags"))
 
 
 def _reviewed_aliases(text: str) -> list[str]:
@@ -6030,13 +5976,31 @@ def _archive_inactive_candidates(root: Path, candidate_dir: Path, records: list[
         if candidate_dir.resolve() not in source.parents:
             raise ValueError(f"candidate archive source escapes candidate dir: {source}")
         state = re.sub(r"[^a-zA-Z0-9._-]+", "-", item["governanceState"]).strip(".-") or "inactive"
-        destination = _unique_archive_destination(archive_root / state / item["runId"])
+        manifest_path = root / "var/rag" / item["runId"] / "extracted/metadata-manifest.json"
+        manifest_data = json.loads(read_text(manifest_path)) if manifest_path.exists() else {}
+        manifest_sources = manifest_data.get("sources", [])
+        source_id = manifest_sources[0].get("id", item["runId"]) if len(manifest_sources) == 1 else item["runId"] + "-collection"
+        source_id = safe_run_id(source_id)
+        destination = _unique_archive_destination(archive_root / "by-source" / source_id / state / item["runId"])
         if candidate_dir.resolve() not in destination.resolve().parents:
             raise ValueError(f"candidate archive destination escapes candidate dir: {destination}")
         destination.parent.mkdir(parents=True, exist_ok=True)
         old_path = rel(root, source)
         shutil.move(str(source), str(destination))
         new_path = rel(root, destination)
+        if manifest_path.exists():
+            # Rewrite live runtime pointers, preserving immutable promotion records.
+            def rewrite_routes(value):
+                if isinstance(value, str):
+                    return value.replace(old_path, new_path)
+                if isinstance(value, list):
+                    return [rewrite_routes(item) for item in value]
+                if isinstance(value, dict):
+                    return {key: rewrite_routes(item) for key, item in value.items()}
+                return value
+            write_text(manifest_path, json.dumps(rewrite_routes(manifest_data), ensure_ascii=False, indent=2))
+            update_status(root, item["runId"], {"candidateArchive": {"oldPath": old_path, "newPath": new_path},
+                                               "reviewPackage": {"state": "archived-inputs-require-new-review"}})
         archive_actions.append({
             "runId": item["runId"],
             "governanceState": item["governanceState"],
@@ -6329,6 +6293,9 @@ def _raw_inventory(root: Path, raw: Path) -> list[dict]:
         return []
     records = []
     for path in sorted([item for item in raw.rglob("*") if item.is_file()]):
+        parts = path.relative_to(raw).parts
+        if any(parts[i:i + 2] == ("normalized", "assets") for i in range(len(parts) - 1)):
+            continue
         records.append({
             "path": rel(root, path),
             "size": path.stat().st_size,
@@ -6791,51 +6758,21 @@ def _first_heading(text: str) -> str | None:
 
 
 def _frontmatter_value(text: str, key: str) -> str | None:
-    frontmatter = _frontmatter_block(text)
-    if not frontmatter:
-        return None
-    match = re.search(rf"^{re.escape(key)}:\s*(.+)$", frontmatter, re.MULTILINE)
-    if not match:
-        return None
-    value = match.group(1).strip().strip("\"'")
-    return value or None
+    return scalar(parse_frontmatter(text).get(key))
 
 
 def _metadata_value(text: str, key: str) -> str | None:
-    match = re.search(rf"(?m)^{re.escape(key)}:\s*(.+)$", text)
-    if not match:
-        return None
-    value = match.group(1).strip().strip("\"'")
-    return value or None
+    return scalar(parse_metadata(text).get(key))
 
 
 def _metadata_list_values(text: str, key: str, prefix: str | None = None) -> list[str]:
-    match = re.search(rf"(?m)^{re.escape(key)}:[ \t\r]*$", text)
-    if not match:
-        return []
-    values = []
-    for line in text[match.end():].lstrip("\r\n").splitlines():
-        item = re.match(r"^[ \t]+-\s+(.+)$", line)
-        if item:
-            value = item.group(1).strip().strip("\"'")
-            if prefix and not value.startswith(prefix):
-                continue
-            values.append(value)
-            continue
-        if line.startswith((" ", "\t")) and line.strip():
-            continue
-        break
-    return _dedupe_preserve_order(values)
+    values = list_values(parse_metadata(text).get(key))
+    return [value for value in values if prefix is None or value.startswith(prefix)]
 
 
 def _scope_from_text(text: str) -> str:
-    scope_block = re.search(r"(?ms)^scope:\s*\n((?:\s+- .+\n)+)", text)
-    if scope_block:
-        scopes = [line.split("-", 1)[1].strip() for line in scope_block.group(1).splitlines() if "-" in line]
-        for scope in scopes:
-            if scope != "reviewed-knowledge":
-                return scope
-    return _frontmatter_value(text, "scope") or "unknown"
+    values = list_values(parse_metadata(text).get("scope"))
+    return next((scope for scope in values if scope != "reviewed-knowledge"), "unknown")
 
 
 def _nested_reviewed_by(text: str) -> str | None:
@@ -6847,23 +6784,8 @@ def _nested_reviewed_at(text: str) -> str | None:
 
 
 def _nested_frontmatter_value(text: str, section: str, key: str) -> str | None:
-    frontmatter = _frontmatter_block(text)
-    if not frontmatter:
-        return None
-    in_section = False
-    for line in frontmatter.splitlines():
-        if re.fullmatch(rf"{re.escape(section)}:\s*", line):
-            in_section = True
-            continue
-        if not in_section:
-            continue
-        if line and not line.startswith((" ", "\t")):
-            break
-        match = re.match(rf"\s+{re.escape(key)}:\s*(.*)$", line)
-        if match:
-            value = match.group(1).strip().strip("\"'")
-            return value or None
-    return None
+    block = parse_frontmatter(text).get(section)
+    return scalar(block.get(key)) if isinstance(block, dict) else None
 
 
 def _strip_frontmatter(text: str) -> str:

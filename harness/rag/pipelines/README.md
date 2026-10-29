@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/pipelines/README.md
-version: v1.0.0-h6-rag-boundary
-updatedAt: 2026-06-22 23:41:15.773 +08:00
+version: v1.1.0-source-bound-pdf-normalization
+updatedAt: 2026-10-29
 status: active
 purpose: 说明 RAG ingestion pipeline 的长期机制边界和非默认 helper 保存规则。
 scope:
@@ -16,16 +16,18 @@ relatedDocuments:
 outputTo:
   - harness/rag/pipelines/README.md
 owner: mixed
-reviewAfter: 2026-07-22
+reviewAfter: 2026-11-12
 supersededBy:
 dependsOn:
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-22
-  decision: h6-complete
+  reviewedAt: 2026-10-29
+  decision: user-requested-source-bound-pipeline-reviewed-and-tested
 ---
 # RAG Pipeline
+
+PDF 默认使用稳定门面的 `normalize-pdf`，再用 `ingest -NormalizationManifest` 接入现有 candidate 流程；审核包、显式晋升映射和审计保持同一套工具链。详见 [PDF 规范化契约](PdfNormalizationContract.md) 与 [命令说明](../../tools/docs/command-surfaces/RagDocumentPipeline.md)。历史 helper 不再扩展为另一套默认流程。
 
 本目录保存可复用的 RAG ingestion pipeline 说明和非默认 helper。默认执行入口仍是稳定工具：
 

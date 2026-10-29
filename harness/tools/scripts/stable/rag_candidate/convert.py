@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import glob
 
 from .common import read_text
 
@@ -17,13 +18,14 @@ def collect_inputs(raw_inputs: list[str]) -> list[Path]:
     files: list[Path] = []
     for item in raw_inputs:
         path = Path(item)
-        matches = list(Path().glob(item)) if any(ch in item for ch in "*?[]") else []
+        matches = [Path(value) for value in glob.glob(item, recursive=True)] if not path.exists() and any(ch in item for ch in "*?[]") else []
         candidates = matches or [path]
         for candidate in candidates:
             if candidate.is_dir():
                 files.extend(
                     p for p in sorted(candidate.rglob("*"))
                     if p.is_file() and p.suffix.lower() in SUPPORTED_EXTENSIONS
+                    and not any(part in {"normalized", "assets", "_archive", ".obsidian"} for part in p.relative_to(candidate).parts[:-1])
                 )
             elif candidate.is_file() and candidate.suffix.lower() in SUPPORTED_EXTENSIONS:
                 files.append(candidate)

@@ -28,9 +28,33 @@ from .wiki_ops import build_graph, concept_page, health_wiki, lint_wiki, search_
 def run_ingest(args) -> dict:
     root = Path(args.root).resolve()
     run_id = safe_run_id(args.run_id or timestamp_id())
-    input_files = collect_inputs(args.inputs)
+    normalization_ref = getattr(args, "normalization_manifest", None)
+    normalized_sources = {}
+    if normalization_ref:
+        from .pdf_normalize import under
+        normalization_file = under(root, normalization_ref)
+        normalization = json.loads(read_text(normalization_file))
+        for item in normalization.get("sources", []):
+            normalized = under(root, item["normalizedMarkdown"], root / "user/knowledge/raw")
+            original = under(root, item["sourceRef"], root / "user/knowledge/raw")
+            if not item.get("candidateAllowed"):
+                raise ValueError("normalization still requires OCR; candidate ingest blocked")
+            if sha256_file(normalized) != item["normalizedHashSha256"] or sha256_file(original) != item["sourceHashSha256"]:
+                raise ValueError("normalization provenance hash changed")
+            normalized_sources[normalized] = item
+        if not normalized_sources:
+            raise ValueError("normalization manifest has no sources")
+        if args.copy_raw:
+            raise ValueError("normalized inputs are already in raw; do not use --copy-raw")
+    input_files = collect_inputs([str(root / p) if not Path(p).is_absolute() else p for p in args.inputs]) if args.inputs else list(normalized_sources)
+    if not input_files:
+        raise ValueError("ingest requires inputs or a normalization manifest")
+    if normalized_sources and any(p.resolve() not in normalized_sources for p in input_files):
+        raise ValueError("input is not covered by normalization manifest")
 
-    raw_domain = safe_run_id(getattr(args, "raw_domain", None) or run_id)
+    raw_domain = getattr(args, "raw_domain", None) or run_id
+    if Path(raw_domain).name != raw_domain or raw_domain.startswith("."):
+        raise ValueError("raw domain must be a single domain name")
     raw_out = root / "user" / "knowledge" / "raw" / raw_domain
     extracted_out = root / "var" / "rag" / run_id / "extracted"
     candidate_wiki = root / "user" / "knowledge" / "candidate" / run_id / "wiki"
@@ -76,8 +100,11 @@ def run_ingest(args) -> dict:
         slug = _unique_slug(source_records, f"{source.stem}-{source_gate['sourceFingerprint']}")
         if args.copy_raw:
             raw_target = raw_out / source.name
+            if raw_target.exists() and sha256_file(raw_target) != sha256_file(source):
+                raw_target = raw_out / source_gate["sourceFingerprint"] / source.name
             raw_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, raw_target)
+            if raw_target.resolve() != source.resolve():
+                shutil.copy2(source, raw_target)
             source_ref = rel(root, raw_target)
         else:
             source_ref = rel(root, source)
@@ -86,7 +113,13 @@ def run_ingest(args) -> dict:
         extracted_path = extracted_out / f"{slug}.md"
         write_text(extracted_path, markdown)
         runtime_extracted_ref = rel(root, extracted_path)
-        if args.copy_raw:
+        normalized_record = normalized_sources.get(source)
+        if normalized_record:
+            normalized_path = source
+            extracted_ref = rel(root, source)
+            source_ref = normalized_record["sourceRef"]
+            converter = "page-preserving-normalized-pdf"
+        elif args.copy_raw:
             normalized_out.mkdir(parents=True, exist_ok=True)
             normalized_path = normalized_out / f"{slug}.md"
             write_text(normalized_path, markdown)
@@ -99,7 +132,7 @@ def run_ingest(args) -> dict:
         source_wiki_path = candidate_wiki / "sources" / f"{slug}.md"
         write_text(source_wiki_path, source_page(title, source_ref, extracted_ref, preview))
         source_entries.append(f"- [{title}](sources/{slug}.md) - candidate source page")
-        log_entries.append(f"## [{today()}] ingest | {title}\n\nScaffolded candidate page from `{source_ref}`.")
+        log_entries.append(f"## [{today()}] ingest | {title}\n\nSource ID: `{slug}`. Scaffolded candidate page from `{source_ref}`.")
 
         chunks = split_chunks(markdown, extraction_config["effectiveMaxChunkChars"])
         batch_ids = _chunk_batch_ids(len(chunks), extraction_config["batchStrategy"], extraction_config["extractionGranularity"])
@@ -120,12 +153,18 @@ def run_ingest(args) -> dict:
         source_records.append({
             "id": slug,
             "sourceRef": source_ref,
-            "sourceHashSha256": sha256_file(source),
+            "sourceHashSha256": normalized_record["sourceHashSha256"] if normalized_record else sha256_file(source),
             "sourceFingerprint": source_gate["sourceFingerprint"],
             "sourceGate": source_gate,
             "extractedMarkdown": extracted_ref,
             "runtimeExtractedMarkdown": runtime_extracted_ref,
             "normalizedMarkdown": rel(root, normalized_path) if normalized_path else None,
+            "normalizedHashSha256": sha256_file(normalized_path) if normalized_path else None,
+            "normalizationManifest": rel(root, normalization_file) if normalized_record else None,
+            "normalizationManifestHashSha256": sha256_file(normalization_file) if normalized_record else None,
+            "qualityState": normalized_record.get("qualityState") if normalized_record else None,
+            "pageCount": normalized_record.get("pageCount", 0) if normalized_record else 0,
+            "pages": normalized_record.get("pages", []) if normalized_record else [],
             "outputHashSha256": sha256_text(markdown),
             "bodyHashSha256": source_gate["bodyHashSha256"],
             "converter": converter,
@@ -362,15 +401,38 @@ def run_enrichment_plan(args) -> dict:
 
 
 def run_review_package(args) -> dict:
+    from .promotion import bindings_from_args, review_snapshot, source_issues, validate_draft
     root = Path(args.root).resolve()
     manifest_path = _resolve_under_root(root, args.manifest)
     wiki = _resolve_under_root(root, args.wiki)
     manifest = json.loads(read_text(manifest_path))
     run_id = args.run_id or manifest.get("manifestId") or infer_run_id_from_wiki(wiki)
     report = _optional_path(root, args.report) or _default_eval_report(root, run_id, "review-package.md")
+    # Refresh structural checks on the bytes being reviewed, rather than trust a
+    # status JSON from an earlier candidate revision.
+    health_wiki(root, wiki, _default_eval_report(root, run_id, "health-report.md"), run_id=run_id)
+    lint_wiki(root, wiki, _default_eval_report(root, run_id, "lint-report.md"), run_id=run_id)
+    build_graph(wiki, root / "var/rag" / run_id / "graph", _default_eval_report(root, run_id, "graph-report.md"), root=root, run_id=run_id)
     status = _load_status(root, run_id)
     inventory = _wiki_inventory(root, wiki)
     gates = _review_gates(manifest, status, inventory)
+
+    gates["blockingIssues"].extend(source_issues(root, manifest))
+    for source in manifest.get("sources", []):
+        candidate = _resolve_under_root(root, source.get("candidatePage", "missing"))
+        content = read_text(candidate) if candidate.is_file() else ""
+        for name in ("Candidate Summary", "Key Claims", "Entities", "Concepts", "Contradictions", "Applicability", "Review Checklist"):
+            if not _section(content, name):
+                gates["blockingIssues"].append(f"{source['id']} missing candidate section: {name}")
+        if "Agent review required" in content:
+            gates["blockingIssues"].append(f"{source['id']} still contains scaffold text")
+    bindings = bindings_from_args(root, manifest, args)
+    by_id = {source["id"]: source for source in manifest.get("sources", [])}
+    for item in bindings:
+        try:
+            validate_draft(root, by_id[item["sourceId"]], _resolve_under_root(root, item["target"]), read_text(_resolve_under_root(root, item["draft"])))
+        except (ValueError, OSError) as exc:
+            gates["blockingIssues"].append(f"draft {item['sourceId']}: {exc}")
 
     result = {
         "state": "ready-for-human-review" if gates["blockingIssues"] == [] else "needs-repair-before-review",
@@ -382,6 +444,8 @@ def run_review_package(args) -> dict:
         "pagesByType": inventory["pagesByType"],
         "reviewGates": gates,
         "reviewBoundary": "candidate-only-no-promotion",
+        "bindings": bindings,
+        "reviewInputHashSha256": review_snapshot(root, manifest_path, wiki, bindings),
         "report": rel(root, report),
     }
     write_text(report, _format_review_package(result, inventory))
@@ -427,59 +491,8 @@ def run_promotion_plan(args) -> dict:
 
 
 def run_promote_reviewed(args) -> dict:
-    root = Path(args.root).resolve()
-    manifest_path = _resolve_under_root(root, args.manifest)
-    wiki = _resolve_under_root(root, args.wiki)
-    target = _resolve_under_root(root, args.target)
-    report = _optional_path(root, args.report)
-    manifest = json.loads(read_text(manifest_path))
-    run_id = args.run_id or manifest.get("manifestId") or infer_run_id_from_wiki(wiki)
-    if report is None:
-        report = _default_eval_report(root, run_id, "promotion-result.md")
-
-    status = _load_status(root, run_id)
-    inventory = _wiki_inventory(root, wiki)
-    gates = _review_gates(manifest, status, inventory)
-    if gates["blockingIssues"]:
-        raise ValueError("promotion blocked: " + "; ".join(gates["blockingIssues"]))
-    review_package = status.get("reviewPackage", {})
-    if review_package.get("state") != "ready-for-human-review":
-        raise ValueError("promotion requires a ready review-package")
-    if target.exists() and not args.overwrite:
-        raise FileExistsError(f"reviewed target already exists: {rel(root, target)}")
-
-    reviewed_text = _format_reviewed_knowledge(
-        root=root,
-        run_id=run_id,
-        manifest=manifest,
-        wiki=wiki,
-        target=target,
-        scope=args.scope,
-        reviewer=args.reviewer,
-        approval_note=args.approval_note,
-        review_after=args.review_after,
-    )
-    write_text(target, reviewed_text)
-
-    result = {
-        "state": "promoted",
-        "runId": run_id,
-        "scope": args.scope,
-        "target": rel(root, target),
-        "reviewer": args.reviewer,
-        "reviewedAt": today(),
-        "approvalNote": args.approval_note,
-        "reviewAfter": args.review_after,
-        "sourceManifest": rel(root, manifest_path),
-        "candidateWiki": rel(root, wiki),
-        "report": rel(root, report),
-        "promotionHandledByThisTool": True,
-        "reviewedKnowledgeWritten": True,
-    }
-    write_text(report, _format_promotion_result(result, gates))
-    update_status(root, run_id, {"state": "promoted", "promotionResult": result})
-    print_json(result)
-    return result
+    from .promotion import promote
+    return promote(args)
 
 
 def run_stale_plan(args) -> dict:
@@ -737,7 +750,7 @@ def _review_gates(manifest: dict, status: dict, inventory: dict) -> dict:
     if lint.get("state") != "passed":
         blocking.append("lint 检查未通过")
     if graph.get("state") != "passed":
-        warnings.append("graph 检查未通过或缺失")
+        blocking.append("graph 检查未通过或缺失")
     missing_sections = []
     for item in enrichment.get("items", []):
         for section in item.get("missingSections", []):
@@ -865,309 +878,20 @@ def _format_promotion_plan(result: dict) -> str:
     return "\n".join(lines)
 
 
-def _format_reviewed_knowledge(
-    root: Path,
-    run_id: str,
-    manifest: dict,
-    wiki: Path,
-    target: Path,
-    scope: str,
-    reviewer: str,
-    approval_note: str,
-    review_after: str,
-) -> str:
-    sources = manifest.get("sources", [])
-    source = sources[0] if sources else {}
-    source_page_ref = source.get("candidatePage", "")
-    source_page = _resolve_under_root(root, source_page_ref) if source_page_ref else wiki / "overview.md"
-    source_content = read_text(source_page) if source_page.exists() else ""
-    title = _page_title(source_content, "Reviewed Knowledge")
-    source_ref = source.get("sourceRef", "")
-    extracted_ref = source.get("extractedMarkdown", "")
-    runtime_extracted_ref = source.get("runtimeExtractedMarkdown", "")
-    domain = _reviewed_domain_from_target(root, target)
-    tags = _reviewed_domain_tags(domain)
-    page_title = _reviewed_page_title(title, domain)
-
-    concepts = _reviewed_concepts(wiki)
-    concept_rows = [
-        "| Concept | Definition | Aliases |",
-        "|---|---|---|",
-    ]
-    for concept, definition, aliases in concepts:
-        concept_rows.append(f"| `{concept}` | {definition} | {aliases} |")
-
-    statement = _reviewed_statement_for_source(title)
-    applicability = _section(source_content, "Applicability")
-    non_applicability = _section(source_content, "Non-Applicability")
-    contradictions = _section(source_content, "Contradictions")
-
-    doc_name = rel(root, target)
-    return f"""---
-documentName: {doc_name}
-version: v1.0.0-reviewed
-updatedAt: {today()}
-status: active
-knowledgeRole: authoritative
-authoritative: true
-tags: [{", ".join(tags)}]
-purpose: {_reviewed_purpose(title, domain)}
-scope:
-  - reviewed-knowledge
-  - {scope}
-  - {domain}
-prerequisites:
-  - harness/governance/KnowledgePromotionPolicy.md
-relatedDocuments:
-  - harness/rag/RAGIndex.md
-  - harness/templates/knowledge/ReviewedKnowledgeTemplate.md
-  - {rel(root, wiki)}
-outputTo:
-  - {doc_name}
-owner: user
-reviewAfter: {review_after}
-supersededBy:
-dependsOn:
-  - {rel(root, source_page)}
-review:
-  reviewedBy: {reviewer}
-  reviewedAt: {today()}
-  decision: user-approved-promotion
----
-# {page_title}
-
-## 元数据
-
-```yaml
-knowledgeId: {Path(target).stem}
-knowledgeRole: authoritative
-authoritative: true
-scope: {scope}
-domain: {domain}
-projectId: null
-reviewedAt: {today()}
-reviewedBy: {reviewer}
-sourceRefs:
-  - {source_ref}
-  - {extracted_ref}
-  - {source_page_ref}
-  - {rel(root, wiki)}
-supersedes: []
-reviewAfter: {review_after}
-sensitiveRisk: low
-storageBoundary: user/knowledge/reviewed/{domain}
-approvalNote: {json.dumps(approval_note, ensure_ascii=False)}
-```
-
-## Statement
-
-{statement}
-
-## Applicability
-
-{_reviewed_block(applicability, "本知识适用于 Harness 架构、RAG / Knowledge workflow、agent runtime governance、tool boundary、workflow evidence 和 evaluation 设计。")}
-
-## Non-Applicability
-
-{_reviewed_block(non_applicability, "本知识不直接替代 Harness 架构权威文档，也不作为具体第三方工具选型建议。论文中的项目列表具有时间边界，后续引用具体项目时仍需单独验证。")}
-
-## Key Concepts
-
-{chr(10).join(concept_rows)}
-
-## Source Trace
-
-| Source | Evidence Summary | Notes |
-|---|---|---|
-| `{source_ref}` | 原始 PDF source。 | 用户审核通过后作为 reviewed Knowledge 来源。 |
-| `{extracted_ref}` | 原始材料转换后的 normalized Markdown。 | 长期保存在 raw domain，作为原始材料的可读派生版本；不是 reviewed 结论本身。 |
-| `{source_page_ref}` | candidate source page，包含 summary、key claims、concepts、entities、contradictions 和 applicability。 | 已通过 health / lint / graph / enrichment 检查。 |
-| `{rel(root, wiki)}` | candidate wiki。 | 晋升后仍保留为候选证据。 |
-{f"| `{runtime_extracted_ref}` | 运行态抽取副本。 | 仅用于复现本次 pipeline；不得作为长期 Source Trace。 |" if runtime_extracted_ref and runtime_extracted_ref != extracted_ref else ""}
-
-## Staleness
-
-- 默认复审条件：`{review_after}`。
-- 如果原始论文正式发表、项目 catalog 更新、Harness 架构进入新阶段，或 reviewed Knowledge 与后续 architecture / governance 文档冲突，应重新 review。
-
-## Governance Notes
-
-- 本文件由 `promote-reviewed` 在用户明确审核通过后生成。
-- Candidate wiki、chunks、graph、eval reports 和 status JSON 仍然是证据或运行态产物，不反向成为事实源。
-- 不包含 raw source 长段正文、credential、private settings、raw logs 或未脱敏 traces。
-- Candidate contradiction notes: {_inline_summary(contradictions)}
-"""
 
 
-def _format_promotion_result(result: dict, gates: dict) -> str:
-    lines = [
-        f"# 晋升结果（Promotion Result）- {today()}",
-        "",
-        f"- Run ID: `{result['runId']}`",
-        f"- 状态（State）: `{result['state']}`",
-        f"- Reviewed Knowledge target: `{result['target']}`",
-        f"- Reviewer: `{result['reviewer']}`",
-        f"- Reviewed At: `{result['reviewedAt']}`",
-        f"- Review After: `{result['reviewAfter']}`",
-        f"- Approval Note: {result['approvalNote']}",
-        "",
-        "## 晋升门禁结果",
-        "",
-        f"- 来源追踪（Source provenance）: `{gates['sourceProvenance']}`",
-        f"- Health: `{gates['health']}`",
-        f"- Lint: `{gates['lint']}`",
-        f"- Graph: `{gates['graph']}`",
-        f"- 补全状态（Enrichment）: `{gates['enrichment']}`",
-        f"- 阻塞项（Blocking Issues）: {', '.join(gates['blockingIssues'] or ['无'])}",
-        f"- 警告（Warnings）: {', '.join(gates['warnings'] or ['无'])}",
-        "",
-        "## 边界",
-        "",
-        "- 已写入 reviewed Knowledge。",
-        "- 未写入 Memory、Project Fact 或 Harness architecture authority。",
-        "- Runtime RAG artifacts 仍是可重建证据，不是事实源。",
-        "",
-    ]
-    return "\n".join(lines)
 
 
-def _reviewed_domain_from_target(root: Path, target: Path) -> str:
-    try:
-        relative = target.resolve().relative_to((root / "user" / "knowledge" / "reviewed").resolve())
-        if relative.parts:
-            return safe_run_id(relative.parts[0])
-    except ValueError:
-        pass
-    return "reviewed-knowledge"
 
 
-def _reviewed_domain_tags(domain: str) -> list[str]:
-    if domain == "llm-agent-externalization":
-        return ["llm-agent", "externalization", "memory", "skill", "protocol", "harness-engineering", "governance"]
-    if domain == "agent-harness-engineering":
-        return ["agent-harness", "harness-architecture", "agent-evaluation", "agent-governance", "trace-native", "workflow-evidence", "knowledge-governance"]
-    return [domain]
 
 
-def _reviewed_page_title(title: str, domain: str) -> str:
-    if domain == "llm-agent-externalization":
-        return "LLM Agent 外部化综述 Reviewed Knowledge"
-    if domain == "agent-harness-engineering":
-        return "Agent Harness Engineering 综述 Reviewed Knowledge"
-    return f"{title} Reviewed Knowledge"
 
 
-def _reviewed_purpose(title: str, domain: str) -> str:
-    if domain == "llm-agent-externalization":
-        return "保存 Externalization in LLM Agents 相关原始材料晋升后的 reviewed Knowledge。"
-    if domain == "agent-harness-engineering":
-        return "保存 Agent Harness Engineering A Survey 晋升后的 reviewed Knowledge。"
-    return f"保存从 candidate wiki 晋升而来的 reviewed Knowledge：{title}。"
 
 
-def _reviewed_statement_for_source(title: str) -> str:
-    if any(term in title.lower() for term in ["externalization", "memory", "skills", "protocols"]):
-        return """本 reviewed Knowledge 确认：LLM agent 的长期能力正在从“模型内部能力”转向“模型 + 外部认知基础设施”的系统能力。论文使用 externalization 视角解释这一变化：memory 外部化跨时间状态，skills 外部化程序性专长，protocols 外部化交互结构，harness engineering 则把这些外部化能力组织为可执行、可观测、可验证、可治理的系统。
-
-核心结论包括：
-
-- 评价 LLM agent 不能只看单次模型输出质量，还要看 memory、skill、protocol、tool interface 和 harness control 共同构成的系统可靠性。
-- Memory 的价值不只是“保存更多上下文”，而是把 agent state 从易丢失的 prompt context 转成可追踪、可检索、可过期、可删除、可治理的外部状态。
-- Skill 的价值不只是“提示词模板”，而是把 procedure、decision heuristic、tool-use pattern 和 normative constraint 包装成可发现、可调用、可复用、可版本化的能力单元。
-- Protocol 的价值是把 agent-tool、agent-agent、human-agent 交互从隐式对话变成显式 message contract、handoff rule、approval boundary 和 responsibility transfer。
-- Harness engineering 是 memory、skills 和 protocols 的统一执行层，负责 agent loop、sandbox、tool binding、human oversight、state transition、trace、evaluation、deployment feedback 和 governance。
-- 这份材料应与既有 [[agent-harness-engineering-survey|AgentHarnessEngineering]] 知识关联：前者强调外部化机制，后者强调 harness taxonomy、trace-native evaluation 和 governance boundary。
-
-## Source Overview
-
-原始材料是一篇关于 LLM agent externalization 的综述。它解释 agent engineering 为什么从 model weights、prompt/context engineering，进一步走向 memory、skills、protocols 和 harness infrastructure。论文把这些机制统一为 external cognitive infrastructure：把模型难以稳定内部完成的状态保持、程序执行、交互协调和治理约束，转移到外部结构中管理。
-
-## Core Framework
-
-| 层级 | 外部化对象 | 主要作用 | 治理关注点 |
-|---|---|---|---|
-| Memory | state across time | 保存任务状态、历史证据、环境变化和长期上下文 | provenance、retention、staleness、privacy、deletion |
-| Skills | procedural expertise | 封装可复用步骤、工具使用模式、决策启发式和规范性约束 | versioning、review、side effect、capability boundary |
-| Protocols | interaction structure | 规范 agent 与工具、用户、其他 agent 的消息、授权、移交和反馈 | message contract、handoff、approval、accountability |
-| Harness | governed execution | 编排 memory、skills、protocols、tools 和 agent loop | trace、verification、lifecycle、policy、rollback |
-
-## Knowledge Implications
-
-- Reviewed Knowledge 应表达原材料主线、概念、方法和边界，而不是只支持关键词命中。
-- normalized Markdown 应作为 raw source derivative 长期保存在 `raw/<domain>/normalized/`；`var/rag` 只能保存可清理的运行态副本。
-- Concept page 是知识图谱节点，不能替代 source-level reviewed page；复杂问题应优先阅读 source-level reviewed page。"""
-    if "Agent Harness Engineering" in title:
-        return """本 reviewed Knowledge 确认：Agent Harness Engineering，中文可理解为智能体运行支架工程，应被视为独立的系统工程层，而不是 prompt 或模型能力的附属细节。
-
-核心结论包括：
-
-- 长周期 agent 任务的可靠性不仅由模型决定，也由 execution harness 决定；这对应 [[BindingConstraintThesis]]。
-- Harness engineering 是 prompt engineering 和 context engineering 之后更高层的工程面，覆盖 execution、tooling、context、lifecycle、observability、verification 和 governance。
-- [[ETCLOVGTaxonomy]] 可以作为分析 agent harness 的七层框架：Execution、Tooling、Context、Lifecycle、Observability、Verification、Governance。
-- Observability 和 Governance 应作为一等层，而不是 lifecycle hooks 的副作用。
-- Harness 的局部优化可能产生系统级副作用；prompt、tool schema、sandbox、memory policy、verifier 和 monitor 都需要按系统变更评估，这对应 [[HarnessCouplingProblem]]。
-- 未来 Harness 需要加强 [[TraceNativeEvaluation]]、[[StandardHandoffProtocol]]、[[AdaptiveHarnessOptimization]] 和对 [[ContextDrift]] 的控制。
-
-## Source Overview
-
-原始材料是一篇关于 Agent Harness Engineering 的综述。其核心判断是：生产环境中 LLM agent 的可靠性往往被包裹模型的 execution harness 所约束，而不仅由基础模型能力决定。论文把这一判断展开为三条主线：agent harness 是独立系统层；ETCLOVG 七层 taxonomy 能描述 harness 的关键组成；开源项目生态和生产实践显示 observability、verification 和 governance 已经成为 harness 工程不可缺少的显式能力。
-
-## Core Framework
-
-| 层级 | 关注对象 | 关键问题 |
-|---|---|---|
-| Execution | runtime、sandbox、deployment | agent 在什么环境中执行，如何隔离和限制副作用 |
-| Tooling | tool interface、protocol、selection | agent 能调用什么工具，工具描述和返回证据如何被治理 |
-| Context | prompt、memory、session state | agent 如何维护短期、中期、长期上下文，如何控制 context drift |
-| Lifecycle | loop、orchestration、handoff | agent 任务如何启动、推进、暂停、交接、结束和回滚 |
-| Observability | trace、monitoring、feedback | agent 行为如何被记录、解释、诊断和复盘 |
-| Verification | eval、regression、judgement | agent 结果如何被验证，失败如何归因 |
-| Governance | permission、policy、audit、review | agent 能力如何被授权、审计、约束和持续治理 |
-
-## Knowledge Implications
-
-- Workflow Evidence、Report、Skill、Knowledge、Memory 和 RAG Index 不能混为一类资产；它们承担不同治理职责。
-- Trace-native evaluation 应成为真实项目验证和回归测试的主要证据对象，而不是只保存一段运行日志。
-- Standard handoff protocol 应明确任务状态、授权边界、证据链、下一步责任和回退条件。
-- Harness coupling problem 表明局部优化可能改变整体系统行为，因此工具、Skill、Memory、Knowledge、Governance 的改动都需要门禁和回归验证。
-"""
-    return f"本 reviewed Knowledge 确认 `{title}` 已通过 candidate review，并可在指定 scope 内作为 reviewed Knowledge 使用。"
 
 
-def _reviewed_concepts(wiki: Path) -> list[tuple[str, str, str]]:
-    preferred = {
-        "AgentHarnessEngineering": ("围绕 LLM agent 的执行环境、工具、上下文、生命周期、观测、验证和治理构建可靠控制层的工程 discipline。", "agent harness, harness engineering"),
-        "BindingConstraintThesis": ("长周期 agent 可靠性可能被 execution harness 约束，而不只由模型能力决定。", "harness over model"),
-        "ETCLOVGTaxonomy": ("Execution、Tooling、Context、Lifecycle、Observability、Verification、Governance 七层分类框架。", "ETCLOVG"),
-        "CostQualitySpeedTrilemma": ("Harness 设计中 cost、quality、speed 之间的系统级权衡。", "cost-quality-speed"),
-        "CapabilityControlTradeoff": ("增强 agent capability 会同时扩大 control、permission、audit 和 safety 问题。", "capability-control"),
-        "HarnessCouplingProblem": ("Harness 层之间存在耦合，局部优化需要按系统变更验证。", "coupling"),
-        "TraceNativeEvaluation": ("以执行 trace 作为评价、诊断和回归测试的主要证据对象。", "trace-first eval"),
-        "ContextDrift": ("长周期任务中 agent 内部状态逐步偏离真实任务状态或原始目标的 failure mode。", "state drift"),
-        "StandardHandoffProtocol": ("在 agents、tools、humans 之间转移状态和责任时需要明确授权、证据、边界和返回条件。", "handoff"),
-        "AdaptiveHarnessOptimization": ("随着模型和任务变化，持续重新评估并简化 Harness controls。", "adaptive harness"),
-        "LLMAgentExternalization": ("LLM agent 的 durable capability 分布在 model calls、memory、skills、protocols、tools 和 harness controls 组成的系统中。", "LLM agent externalization, agent externalization"),
-        "ExternalizedMemory": ("将 agent state 保存到 prompt 之外，使后续动作能使用有来源、可治理、可过期的上下文。", "agent memory, external memory"),
-        "SkillLibrary": ("将可复用 procedure、tool-use pattern、decision heuristic 和约束封装为可调用能力包。", "skills, reusable procedures"),
-        "ProtocolMediatedCoordination": ("通过协议让 tool、human 或 multi-agent handoff 显式化、可审计。", "agent protocol, handoff protocol"),
-        "HarnessEngineering": ("为 agents 和外部化能力提供 execution、observation、verification、lifecycle 和 governance 控制层。", "agent harness engineering, runtime harness"),
-        "StatePersistence": ("定义哪些状态应跨 turn、run、user 或 agent 保留，以及如何过期、删除和追踪。", "persistent state, durable state"),
-        "ToolInterfaceBoundary": ("治理 agent 可调用工具、返回证据、副作用、失败处理和审计边界。", "tool boundary, tool contract"),
-        "GovernedExternalState": ("将 authoritative knowledge、candidate material、runtime indexes、memory 和 project facts 分开治理。", "external state governance, governed state"),
-    }
-    existing_pages = {p.stem: p for p in all_wiki_pages(wiki) if "concepts" in p.parts}
-    existing = set(existing_pages)
-    concepts = []
-    for name, item in preferred.items():
-        if name in existing:
-            concepts.append((name, item[0], item[1]))
-    for name, page in sorted(existing_pages.items()):
-        if name in preferred or name in {"CandidateKnowledge", "StructuredIngestion"}:
-            continue
-        text = read_text(page)
-        definition = _section(text, "Candidate Definition") or _first_non_heading_line(text) or "Candidate concept promoted after review."
-        concepts.append((name, definition, name))
-    return concepts
 
 
 def _first_non_heading_line(text: str) -> str:

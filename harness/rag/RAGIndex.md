@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/RAGIndex.md
-version: v2.10.0-normalized-source-depth-boundary
-updatedAt: 2026-07-04 00:00:00.000 +08:00
+version: v2.13.0-query-evaluation-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 路由 Harness RAG 摄取机制资产，并定义真实知识、候选知识和运行态索引的边界。
 scope:
@@ -13,6 +13,7 @@ prerequisites:
   - INDEX.md
   - harness/architecture/HarnessEngineering.md
 relatedDocuments:
+  - harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
   - harness/HarnessIndex.md
   - harness/rag/manifests/README.md
   - harness/rag/pipelines/README.md
@@ -26,18 +27,21 @@ relatedDocuments:
 outputTo:
   - harness/rag/RAGIndex.md
 owner: mixed
-reviewAfter: 2026-07-22
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - INDEX.md
   - harness/HarnessIndex.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-03
-  decision: normalized-source-depth-boundary-linked
+  reviewedBy: user
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # RAG 机制索引
+
+文档摄取按 [PDF 规范化契约](pipelines/PdfNormalizationContract.md) 与 [稳定流水线命令](../tools/docs/command-surfaces/RagDocumentPipeline.md) 执行。原件、规范化副本、审核草稿和 reviewed 正文均保留哈希；全库结构通过不能替代转换质量核验或语义审核。旧语料可先运行 `audit-corpus`，不得自动补造历史晋升封印。
 
 `harness/rag/` 是 Harness 的 RAG 摄取机制层，中文解释是检索增强生成机制层。它保存可复用的 schema、manifest 示例、pipeline 说明、eval 模板和 policy，不保存真实用户知识正文、私有原始资料、embedding、vector index、cache 或 raw extraction output。
 
@@ -130,3 +134,12 @@ harness/tools/scripts/stable/invoke-rag-knowledge.ps1
 13. LLM Wiki 机制增强必须通过 `validate-llm-wiki-mechanisms` 复核；真实 raw 到 reviewed 的 Knowledge/RAG 收口必须同时通过 `pipeline-smoke`、`candidate-cleanup-plan` 或 approved apply、`validate-knowledge-vault` 和 reviewed-only query。
 14. Source-level reviewed Knowledge 必须具备足够的中文主体综合内容，能让 agent 仅阅读 reviewed page 就理解原始材料的核心主线、概念、方法和边界；concept page 是知识图谱节点，不应替代 source-level reviewed page。
 15. 原始材料转换后的 Markdown 应保存到 `user/knowledge/raw/<domain>/normalized/` 或外部 private raw source boundary；`var/rag/<run-id>/extracted/*.md` 只允许作为运行态复现产物，不应作为 reviewed `sourceRefs` 的长期来源。
+16. PDF 来源页须包含可独立检索的条款正文、适用条件和关键数值；目录及原件链接不能代替知识内容。逐页来源对齐正文通过 `prepare-reviewed-content` 形成候选，审核后晋升；转换覆盖和语义审核分别标记。
+17. 查询应返回相关 reviewed 条款及行号。以回查 raw PDF 或图像补出答案的测试，不能计为 reviewed-only 问答通过。缺少正文或关键条件时登记知识缺口，回到摄取与审核流程补强。
+18. 版本适用性独立维护发布日期、实施日期、官方核验时间与适用事项；不按知识维护日期替代法规时序，也不把不同分类轴按年份简单覆盖。
+
+## 查询与验收模式
+
+纯库测试、正式混合使用及补强的来源规则见 [知识查询与评测来源边界](policies/KnowledgeQueryEvaluationPolicy.md)。测试不得搜索网页补状态或日期；库内未核实信息保留缺口。正式使用可以结合外部证据并分别归属来源。
+
+稳定query-reviewed返回模式契约与可选来源前缀筛选；audit-query-evaluation校验提供的整轮记录。局部查询函数的文件守卫只证明局部行为，不能证明整轮没有外部访问；记录不完整不可认定纯库通过。运行态事件和真实知识不进入通用仓库。

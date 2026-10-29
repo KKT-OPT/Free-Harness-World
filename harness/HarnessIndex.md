@@ -1,7 +1,7 @@
-﻿---
+---
 documentName: harness/HarnessIndex.md
-version: v1.4.0-project-feedback-policy
-updatedAt: 2026-07-05 00:00:00.000 +08:00
+version: v1.7.0-query-evaluation-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告，并记录 Memory governance gate 与项目反向优化 Harness 治理入口。
 scope:
@@ -9,6 +9,7 @@ scope:
 prerequisites:
   - AGENTS.md
 relatedDocuments:
+  - harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
   - INDEX.md
   - harness/architecture/HarnessEngineering.md
   - harness/architecture/PLANS.md
@@ -21,15 +22,16 @@ relatedDocuments:
 outputTo:
   - harness/HarnessIndex.md
 owner: mixed
-reviewAfter: 2026-07-17
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
-  reviewedBy: agent
-  reviewedAt: 2026-07-05
-  decision: project-feedback-policy-routed
+  reviewedBy: user
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # General Harness 索引
 
 本文是 `harness/` 下 General Harness 资产的分层索引。全局入口是根目录 `INDEX.md`；本文不记录项目事实，不替代项目 `ProjectIndex.md`。
@@ -105,6 +107,8 @@ harness/tools/external/
 
 ### RAG / Knowledge
 
+PDF 规范化与审核晋升契约见 [RAG 文档流水线](tools/docs/command-surfaces/RagDocumentPipeline.md)；通用工具审查证据见 [RAG 工具可靠性复查](reports/redacted/RagToolReliabilityReview.md)。真实语料与逐页问题清单留在本地用户和运行态边界。
+
 ```text
 harness/rag/RAGIndex.md
 harness/rag/manifests/
@@ -164,3 +168,11 @@ harness/skills/usage/skill-usage.json
 2. 当前实现路径和目标路径冲突时，以 `HarnessEngineering.md` 的目标架构为最终方向，以 `PLANS.md` 决定落地顺序。
 3. 新增或迁移 General Harness 长期资产后，必须同步本文。
 4. 删除旧路径或历史输入前，必须确保根 `INDEX.md` 和本文已有新路由。
+
+## Reviewed 条款查询入口
+
+正文覆盖、来源绑定的条款补强、仅依赖 reviewed 的查询验收，以及发布日期和实施日期上下文，统一见 [RAG 文档工具契约](tools/docs/command-surfaces/RagDocumentPipeline.md)。完整转换覆盖与逐字语义校核分别记录。
+
+## 知识查询测试边界
+
+查询测试与正式混合使用的模式、时序证据、整轮审计及缺口处置，见 [知识查询与评测来源边界](rag/policies/KnowledgeQueryEvaluationPolicy.md)；模板由 [评测入口](rag/evals/README.md) 路由。

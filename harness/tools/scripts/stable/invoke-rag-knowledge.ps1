@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("init-obsidian-vault", "sync-reviewed-index", "build-reviewed-graph", "health-reviewed", "query-reviewed", "reviewed-gap-plan", "govern-reviewed-duplicates", "dispose-residual-gaps", "canonicalize-vault-layout", "validate-knowledge-vault", "schema-context", "validate-llm-wiki-mechanisms", "candidate-cleanup-plan", "candidate-cleanup-apply", "enrich-gap-candidates", "gap-review-package", "promote-gap-candidates", "govern-vault", "pipeline-smoke")]
+    [ValidateSet("init-obsidian-vault", "sync-reviewed-index", "build-reviewed-graph", "health-reviewed", "query-reviewed", "audit-query-evaluation", "reviewed-gap-plan", "govern-reviewed-duplicates", "dispose-residual-gaps", "canonicalize-vault-layout", "validate-knowledge-vault", "schema-context", "validate-llm-wiki-mechanisms", "candidate-cleanup-plan", "candidate-cleanup-apply", "enrich-gap-candidates", "gap-review-package", "promote-gap-candidates", "govern-vault", "pipeline-smoke")]
     [string]$Command,
 
     [string]$Root = ".",
@@ -23,7 +23,13 @@ param(
     [string]$CandidateRunId = "reviewed-gap-concepts",
     [string]$TargetDir = "",
     [string]$Target = "",
+    [string]$ReviewedDraft = "",
     [string]$Question = "",
+    [string]$AsOf = "",
+    [ValidateSet("knowledge-only", "mixed")]
+    [string]$Mode = "knowledge-only",
+    [string]$SourcePrefix = "",
+    [string]$EvaluationRecord = "",
     [int]$Limit = 10,
     [string]$Scope = "user-private",
     [string]$Reviewer = "",
@@ -55,6 +61,10 @@ if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
 }
 
 $previousPythonPath = $env:PYTHONPATH
+$previousOutputEncoding = $OutputEncoding
+$previousConsoleOutputEncoding = [Console]::OutputEncoding
+$OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+[Console]::OutputEncoding = $OutputEncoding
 if ([string]::IsNullOrWhiteSpace($previousPythonPath)) {
     $env:PYTHONPATH = $stableDir
 } else {
@@ -82,8 +92,16 @@ switch ($Command) {
     "query-reviewed" {
         if ([string]::IsNullOrWhiteSpace($Question)) { throw "query-reviewed requires -Question." }
         $argsList += @($Question, "--limit", [string]$Limit)
+        if ($AsOf) { $argsList += @("--as-of", $AsOf) }
+        $argsList += @("--mode", $Mode)
+        if ($SourcePrefix) { $argsList += @("--source-prefix", $SourcePrefix) }
         if (-not [string]::IsNullOrWhiteSpace($Graph)) { $argsList += @("--graph", $Graph) }
         if (-not [string]::IsNullOrWhiteSpace($Report)) { $argsList += @("--report", $Report) }
+    }
+    "audit-query-evaluation" {
+        if (-not $EvaluationRecord) { throw "audit-query-evaluation requires -EvaluationRecord." }
+        $argsList += @("--evaluation-record", $EvaluationRecord)
+        if ($Report) { $argsList += @("--report", $Report) }
     }
     "reviewed-gap-plan" {
         if (-not [string]::IsNullOrWhiteSpace($Graph)) { $argsList += @("--graph", $Graph) }
@@ -156,11 +174,13 @@ switch ($Command) {
         if ($ArchiveInactiveCandidates) { $argsList += @("--archive-inactive-candidates") }
     }
     "pipeline-smoke" {
+        if (-not $ReviewedDraft) { throw "pipeline-smoke requires -ReviewedDraft; automatic topic enrichment is disabled." }
         if ($InputPath.Count -eq 0) { throw "pipeline-smoke requires -InputPath." }
         if ([string]::IsNullOrWhiteSpace($Reviewer)) { throw "pipeline-smoke requires -Reviewer." }
         if ([string]::IsNullOrWhiteSpace($ApprovalNote)) { throw "pipeline-smoke requires -ApprovalNote." }
         if ([string]::IsNullOrWhiteSpace($Question)) { throw "pipeline-smoke requires -Question." }
         $argsList += $InputPath
+        $argsList += @("--reviewed-draft", $ReviewedDraft)
         $argsList += @("--candidate", $Candidate, "--raw", $Raw, "--registry", $Registry, "--domain", $Domain, "--scope", $Scope, "--reviewer", $Reviewer, "--approval-note", $ApprovalNote, "--review-after", $ReviewAfter, "--question", $Question, "--limit", [string]$Limit, "--max-chunk-chars", [string]$MaxChunkChars)
         $argsList += @("--extraction-granularity", $ExtractionGranularity, "--batch-strategy", $BatchStrategy, "--tag-vocabulary-mode", $TagVocabularyMode)
         if ($EntityCap -gt 0) { $argsList += @("--entity-cap", [string]$EntityCap) }
@@ -179,4 +199,6 @@ try {
     exit $LASTEXITCODE
 } finally {
     $env:PYTHONPATH = $previousPythonPath
+    $OutputEncoding = $previousOutputEncoding
+    [Console]::OutputEncoding = $previousConsoleOutputEncoding
 }

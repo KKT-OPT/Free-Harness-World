@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.22.0-artifact-cleanup-stable
-updatedAt: 2026-10-28
+version: v1.25.0-query-evaluation-boundary
+updatedAt: 2026-10-29
 status: active
 purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 与数值字面量发现/分类只读门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
 scope:
@@ -14,6 +14,7 @@ prerequisites:
   - INDEX.md
   - harness/architecture/HarnessEngineering.md
 relatedDocuments:
+  - harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
   - harness/HarnessIndex.md
   - harness/tools/docs/script-index/ScriptIndex.md
   - harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
@@ -24,17 +25,18 @@ relatedDocuments:
 outputTo:
   - harness/tools/ToolsIndex.md
 owner: mixed
-reviewAfter: 2026-11-11
-supersededBy:
+reviewAfter: '2026-11-29'
+supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - INDEX.md
   - harness/HarnessIndex.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-10-28
-  decision: evidence-gate-fixes-validated-cleanup-tool-promoted
+  reviewedAt: '2026-10-29'
+  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
 ---
+
 # 工具资产索引
 
 2026-10-28增量：已有workflow/lifecycle证据门禁增加中文章节和显式UTF-8读取，保留英文与机器状态契约；
@@ -72,6 +74,8 @@ review:
 
 ## 3. 默认稳定工具
 
+RAG 文档摄取与晋升使用[稳定命令契约](docs/command-surfaces/RagDocumentPipeline.md)：PDF 按页规范化、来源绑定的水印规则、完整晋升映射、审核快照和正文哈希审计。回归入口为 `scripts/stable/test-rag-tools.ps1`；具体知识与校正规则留在本地用户边界。
+
 默认可被 Agent 优先调用的稳定工具位于：
 
 ```text
@@ -85,6 +89,7 @@ harness/tools/docs/script-index/ScriptIndex.md
 harness/tools/docs/command-surfaces/StableToolSurfaceModel.md
 harness/tools/docs/command-surfaces/JavaMavenCommandSurface.md
 harness/tools/docs/command-surfaces/JavaMavenCommandCookbook.md
+harness/tools/docs/command-surfaces/RagDocumentPipeline.md
 ```
 
 Workspace bootstrap 稳定脚本：
@@ -148,3 +153,11 @@ harness/tools/scripts/stable/invoke-memory.ps1
 3. 不要读取、打印或写入 settings/auth 正文。
 4. 不要在工具文档中写入真实私有路径、真实仓库 URL、token、password 或未脱敏日志。
 5. 不要在旧顶层 `tools/` 下新增工具资产。
+
+## Reviewed 正文检索补强
+
+现有 candidate 门面增加 `prepare-reviewed-content`，准备逐页正文草稿并阻止只有目录的 PDF 来源晋升；knowledge 门面的 `query-reviewed -AsOf` 返回命中条款、行号与版本上下文。规则与配置见 [RAG 文档工具契约](docs/command-surfaces/RagDocumentPipeline.md)。
+
+## 评测来源审计工具
+
+knowledge门面提供query-reviewed的Mode与SourcePrefix，以及audit-query-evaluation。前者给出命令范围的来源契约，后者校验完整评测输入记录；二者都不能替代Agent运行时的实际工具限制与全量事件采集。模板和能力边界见 [评测策略](../rag/policies/KnowledgeQueryEvaluationPolicy.md) 与 [命令契约](docs/command-surfaces/RagDocumentPipeline.md)。

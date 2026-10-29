@@ -1,7 +1,7 @@
 ---
 documentName: harness/reports/ReportsIndex.md
-version: v1.3.0-engineering-feedback-promoted
-updatedAt: 2026-10-28
+version: v1.4.0-rag-document-reliability
+updatedAt: 2026-10-29
 status: active
 purpose: 定义 Harness Report 的通用机制入口，路由报告格式、规则、模板、命令面、应用场景和存放边界。
 scope:
@@ -27,17 +27,19 @@ relatedDocuments:
 outputTo:
   - harness/reports/ReportsIndex.md
 owner: mixed
-reviewAfter: 2026-11-11
+reviewAfter: 2026-11-12
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/governance/ReportArchivePolicy.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-28
-  decision: engineering-feedback-route-added-existing-report-policy-preserved
+  reviewedAt: 2026-10-29
+  decision: rag-tool-reliability-review-evidence-routed
 ---
 # Report 索引
+
+当前增量：[RAG 工具可靠性复查](redacted/RagToolReliabilityReview.md)，记录临时转换脚本的取舍、稳定工具修复、验证及旧语料的合规边界；原始材料、逐页错误和本机路径保留在 local-only。
 
 当前H9-5增量记录：[工程可靠性沉淀与晋升](redacted/H9-5EngineeringReliabilityFeedback.md)，
 记录用户条件批准、有效性测试及正式资产去向；项目数据/参数/效果不进入本目录。

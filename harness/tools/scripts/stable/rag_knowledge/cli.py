@@ -3,7 +3,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from rag_candidate.common import print_json
+from rag_candidate.common import execute_cli
+from .evaluation import run_audit_query_evaluation
 
 from .commands import (
     run_build_reviewed_graph,
@@ -71,8 +72,20 @@ def build_parser() -> argparse.ArgumentParser:
     query.add_argument("--graph", default="var/rag/reviewed-knowledge/graph/graph.json")
     query.add_argument("--report", default=None)
     query.add_argument("--limit", type=int, default=10)
+    query.add_argument("--as-of", default=None, help="ISO date for applicability context; default today")
+    query.add_argument("--mode", choices=["knowledge-only", "mixed"], default="knowledge-only")
+    query.add_argument("--source-prefix", default=None, help="restrict identifier family, including its slash subfamilies")
     query.add_argument("--run-id", default="reviewed-knowledge")
     query.set_defaults(func=run_query_reviewed)
+
+    audit = sub.add_parser("audit-query-evaluation", help="validate supplied whole-turn evaluation evidence; no runtime attestation")
+    audit.add_argument("--root", default=".")
+    audit.add_argument("--vault", default="user/knowledge")
+    audit.add_argument("--reviewed", default="user/knowledge/reviewed")
+    audit.add_argument("--evaluation-record", required=True)
+    audit.add_argument("--report", default=None)
+    audit.add_argument("--run-id", default="query-evaluation")
+    audit.set_defaults(func=run_audit_query_evaluation)
 
     gaps = sub.add_parser(
         "reviewed-gap-plan",
@@ -277,6 +290,7 @@ def build_parser() -> argparse.ArgumentParser:
     smoke.add_argument("--domain", default="agent")
     smoke.add_argument("--scope", default="user-private")
     smoke.add_argument("--target", default=None)
+    smoke.add_argument("--reviewed-draft", required=True)
     smoke.add_argument("--reviewer", required=True)
     smoke.add_argument("--approval-note", required=True)
     smoke.add_argument("--review-after", default="source-updated-or-2026-12-31")
@@ -301,12 +315,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    try:
-        args.func(args)
-        return 0
-    except Exception as exc:
-        print_json({"state": "failed", "error": str(exc)})
-        return 1
+    return execute_cli(args.func, args)
 
 
 if __name__ == "__main__":

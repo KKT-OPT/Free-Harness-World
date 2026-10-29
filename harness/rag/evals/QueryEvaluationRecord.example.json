@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "harness.queryEvaluationRecord.v1",
+  "mode": "knowledge-only",
+  "question": "<question>",
+  "reviewer": "<reviewer>",
+  "trace": {
+    "scope": "whole-turn",
+    "complete": false,
+    "capturedBy": "agent-declared",
+    "events": [
+      { "kind": "knowledge-query" }
+    ]
+  },
+  "evidence": [
+    {
+      "id": "e1",
+      "kind": "reviewed",
+      "path": "user/knowledge/reviewed/<domain>/<source>.md",
+      "sha256": "<actual-file-sha256>",
+      "startLine": 1,
+      "endLine": 1
+    }
+  ],
+  "inferences": [],
+  "assessment": "incomplete"
+}

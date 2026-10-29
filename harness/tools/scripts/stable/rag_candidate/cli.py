@@ -15,7 +15,10 @@ from .commands import (
     run_review_package,
     run_stale_plan,
 )
-from .common import print_json
+from .common import execute_cli
+from .pdf_normalize import run_normalize_pdf
+from .corpus_audit import run_audit_corpus
+from .reviewed_content import run_prepare_reviewed_content
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,7 +26,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     ingest = sub.add_parser("ingest", help="convert raw files into extracted artifacts and candidate wiki")
-    ingest.add_argument("inputs", nargs="+", help="files, directories, or globs to ingest")
+    ingest.add_argument("inputs", nargs="*", help="files, directories, or globs to ingest")
+    ingest.add_argument("--normalization-manifest", default=None, help="validated raw PDF to normalized Markdown provenance")
     ingest.add_argument("--root", default=".", help="Harness root")
     ingest.add_argument("--run-id", default=None, help="stable run id; default uses timestamp")
     ingest.add_argument("--raw-domain", default=None, help="domain/source folder for copied raw files; default uses run id")
@@ -80,6 +84,9 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--wiki", required=True)
     review.add_argument("--report", default=None)
     review.add_argument("--run-id", default=None)
+    review.add_argument("--promotion-map", default=None)
+    review.add_argument("--reviewed-draft", default=None)
+    review.add_argument("--source-id", default=None)
     review.set_defaults(func=run_review_package)
 
     promotion = sub.add_parser("promotion-plan", help="produce a plan for reviewed-knowledge promotion without writing reviewed knowledge")
@@ -97,31 +104,60 @@ def build_parser() -> argparse.ArgumentParser:
     promote.add_argument("--manifest", required=True)
     promote.add_argument("--wiki", required=True)
     promote.add_argument("--scope", default="user-private", choices=["global", "domain", "project-reviewed", "user-private"])
-    promote.add_argument("--target", required=True)
+    promote.add_argument("--target", default=None)
     promote.add_argument("--reviewer", required=True)
     promote.add_argument("--approval-note", required=True)
     promote.add_argument("--review-after", default="source-updated-or-2026-12-31")
     promote.add_argument("--report", default=None)
     promote.add_argument("--run-id", default=None)
     promote.add_argument("--overwrite", action="store_true")
+    promote.add_argument("--promotion-map", default=None)
+    promote.add_argument("--reviewed-draft", default=None)
+    promote.add_argument("--source-id", default=None)
     promote.set_defaults(func=run_promote_reviewed)
 
     stale = sub.add_parser("stale-plan", help="compare manifest source hashes and produce a plan only")
     stale.add_argument("--root", default=".")
     stale.add_argument("--manifest", required=True)
     stale.set_defaults(func=run_stale_plan)
+
+    content = sub.add_parser("prepare-reviewed-content", help="prepare page-complete source-aligned drafts; no promotion")
+    content.add_argument("--root", default=".")
+    content.add_argument("--manifest", required=True)
+    content.add_argument("--reviewed", required=True)
+    content.add_argument("--run-id", required=True)
+    content.add_argument("--reviewer", required=True)
+    content.add_argument("--content-profile", default=None, help="source/hash-bound verified clauses and version context")
+    content.set_defaults(func=run_prepare_reviewed_content)
+
+    normalize = sub.add_parser("normalize-pdf", help="preserve PDF pages and quality evidence; optional offline OCR")
+    normalize.add_argument("inputs", nargs="+")
+    normalize.add_argument("--root", default=".")
+    normalize.add_argument("--normalized-dir", required=True)
+    normalize.add_argument("--run-id", default=None)
+    normalize.add_argument("--pdf-profile", default=None)
+    normalize.add_argument("--ocr-mode", choices=["auto", "none", "windows"], default="auto")
+    normalize.add_argument("--ocr-language", default="auto")
+    normalize.add_argument("--dpi", type=int, choices=range(72, 301), default=180)
+    normalize.add_argument("--overwrite", action="store_true")
+    normalize.set_defaults(func=run_normalize_pdf)
+
+    audit = sub.add_parser("audit-corpus", help="check an explicit corpus without hiding global vault failures")
+    audit.add_argument("--root", default=".")
+    audit.add_argument("--manifest", required=True)
+    audit.add_argument("--reviewed", default=None)
+    audit.add_argument("--promotion-record", default=None)
+    audit.add_argument("--require-sealed", action="store_true")
+    audit.add_argument("--export-manifest", default=None)
+    audit.add_argument("--report", default=None)
+    audit.set_defaults(func=run_audit_corpus)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    try:
-        args.func(args)
-        return 0
-    except Exception as exc:
-        print_json({"state": "failed", "error": str(exc)})
-        return 1
+    return execute_cli(args.func, args)
 
 
 if __name__ == "__main__":
