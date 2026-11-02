@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("ingest", "health", "lint", "build-graph", "query", "enrichment-plan", "review-package", "promotion-plan", "promote-reviewed", "stale-plan", "normalize-pdf", "audit-corpus", "prepare-reviewed-content", "compare-pdf-copies", "archive-build-evidence")]
+    [ValidateSet("ingest", "health", "lint", "build-graph", "query", "enrichment-plan", "review-package", "promotion-plan", "promote-reviewed", "stale-plan", "normalize-pdf", "audit-corpus", "prepare-reviewed-content", "compare-pdf-copies", "archive-build-evidence", "prepare-source-relocation", "audit-versions")]
     [string]$Command,
 
     [string]$Root = ".",
@@ -16,6 +16,9 @@ param(
     [string]$PdfProfile = "",
     [string]$ContentProfile = "",
     [string]$TargetMap = "",
+    [string]$RelocationMap = "",
+    [string]$AsOf = "",
+    [switch]$Apply,
     [string]$EvidenceManifest = "",
     [string]$AuditDir = "user/knowledge/candidate/_audit/post-promotion",
     [ValidateRange(36, 144)]
@@ -29,7 +32,7 @@ param(
     [string]$ReviewedDraft = "",
     [string]$SourceId = "",
     [string]$Reviewed = "",
-    [string]$PromotionRecord = "",
+    [string[]]$PromotionRecord = @(),
     [string]$ExportManifest = "",
     [switch]$RequireSealed,
     [ValidateSet("global", "domain", "project-reviewed", "user-private")]
@@ -77,6 +80,17 @@ $env:PYTHONUTF8 = "1"
 $argsList = @("-m", "rag_candidate.cli", $Command, "--root", $rootPath)
 
 switch ($Command) {
+    "prepare-source-relocation" {
+        if (-not $Manifest -or -not $RelocationMap -or -not $Reviewed -or -not $RunId) { throw "prepare-source-relocation requires -Manifest, -RelocationMap, -Reviewed and -RunId." }
+        $argsList += @("--manifest", $Manifest, "--relocation-map", $RelocationMap, "--reviewed", $Reviewed, "--run-id", $RunId)
+        if ($Reviewer) { $argsList += @("--reviewer", $Reviewer) }
+        if ($ApprovalNote) { $argsList += @("--approval-note", $ApprovalNote) }
+        if ($Apply) { $argsList += "--apply" }
+    }
+    "audit-versions" {
+        if (-not $Reviewed -or -not $RunId -or -not $AsOf) { throw "audit-versions requires -Reviewed, -RunId and -AsOf." }
+        $argsList += @("--reviewed", $Reviewed, "--run-id", $RunId, "--as-of", $AsOf)
+    }
     "compare-pdf-copies" {
         if ($InputPath.Count -ne 2 -or -not $RunId) { throw "compare-pdf-copies requires two -InputPath values and -RunId." }
         $argsList += $InputPath
@@ -189,7 +203,7 @@ switch ($Command) {
         if (-not $Manifest) { throw "audit-corpus requires -Manifest." }
         $argsList += @("--manifest", $Manifest)
         if ($Reviewed) { $argsList += @("--reviewed", $Reviewed) }
-        if ($PromotionRecord) { $argsList += @("--promotion-record", $PromotionRecord) }
+        foreach ($recordPath in $PromotionRecord) { $argsList += @("--promotion-record", $recordPath) }
         if ($RequireSealed) { $argsList += "--require-sealed" }
         if ($ExportManifest) { $argsList += @("--export-manifest", $ExportManifest) }
         if ($Report) { $argsList += @("--report", $Report) }

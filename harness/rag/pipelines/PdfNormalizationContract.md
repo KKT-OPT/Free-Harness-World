@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/pipelines/PdfNormalizationContract.md
-version: v1.2.0-copy-comparison-and-profile-retention
-updatedAt: 2026-10-29
+version: v1.4.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 定义逐页 PDF 转换、离线 OCR、来源绑定的水印与校正配置，以及转换质量证据边界。
 scope:
@@ -15,14 +15,14 @@ relatedDocuments:
 outputTo:
   - harness/rag/pipelines/PdfNormalizationContract.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy:
 dependsOn:
   - harness/tools/scripts/stable/rag_candidate/pdf_normalize.py
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 # PDF 逐页转换契约
 
@@ -101,3 +101,13 @@ review:
 `compare-pdf-copies`只读比较两份raw PDF的文件哈希、逐页原生文字与固定DPI渲染。空原生文字、去空白文字相等或很小的像素差值均不单独证明同版；图像水印、图表和版次需人工核对。确认共用一个本地权威来源页后，仍保留各原件及哈希、别名、次要Source Trace和导航，不把副本虚报为第二份独立封印来源。
 
 每批保存实际使用的完整profile版本，分别记录文件字节哈希和工具配置标识；临时路径收敛至私有审计目录时记录原路径与新路径对应，不改写不可变晋升记录。完整校录、OCR、文字水印过滤统计分别记录；覆盖页不意味着其余OCR、公式或图示逐字正确。
+
+
+## 已核对的扫描空白页
+
+空OCR结果仍默认阻断摄取。确认为空白的扫描物理页可在私有profile中声明blankPages，每项须包含sourceHashSha256、page、expectedImageHashSha256、reviewedBy和evidence。声明同时要求：已实际执行OCR且结果为空、没有原生文字、当前原图哈希一致、RGB渲染每个通道像素均为255；有任意非白内容、哈希变化、缺失审核证据或未执行OCR均拒绝。
+
+成功仅记录带reviewed-blank-page后缀的OCR方法、空白页审核信息和明确的非原文说明，原图与物理页保留。不把空白声明当作文字校录，不通过pageOverrides绕过未解决OCR，也不自动认定带淡字、图表或水印的页为空白。
+
+
+同一来源物理页不能同时声明blankPages和pageOverrides；空白审核和文字校录表达不同事实，配置重叠必须阻断。来源路径迁移保留转换配置与页级审核信息，不扩大为新语义审核。新派生稿生成流程见[来源版本与迁移策略](../policies/SourceVersionAndRelocationPolicy.md)。

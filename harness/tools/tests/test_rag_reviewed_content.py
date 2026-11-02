@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from rag_candidate.common import write_text, sha256_file
 from rag_candidate.metadata import dump_mapping
 from rag_candidate.reviewed_content import rendered_content, validate_content, source_pages, run_prepare_reviewed_content
-from rag_knowledge.commands import _query_reviewed
+from rag_knowledge.commands import _query_reviewed, _query_terms
 from rag_knowledge.retrieval import version_context, passages
 
 
@@ -67,6 +67,25 @@ class ReviewedContentTests(unittest.TestCase):
         with mock.patch('io.open',side_effect=guarded):
             result=self.query('最大真空速')
         self.assertTrue(reads);self.assertIn('≤75',result['matches'][0]['matchedSections'][0]['excerpt'])
+
+    def test_long_title_does_not_hide_trailing_version_question(self):
+        title = '复杂设备智能巡检系统数据采集处理与运行维护技术规范'
+        write_text(self.page, '# ' + title + '\n\n## 版本与适用边界\n\n'
+                   '此来源是报批稿；文件名所称年份未经核实，不能认定正式发布或生效，发布日期和实施日期未知。\n\n'
+                   + '\n'.join('## 正文事项' + str(i) + '\n\n' + title
+                               + '规定设备系统的数据采集、处理、运行维护和检验要求。\n'
+                               for i in range(6)))
+        question = title + '所提供资料的适用对象和实际使用要求是什么；版本与适用边界如何规定，文件名年份是否已核实？'
+        result = self.query(question)
+        excerpts = '\n'.join(s['excerpt'] for s in result['matches'][0]['matchedSections'])
+        self.assertIn('文件名所称年份未经核实', excerpts)
+        self.assertIn('版本', result['terms'])
+
+    def test_extreme_query_remains_bounded_and_preserves_final_intent(self):
+        question = ' '.join('item' + str(i) for i in range(500)) + ' terminalintent'
+        terms = _query_terms(question)
+        self.assertLessEqual(len(terms), 160)
+        self.assertIn('terminalintent', terms)
 
     def test_passage_citation_lines_equal_actual_reviewed_text(self):
         text='# 测试\n\n## 条款\n\n\n第一段包含条件与对象，说明该条款适用于哪些场景及使用边界。\n\n第二段保留数值≤75以及完整的分类条件和适用对象。\n'

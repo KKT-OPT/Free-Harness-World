@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.32.0-batch-knowledge-tools
-updatedAt: 2026-10-29
+version: v1.33.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Java 数值字面量发现/分类门禁、Memory 流程状态和治理自检。
 scope:
@@ -20,14 +20,14 @@ relatedDocuments:
 outputTo:
   - harness/tools/docs/script-index/ScriptIndex.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/tools/ToolsIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # 脚本索引
@@ -50,13 +50,16 @@ review:
 | `harness/tools/scripts/stable/test-harness-governance.ps1` | 运行 Harness Root 治理自检。 | yes |
 | `harness/tools/scripts/stable/verify-artifact-cleanup.py` | 按显式文件清单保存保护哈希并核验清理后身份，无删除功能。 | yes |
 | `harness/tools/scripts/stable/bootstrap-harness-workspace.ps1` | 初始化或检查 Harness Workspace bootstrap 基础设施。 | yes |
-| `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | PDF 规范化、candidate 摄取、审核快照、映射晋升和语料审计。 | yes |
+| `harness/tools/scripts/stable/invoke-rag-candidate.ps1` | PDF 规范化、candidate 摄取、审核快照、映射晋升、版本审计和来源迁移候选准备。 | yes |
 | `harness/tools/scripts/stable/test-rag-tools.ps1` | 验证 RAG 解析、OCR、来源绑定、审核晋升、失败回滚及归档契约。 | yes |
 | `harness/tools/scripts/stable/invoke-rag-knowledge.ps1` | 通过稳定门面运行 reviewed Knowledge vault、index、graph、health、query、reviewed gap plan、residual gap disposition、canonical vault layout、one-click validation gate、schema context、LLM Wiki mechanism validation、gap candidate enrichment、gap review package、approved gap concept promotion、vault governance 和 full pipeline smoke 流程。 | yes |
 | `harness/tools/scripts/stable/invoke-memory.ps1` | 通过稳定门面运行 Memory flow status、Memory store 只读验证和 candidate review package。 | yes |
+| `harness/tools/scripts/stable/scan-publish-content.py` | 发布器内部使用的只读Python语法感知字面量扫描，输出代码及行号，不输出匹配值。 | yes，发布辅助 |
 | `harness/tools/scripts/stable/publish-harness-agent-branch.ps1` | 管理 agent-owned Git branch、提交和推送。 | yes，写操作需审批 |
 
 ## 2. 稳定工具契约
+
+RAG增量统一由[文档工具契约](../command-surfaces/RagDocumentPipeline.md)维护：`audit-versions`输出只读版本信号；`prepare-source-relocation`默认计划，Apply只复制新raw文件并准备候选，旧文件和reviewed不变。输入为来源清单、哈希绑定的迁移映射、显式reviewed范围和RunId；输出plan、manifest、wiki、PromotionMap与私有证据。来源/目标冲突或哈希变化会阻断，失败按回执保留并发变化，不自动重试删除。敏感资料留在user/var，合成回归由`test-rag-tools.ps1`执行。实现模块为`rag_candidate/versions.py`、`rag_candidate/relocation.py`及既有解析、摄取和晋升模块。
 
 ### `show-java-maven-config.ps1`
 
@@ -288,7 +291,7 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 | Outputs | JSON status summary、branch、head、staged file count、push heads。 |
 | Status Summary | mode、branch、head、governance status、Git status lines。 |
 | Redacted Log Path | 默认不写日志；Git 输出只作为摘要，不记录 credential。 |
-| Sensitive Handling | 不保存 GitHub account、SSH config path 或 credential；写操作前扫描 staged sensitive content。 |
+| Sensitive Handling | 不保存 GitHub account、SSH config path 或 credential；写操作前用显式UTF-8扫描staged文本及Python源文件，治理检查要求零错误、零警告，保留正常信息项。 |
 | Failure Mode | `git/base-branch-refused`、`git/governance-failed`、`git/no-changes`、`git/push`、`sensitive/staged-content`。 |
 | Repair Suggestion | 切换 agent branch、修复治理 finding、移除敏感内容或补充 remote 参数。 |
 | Validation Instruction | 先运行 `-Mode status`；提交前确认 governance self-check 通过。 |
@@ -333,3 +336,6 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 | candidate `archive-build-evidence` | `-EvidenceManifest -RunId`及可选`-AuditDir` | candidate/_audit新目录与ArtifactManifest；哈希或路径错误在复制前阻断，存在目录拒绝覆盖 |
 
 完整配置、状态、失败修复和验证见[RAG工具契约](../command-surfaces/RagDocumentPipeline.md)。归档只证明字节保存；不重算或修改原始评测结论。
+
+
+发布器对Python源文件调用`scan-publish-content.py --path <staged-file>`：识别实际字符串路径及凭据赋值、字典和关键字实参，普通分词表达式不视为静态凭据。语法错误阻断扫描，不输出匹配值；扫描属于启发式检查，仍需人工审读补丁与Git边界。

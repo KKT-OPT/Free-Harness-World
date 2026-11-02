@@ -20,6 +20,8 @@ from .pdf_normalize import run_normalize_pdf
 from .corpus_audit import run_audit_corpus
 from .reviewed_content import run_prepare_reviewed_content
 from .evidence import run_compare_pdf_copies, run_archive_build_evidence
+from .relocation import run_prepare_source_relocation
+from .versions import run_audit_versions
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -151,7 +153,7 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--root", default=".")
     audit.add_argument("--manifest", required=True)
     audit.add_argument("--reviewed", default=None)
-    audit.add_argument("--promotion-record", default=None)
+    audit.add_argument("--promotion-record", action='append', default=None)
     audit.add_argument("--require-sealed", action="store_true")
     audit.add_argument("--export-manifest", default=None)
     audit.add_argument("--report", default=None)
@@ -170,6 +172,24 @@ def build_parser() -> argparse.ArgumentParser:
     evidence.add_argument('--evidence-manifest', required=True)
     evidence.add_argument('--audit-dir', default='user/knowledge/candidate/_audit/post-promotion')
     evidence.set_defaults(func=run_archive_build_evidence)
+
+    relocation = sub.add_parser('prepare-source-relocation', help='plan or copy sources and prepare candidates; no delete or promotion')
+    relocation.add_argument('--root', default='.')
+    relocation.add_argument('--manifest', required=True)
+    relocation.add_argument('--relocation-map', required=True)
+    relocation.add_argument('--reviewed', required=True)
+    relocation.add_argument('--run-id', required=True)
+    relocation.add_argument('--reviewer', default='')
+    relocation.add_argument('--approval-note', default='')
+    relocation.add_argument('--apply', action='store_true')
+    relocation.set_defaults(func=run_prepare_source_relocation)
+
+    versions = sub.add_parser('audit-versions', help='read-only source dates, draft states and version review signals')
+    versions.add_argument('--root', default='.')
+    versions.add_argument('--reviewed', required=True)
+    versions.add_argument('--run-id', required=True)
+    versions.add_argument('--as-of', required=True)
+    versions.set_defaults(func=run_audit_versions)
     return parser
 
 

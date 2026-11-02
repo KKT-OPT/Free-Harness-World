@@ -1,7 +1,7 @@
 ---
 documentName: harness/reports/redacted/RagToolReliabilityReview.md
-version: v1.4.0-batch-construction-tools
-updatedAt: 2026-10-29
+version: v1.5.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 记录临时文档转换脚本与稳定 RAG 工具的审查、通用能力沉淀和既有知识库的合规边界。
 scope:
@@ -21,14 +21,14 @@ relatedDocuments:
 outputTo:
   - harness/reports/redacted/RagToolReliabilityReview.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/governance/KnowledgePromotionPolicy.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tools-validated-and-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # RAG 工具可靠性复查
@@ -138,3 +138,18 @@ Skill 采用已有条目补丁，删除把原件回查视为正常问答成功�
 实际副本比较稳定入口已只读验证：能够区分原生文字一致与渲染有差异。草稿与归档命令双PowerShell入口均通过合成正反例。现有reviewed正文保持字节不变；来源特定配置、问题、回答、原件及运行记录仍为local-only。未重写旧知识，也未通过过滤无关目录使全库验收变为通过。
 
 Skill使用已有rag-knowledge-use的窄范围candidate补丁，更新工具路由与边界，无新增知识晋升权限；经agent复查合入，补丁记录归档，usage sidecar同步。机器断言和引用成立不证明全部语义或法规状态正确；Python工作进程guard不证明父进程或Agent整轮来源合规。后续实际使用优先调用稳定命令，历史批次脚本仅保留原始审计用途。
+
+
+## 来源生命周期机制复查
+
+本次将反复使用的来源哈希核对、路径重绑定、正文和版本不变证明收敛为稳定prepare-source-relocation。默认计划不改文件，Apply保留旧来源和reviewed，只写新raw及候选；失败按新文件实际字节恢复，保留变化文件与失败证据。完整晋升映射增加可选预期目标哈希，阻止准备后变化的目标被覆盖。另补只读audit-versions及多记录当前封印选择，不自动裁定文种或实时法律效力。
+
+此前待提交的长题名末尾问题保留、经审核的全白扫描页门禁及相关文档一并审读；空白声明与文字校录不得重叠。已有非RAG Skill的两处文档链接修正仅按实际路由保留，不引入新的项目结论。实现使用合成来源、错误路径、并发修改、缺失授权、过期日期和恢复负例验证，具体执行结果收敛到PLANS，真实语料与批次脚本继续保存在私有证据边界。
+
+本次稳定能力不需要把领域日期、标准号、原件清单或绝对路径复制进源码。领域优先级留在本地schema，跨来源语义结论由Agent审核；版本分组只提示复查。检索回归、局部守卫、完整知识库门禁和用户问题的语义判断分别记录。
+
+
+本次执行证据摘要：Windows PowerShell和PowerShell 7各120项合成回归通过，三个相关Skill格式校验通过；真实资料仅做本地只读封印与版本审计、全局门禁及已知问题回归。复查另修复了候选摄取Skill的旧frontmatter兼容性，治理属性保留正文且candidate状态不变。发布前敏感扫描覆盖Python源文件并显式UTF-8读取；治理门禁要求零错误、零警告，信息项逐项保留，不把受管项目独立仓库的正常隔离信息当作故障。
+
+
+发布辅助扫描复查：将Python语法表达式与实际字面量分开，避免分词变量、字典动态读取和转义换行误报；真实字面量赋值、字典凭据、关键字实参、绝对路径及常见密钥格式仍阻断。新增正反例纳入RAG回归，不通过跳过Python扫描或隐藏原始失败发布。

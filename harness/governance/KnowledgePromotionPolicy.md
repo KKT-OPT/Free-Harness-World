@@ -1,7 +1,7 @@
 ---
 documentName: harness/governance/KnowledgePromotionPolicy.md
-version: v2.3.0-secondary-source-and-batch-evidence
-updatedAt: 2026-10-29
+version: v2.4.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 定义 raw source、extracted artifacts、candidate knowledge、reviewed knowledge 和 RAG index 的晋升边界。
 scope:
@@ -25,15 +25,15 @@ relatedDocuments:
 outputTo:
   - harness/governance/KnowledgePromotionPolicy.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
   - harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # Knowledge Promotion Policy（知识晋升策略）
@@ -147,3 +147,10 @@ PDF来源页须提供可独立查询的实际条款与完整条件，来源对�
 不同字节的同版副本只有在明确审核关系后才可共用一个来源页；保留每份原件及哈希、别名和次要Source Trace。secondarySources必须与sourceRefs一致并绑定哈希，审核快照覆盖全部来源引用。副本变化后重新审核，不把主来源正文封印延伸为副本的第二份独立封印。
 
 新来源草稿通过稳定prepare-reviewed-content及完整目标映射生成，仍需review-package和明确授权后晋升。证据归档只复制显式清单的已核对字节，不产生批准、不把失败改成通过、不把局部回归当成全库验证。已排除范围之外的历史全库问题保留真实失败，不通过临时过滤制造全库通过。
+
+
+## 版本冲突和原件位置变化
+
+来源迁移不能复用旧正文封印冒充新审核。按[来源版本与迁移策略](../rag/policies/SourceVersionAndRelocationPolicy.md)保存原件与页面哈希、生成候选路径修复、重新审核实际字节并晋升。候选准备可绑定expectedTargetHashSha256，目标变化即停止Overwrite；实际晋升前保留旧来源，清理单独依授权执行。
+
+元数据日期齐全、全页覆盖或版本分组不等于语义冲突已裁定。领域schema保存用户确认的取证偏好，检索分数不能代替适用范围、文稿状态及明确替代证据。旧记录保持原样，通过路径对照和显式实际晋升记录审计当前状态，不生成历史批准。

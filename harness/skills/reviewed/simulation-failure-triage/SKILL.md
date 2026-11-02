@@ -51,8 +51,8 @@ metadata:
 | `projects/lfms-decision/docs/project/ProjectIndex.md` | 路由到项目事实、测试、验证和 workflow evidence。 |
 | `projects/lfms-decision/docs/project/test/simulation/SimulationFailureTriage.md` | 读取项目级仿真失败排查流程、产物判读顺序和证据记录要求。 |
 | `projects/lfms-decision/docs/project/test/simulation/SimulationManual.md` | 读取仿真程序使用方法、输入输出、summary、call records、timeline 和 anomalies 的含义。 |
-| `projects/lfms-decision/docs/project/Validation.md` | 确认稳定命令面、Java/Maven profile 和项目验证方式。 |
-| `projects/lfms-decision/docs/project/TestStrategy.md` | 确认测试层级、最小回归和真实数据复跑的选择规则。 |
+| `projects/lfms-decision/docs/project/test/Validation.md` | 确认稳定命令面、Java/Maven profile 和项目验证方式。 |
+| `projects/lfms-decision/docs/project/test/TestStrategy.md` | 确认测试层级、最小回归和真实数据复跑的选择规则。 |
 
 ## 3. 适用场景
 

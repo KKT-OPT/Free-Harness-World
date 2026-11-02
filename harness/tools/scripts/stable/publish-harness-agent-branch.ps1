@@ -132,12 +132,13 @@ function Invoke-GovernanceCheck {
 
     $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Root $RootPath -Registry $Registry
     $result = $raw | ConvertFrom-Json
-    if ($result.status -ne "passed") {
-        throw "Governance self-check failed with status=$($result.status)."
+    if ($result.status -ne "passed" -or $result.summary.severityCounts.error -gt 0 -or $result.summary.severityCounts.warning -gt 0) {
+        throw "Governance publication gate failed: status=$($result.status), errors=$($result.summary.severityCounts.error), warnings=$($result.summary.severityCounts.warning)."
     }
     return [pscustomobject]@{
         status = $result.status
         findingCount = $result.summary.findingCount
+        informationalFindingCount = $result.summary.severityCounts.info
     }
 }
 
@@ -198,11 +199,26 @@ function Test-StagedSensitiveContent {
         $full = Join-Path $RootPath ($file -replace "/", "\")
         if (-not (Test-Path -LiteralPath $full -PathType Leaf)) { continue }
         $extension = [System.IO.Path]::GetExtension($full).ToLowerInvariant()
-        if ($extension -notin @(".md", ".json", ".yaml", ".yml", ".ps1", ".txt", ".gitignore", ".gitattributes")) {
+        if ($extension -notin @(".md", ".json", ".yaml", ".yml", ".ps1", ".py", ".txt", ".gitignore", ".gitattributes")) {
             continue
         }
-        $text = Get-Content -Raw -LiteralPath $full
-        if ($text -match '[A-Za-z]:\\[A-Za-z0-9_. $(){}\[\]-]') {
+        if ($extension -eq ".py") {
+            $scanner = Join-Path $RootPath "harness/tools/scripts/stable/scan-publish-content.py"
+            $scannerPython = Join-Path $RootPath "var/rag/venvs/llm-wiki-agent/Scripts/python.exe"
+            if (-not (Test-Path -LiteralPath $scannerPython -PathType Leaf)) { $scannerPython = "python" }
+            $scanRaw = & $scannerPython $scanner --path $full
+            $scanCode = $LASTEXITCODE
+            $scan = $scanRaw | ConvertFrom-Json
+            if ($scanCode -ne 0 -or $scan.state -ne "passed") {
+                foreach ($finding in $scan.findings) {
+                    [void]$findings.Add("$($finding.code) at line $($finding.line) in staged file: $file")
+                }
+                if (@($scan.findings).Count -eq 0) { [void]$findings.Add("Python staged scan failed: $file") }
+            }
+            continue
+        }
+        $text = Get-Content -Raw -LiteralPath $full -Encoding UTF8
+        if ($text -match '(?<![A-Za-z0-9_])[A-Za-z]:[\\/]+[A-Za-z0-9_. $(){}\[\]-]') {
             [void]$findings.Add("Concrete local path detected in staged file: $file")
         }
         if ($text -match '(?i)(password|token|secret)\s*[:=]\s*[^\s`]{8,}') {

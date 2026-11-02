@@ -1,38 +1,50 @@
-﻿---
+---
 name: rag-structured-ingestion
-description: Convert user-provided raw or unstructured material into Harness RAG runtime artifacts and local-only candidate knowledge, and after explicit approval promote candidate evidence into reviewed Knowledge. Use when the user asks to ingest raw files, convert PDFs/Office/TXT/Markdown into candidate wiki pages, run raw-to-candidate health/lint/graph/query/enrichment-plan/review-package/promotion-plan/promote-reviewed/stale-plan checks, or prepare Obsidian-reviewable candidate notes before reviewed-knowledge approval.
+description: 将用户提供的原始资料转换为本地RAG候选知识，执行来源检查、补强和审核；用户明确批准后通过稳定工具晋升。适用于PDF及其他文档摄取、候选wiki维护和来源路径迁移准备。
+metadata:
+  short-description: 原始资料摄取与候选知识审核
+  asset-state: candidate
+  review-state: requires-separate-review
+---
+# RAG 结构化摄取 Skill
+
+## 笔记属性
+
+Skill frontmatter只保留运行时支持的字段；Harness治理属性保存在下列正文中，与既有reviewed Skill格式一致。格式和工具路由修订不改变候选生命周期状态，不表示该Skill已晋升。
+
+```yaml
 documentName: harness/skills/candidate/rag-structured-ingestion/SKILL.md
-version: v1.6.2-candidate-path-normalized
-updatedAt: 2026-07-05 00:00:00.000 +08:00
+version: v1.7.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: review
 purpose: 定义 raw-to-candidate RAG Skill 的执行边界、稳定命令和输出路径。
 scope:
-  - rag-skill
-  - raw-to-candidate
-  - candidate-knowledge
-  - reviewed-knowledge-promotion
+- rag-skill
+- raw-to-candidate
+- candidate-knowledge
+- reviewed-knowledge-promotion
 prerequisites:
-  - AGENTS.md
-  - harness/rag/RAGIndex.md
+- AGENTS.md
+- harness/rag/RAGIndex.md
 relatedDocuments:
-  - harness/rag/RAGIndex.md
-  - user/knowledge/README.md
-  - harness/governance/KnowledgePromotionPolicy.md
-  - harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
-  - harness/skills/reviewed/rag-knowledge-use/SKILL.md
+- harness/rag/RAGIndex.md
+- user/knowledge/README.md
+- harness/governance/KnowledgePromotionPolicy.md
+- harness/rag/policies/LlmWikiMechanismAbsorptionPolicy.md
+- harness/skills/reviewed/rag-knowledge-use/SKILL.md
 outputTo:
-  - harness/skills/candidate/rag-structured-ingestion/SKILL.md
+- harness/skills/candidate/rag-structured-ingestion/SKILL.md
 owner: mixed
-reviewAfter: 2026-07-22
-supersededBy:
+reviewAfter: '2027-05-02'
+supersededBy: null
 dependsOn:
-  - harness/rag/RAGIndex.md
+- harness/rag/RAGIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-05
-  decision: moved-to-candidate-skill-boundary
----
-# RAG 结构化摄取 Skill
+  reviewedAt: '2026-11-02'
+  decision: candidate-format-and-tool-route-reviewed-no-skill-promotion
+```
+
 
 ## 1. 边界
 
@@ -101,6 +113,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 执行 raw-to-candidate 前应先判断 source gate：空文件、frontmatter-only、不兼容类型和重复 body hash 不应继续进入 LLM 提取；同名 source 应使用 path fingerprint 和 content hash 防止覆盖或混淆。Candidate tags 必须来自目标 domain schema 或 review package 中的受控 tag vocabulary。
 
 Human-facing reports，中文解释是面向人类审核的报告，例如 `enrichment-plan.md`、`review-package.md` 和 `promotion-plan.md`，必须使用中文作为主说明语言；允许保留 command、path、status code、frontmatter key 和专业术语英文。
+
+原件目录应在摄取前确认属于正式领域。已有来源只改变位置时，优先使用稳定`prepare-source-relocation`及哈希绑定映射，不为同一原件制造竞争性权威页。它不会完成语义补全、review或promotion；旧来源与旧派生稿保留至实际晋升及复验后的授权清理。版本日期和冲突边界由[来源版本与迁移策略](../../../rag/policies/SourceVersionAndRelocationPolicy.md)维护。
 
 ## 5. 输出
 

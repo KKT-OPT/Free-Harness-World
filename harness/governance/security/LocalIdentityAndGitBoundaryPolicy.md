@@ -1,7 +1,7 @@
 ---
 documentName: harness/governance/security/LocalIdentityAndGitBoundaryPolicy.md
-version: v1.0.0-pre-h8-git-boundary
-updatedAt: 2026-06-23 08:10:00.000 +08:00
+version: v1.1.0-severity-aware-publication
+updatedAt: '2026-11-02'
 status: active
 purpose: 定义本地身份、GitHub 信息、知识边界、仓库边界和 Git tracking 规则。
 scope:
@@ -17,14 +17,14 @@ relatedDocuments:
 outputTo:
   - harness/governance/security/LocalIdentityAndGitBoundaryPolicy.md
 owner: mixed
-reviewAfter: 2026-07-22
+reviewAfter: '2027-05-02'
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-06-22
-  decision: pre-h8-git-restore-decision
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-harness-publication-gate-alignment
 ---
 # 本地身份和 Git 边界策略
 
@@ -123,7 +123,7 @@ Tracked docs may use placeholders:
 
 恢复 Git 管理前必须满足：
 
-1. Governance self-check passes with `findingCount=0`.
+1. Governance self-check为passed，且severityCounts.error=0、severityCounts.warning=0。info逐项记录并审读，不作为阻断项；受管项目具有独立Git仓库的信息符合仓库隔离规则，不通过删除或过滤正常信息制造零计数。
 2. Sensitive scan finds no concrete local paths or credential-like values in trackable assets.
 3. `.gitignore` excludes `var/`, `user/settings/`, `user/github/`, `user/auth/`, `user/knowledge/**`, `user/registry/*.local.json`, `harness/tools/external/` and `projects/*/`.
 4. User confirms whether the repository is local-only or connected to GitHub.

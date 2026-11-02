@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/ToolsIndex.md
-version: v1.26.0-batch-knowledge-tools
-updatedAt: 2026-10-29
+version: v1.27.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 路由 Harness 工具资产层，定义 stable、candidate、runtime、historical、external 的分类边界、稳定工具契约入口、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 与数值字面量发现/分类只读门禁、Memory 流程状态、只读验证门禁、受控候选删除命令和治理自检集成。
 scope:
@@ -25,7 +25,7 @@ relatedDocuments:
 outputTo:
   - harness/tools/ToolsIndex.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
@@ -33,8 +33,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # 工具资产索引
@@ -166,3 +166,8 @@ knowledge门面提供query-reviewed的Mode与SourcePrefix，以及audit-query-ev
 ## 批量知识构建补充
 
 `prepare-reviewed-content`增加新来源TargetMap模式；`compare-pdf-copies`只生成原生文字和渲染比较证据；`query-regression`冻结知识与用例并逐项验证引用和断言；`archive-build-evidence`保真归档显式哈希清单。均复用现有candidate/knowledge门面，详见[RAG命令契约](docs/command-surfaces/RagDocumentPipeline.md)。来源内容、校录配置及真实用例保持local-only，临时批次脚本不再成为下一批默认入口。
+
+
+## 来源生命周期工具补充
+
+RAG门面新增`audit-versions`和`prepare-source-relocation`，分别用于版本信号检查及不删除、不晋升的迁移候选准备。多批次封印可显式传入多个PromotionRecord，不再手工拼接批准记录。运行参数、失败恢复、输出及合成回归见[工具契约](docs/command-surfaces/RagDocumentPipeline.md)；文种优先级与原件治理规则见[来源版本与迁移策略](../rag/policies/SourceVersionAndRelocationPolicy.md)。

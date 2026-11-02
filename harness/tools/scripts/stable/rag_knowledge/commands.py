@@ -6820,7 +6820,13 @@ def _query_terms(question: str) -> list[str]:
         if term not in seen:
             seen.add(term)
             result.append(term)
-    return result[:40]
+    # A long title must not silently discard the actual question at the end.
+    # Keep ordinary questions intact; bound pathological input while sampling
+    # the entire question, including its final intent, rather than its prefix.
+    limit = 160
+    if len(result) <= limit:
+        return result
+    return [result[i * (len(result) - 1) // (limit - 1)] for i in range(limit)]
 
 
 def _matched_sections(text: str, terms: list[str]) -> list[dict]:

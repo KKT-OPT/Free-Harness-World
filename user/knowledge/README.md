@@ -1,7 +1,7 @@
 ---
 documentName: user/knowledge/README.md
-version: v1.6.0-candidate-cleanup-llm-wiki-mechanisms
-updatedAt: 2026-07-03 22:30:00.000 +08:00
+version: v1.7.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 定义真实用户知识、候选知识和 reviewed knowledge 的本地边界。
 scope:
@@ -22,7 +22,7 @@ relatedDocuments:
 outputTo:
   - user/knowledge/README.md
 owner: mixed
-reviewAfter: 2026-07-22
+reviewAfter: '2027-05-02'
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
@@ -30,8 +30,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-07-03
-  decision: candidate-cleanup-and-llm-wiki-mechanism-boundary-added
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 # 用户知识边界
 
@@ -90,3 +90,8 @@ Home.md
 `harness/rag/` 只保存可复用摄取机制；`var/rag/` 保存 extracted artifacts、eval reports、graph、embedding、index 和 cache。
 
 禁止把 credential、auth 文件、private settings、raw logs、未脱敏 trace 或私有仓库细节写入 tracked docs。
+
+
+## 来源版本与位置维护
+
+优先级保存在本地领域schema，不从文件名或维护日期推断现行状态。版本检查用candidate门面的audit-versions；原件位置变化用prepare-source-relocation先生成哈希绑定计划。Apply只复制新raw来源、派生稿并准备候选，旧来源和reviewed保留。补全、审核、实际晋升与复验后，才按已授权的明确清单清理旧文件。历史证据不改写；真实资料和本地审计不进入通用Git。契约见[RAG文档工具](../../harness/tools/docs/command-surfaces/RagDocumentPipeline.md)。

@@ -86,7 +86,12 @@ def bindings_from_args(root: Path, manifest: dict, args) -> list[dict]:
             raise ValueError("reviewed draft missing")
         seen_sources.add(source_id)
         seen_targets.add(str(target).casefold())
-        clean.append({"sourceId": source_id, "draft": rel(root, draft), "target": rel(root, target)})
+        bound = {"sourceId": source_id, "draft": rel(root, draft), "target": rel(root, target)}
+        if 'expectedTargetHashSha256' in item:
+            if not isinstance(item['expectedTargetHashSha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', item['expectedTargetHashSha256']):
+                raise ValueError('invalid expected target hash')
+            bound['expectedTargetHashSha256'] = item['expectedTargetHashSha256']
+        clean.append(bound)
     return clean
 
 
@@ -242,6 +247,8 @@ def promote(args) -> dict:
         except ValueError as exc:
             raise ValueError(f"draft {source['id']}: {exc}") from exc
         before = target.read_bytes() if target.exists() else None
+        if item.get('expectedTargetHashSha256') and (before is None or hashlib.sha256(before).hexdigest() != item['expectedTargetHashSha256']):
+            raise ValueError('reviewed target changed since candidate preparation')
         if before is not None and before != content and not args.overwrite:
             raise FileExistsError("reviewed target already exists: " + rel(root, target))
         plans.append({"item": item, "source": source, "target": target, "content": content, "before": before})

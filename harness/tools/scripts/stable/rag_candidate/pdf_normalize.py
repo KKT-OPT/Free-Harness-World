@@ -139,6 +139,17 @@ def load_profile(path: Path | None) -> dict:
         if any(not fix.get(key) for key in ["sourceHashSha256", "page", "old", "new", "reviewedBy", "evidence"]):
             raise ValueError("correction requires a source hash, physical page, exact old/new text and review evidence")
     override_keys = set()
+    blank_keys = set()
+    for blank in profile.get('blankPages', []):
+        if any(not blank.get(k) for k in ['sourceHashSha256', 'page', 'expectedImageHashSha256', 'reviewedBy', 'evidence']):
+            raise ValueError('blank page requires source, physical page, rendered image hash and review evidence')
+        if (type(blank['page']) is not int or blank['page'] < 1
+                or any(not re.fullmatch(r'[0-9a-f]{64}', blank[k]) for k in ['sourceHashSha256', 'expectedImageHashSha256'])):
+            raise ValueError('invalid reviewed blank page')
+        key = (blank['sourceHashSha256'], blank['page'])
+        if key in blank_keys:
+            raise ValueError('duplicate reviewed blank page')
+        blank_keys.add(key)
     for override in profile.get("pageOverrides", []):
         required = ["sourceHashSha256", "page", "expectedTextHashSha256", "text", "reviewedBy", "evidence"]
         if any(not override.get(key) for key in required):
@@ -150,6 +161,8 @@ def load_profile(path: Path | None) -> dict:
                 or re.search(r"(?m)^## PDF 第 \d+ 页", override["text"])):
             raise ValueError("invalid reviewed page override")
         key = (override["sourceHashSha256"], override["page"])
+        if key in blank_keys:
+            raise ValueError('blank page and text override cannot cover the same physical page')
         if key in override_keys:
             raise ValueError("duplicate reviewed page override")
         override_keys.add(key)
@@ -267,6 +280,23 @@ def normalize_pdf(root: Path, source: Path, output: Path, runtime: Path, profile
                     lines = [line.replace(fix["old"], fix["new"]) for line in lines]
                     applied.append(fix)
             text = "\n".join(lines)
+            for blank in profile.get('blankPages', []):
+                if blank['sourceHashSha256'] == source_hash and blank['page'] == number:
+                    # This is not an OCR override: accept only a reviewed,
+                    # hash-bound, entirely white rendering with no native text,
+                    # after an actual OCR attempt produced no text.
+                    if (record['method'] != 'needs-ocr' or not record.get('ocrResult')
+                            or text.strip() or page.get_text().strip()
+                            or sha256_file(image) != blank['expectedImageHashSha256']):
+                        raise ValueError('reviewed blank page precondition mismatch')
+                    samples = fitz.Pixmap(str(image)).samples
+                    if not samples or min(samples) != 255:
+                        raise ValueError('reviewed blank page rendering contains non-white content')
+                    language_used = json.loads(read_text(root/record['ocrResult']))['language']
+                    record['method'] = 'offline-ocr-' + language_used + '+reviewed-blank-page'
+                    record['blankPageReview'] = blank
+                    record['qualityFlags'].append('reviewed-blank-page-no-source-content')
+                    text = '[原件空白物理页：已按保留原图核验，无正文；此标注不是原文条款。]'
             for override in profile.get("pageOverrides", []):
                 if override["sourceHashSha256"] == source_hash and override["page"] == number:
                     if record["method"] == "needs-ocr":

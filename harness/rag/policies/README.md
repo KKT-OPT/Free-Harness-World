@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/policies/README.md
-version: v1.4.0-query-evaluation-boundary
-updatedAt: 2026-10-29
+version: v1.5.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 说明 RAG chunking、citation、review、promotion、插件和运行态边界规则。
 scope:
@@ -25,14 +25,14 @@ relatedDocuments:
 outputTo:
   - harness/rag/policies/README.md
 owner: mixed
-reviewAfter: '2026-11-29'
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/rag/RAGIndex.md
 review:
-  reviewedBy: user
-  reviewedAt: '2026-10-29'
-  decision: user-approved-rag-assets-and-evaluation-boundary-with-implementation-regression
+  reviewedBy: agent
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # RAG Policy（RAG 策略）
@@ -57,3 +57,8 @@ review:
 | `CandidatePostPromotionCleanupPolicy.md` | 定义 candidate 晋升、拒绝或归档后的 full corpus 清理规则、轻量审计记录要求、`candidate-cleanup-plan` dry-run 命令和 `candidate-cleanup-apply` 显式批准命令。 |
 | `LlmWikiMechanismAbsorptionPolicy.md` | 定义从 obsidian-llm-wiki 吸收到 Harness RAG/Knowledge 的 schema、granularity、tag vocabulary、source gate、source fingerprint、alias dedup、graph retrieval 和 auto maintenance 边界。 |
 | `KnowledgeQueryEvaluationPolicy.md` | 定义纯知识库测试、正式混合查询、时间证据、完整条款与整轮来源审计；禁止在纯库测试中用网页核验元数据补证。 |
+
+
+## 来源版本与迁移
+
+[SourceVersionAndRelocationPolicy.md](SourceVersionAndRelocationPolicy.md)维护领域优先级、日期与文稿状态、冲突审读、正式原件迁移、旧文件清理及历史证据边界。真实规则实例和清单留在本地，通用工具不硬编码具体标准结论。

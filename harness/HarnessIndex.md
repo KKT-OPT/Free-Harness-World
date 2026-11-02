@@ -1,7 +1,7 @@
 ---
 documentName: harness/HarnessIndex.md
-version: v1.8.0-batch-knowledge-tools
-updatedAt: 2026-10-29
+version: v1.9.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 通用 Harness 资产分层索引，路由到架构、治理、模板、技能、记忆、RAG 机制、工具、验证、观测和报告，并记录 Memory governance gate 与项目反向优化 Harness 治理入口。
 scope:
@@ -22,14 +22,14 @@ relatedDocuments:
 outputTo:
   - harness/HarnessIndex.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # General Harness 索引
@@ -181,3 +181,8 @@ harness/skills/usage/skill-usage.json
 ## 批量知识构建与回归工具
 
 新来源草稿、PDF副本比较、已知用例离线回归和证据归档均通过现有稳定门面调用，参数与私有配置模板见[RAG文档工具契约](tools/docs/command-surfaces/RagDocumentPipeline.md)。副本不自动合并；已知用例回归不替代整轮评测审计。
+
+
+## 知识来源生命周期路由
+
+版本日期、草稿、译本、冲突审读、正式原件迁移及历史证据边界统一见[来源版本与迁移策略](rag/policies/SourceVersionAndRelocationPolicy.md)，可执行入口仍为已有[RAG文档工具契约](tools/docs/command-surfaces/RagDocumentPipeline.md)。具体领域知识和原件清单不进入General Harness。

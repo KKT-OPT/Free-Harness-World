@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/RAGIndex.md
-version: v2.14.0-batch-knowledge-tools
-updatedAt: 2026-10-29
+version: v2.15.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 路由 Harness RAG 摄取机制资产，并定义真实知识、候选知识和运行态索引的边界。
 scope:
@@ -27,7 +27,7 @@ relatedDocuments:
 outputTo:
   - harness/rag/RAGIndex.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/architecture/HarnessEngineering.md
@@ -35,8 +35,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # RAG 机制索引
@@ -148,3 +148,8 @@ harness/tools/scripts/stable/invoke-rag-knowledge.ps1
 ## 连续批次构建入口
 
 批量构建优先复用`prepare-reviewed-content`的新来源模式、`compare-pdf-copies`、`query-regression`及`archive-build-evidence`，避免每批手写草稿格式、测试循环和证据复制脚本。命令与输出边界见[统一工具契约](../tools/docs/command-surfaces/RagDocumentPipeline.md)。非私有配置结构由[manifest入口](manifests/README.md)和[eval入口](evals/README.md)路由。Source Trace、次要副本哈希与实际profile版本作为审核输入；图谱、比较结果和回归报告继续属于证据，不晋升为知识事实。
+
+
+## 版本与原件生命周期
+
+[来源版本与迁移策略](policies/SourceVersionAndRelocationPolicy.md)规定事项匹配、用户领域取证规则、未知日期和草稿边界、原件迁移、清理授权及不可变历史证据。candidate门面的`audit-versions`只给版本检查信号；`prepare-source-relocation`默认计划，Apply只复制到新raw路径并准备候选，必须继续审核晋升和单独清理。参数与模板见[稳定工具契约](../tools/docs/command-surfaces/RagDocumentPipeline.md)。

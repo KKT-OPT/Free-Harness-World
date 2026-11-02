@@ -1,7 +1,7 @@
 ---
 documentName: harness/tools/docs/command-surfaces/RagDocumentPipeline.md
-version: v1.4.0-batch-construction-tools
-updatedAt: 2026-10-29
+version: v1.6.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 定义现有 RAG 命令下的逐页 PDF、来源绑定摄取、精确内容批量晋升和只读语料核验契约。
 scope:
@@ -18,15 +18,15 @@ relatedDocuments:
 outputTo:
   - harness/tools/docs/command-surfaces/RagDocumentPipeline.md
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn:
   - harness/tools/scripts/stable/invoke-rag-candidate.ps1
   - harness/tools/scripts/stable/invoke-rag-knowledge.ps1
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 
 # RAG 文档工具契约
@@ -36,6 +36,29 @@ review:
 现有 `invoke-rag-candidate.ps1` 与 `invoke-rag-knowledge.ps1` 继续作为默认入口。通用转换、核验和晋升放入其模块，避免每批重写转换脚本、拆分来源清单、循环启动晋升后再覆盖正文。
 
 两个 Python CLI 对成功和运行失败都输出一个 JSON 对象。失败仍返回非零退出码；已产生的 `blockingIssues` 保留在同一对象中，调用方不再需要截取“第一个 JSON”。参数解析错误仍由命令行解析器报告。
+
+版本与冲突审读、原件路径及历史证据规则见[来源版本与迁移策略](../../../rag/policies/SourceVersionAndRelocationPolicy.md)。真实优先级和条款保存在本地领域schema，工具不把检索分数当作效力顺序。
+
+## 版本检查与原件迁移
+
+```powershell
+& harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command audit-versions `
+  -Reviewed 'user/knowledge/reviewed/<domain>' -AsOf '<YYYY-MM-DD>' -RunId '<new-audit-run>'
+
+& harness/tools/scripts/stable/invoke-rag-candidate.ps1 -Command prepare-source-relocation `
+  -Manifest '<existing-source-manifest.json>' -RelocationMap '<private-relocation-map.json>' `
+  -Reviewed 'user/knowledge/reviewed/<domain>' -RunId '<relocation-run>'
+```
+
+`audit-versions`只读扫描显式范围内具有sourceSha256的authoritative来源页。必要字段为publishedOn、effectiveOn、officialStatus、sourceDocumentState；前两者允许null。日期格式、未来核验日、无核验日期的current/upcoming声明或空范围会失败；发布日期未知、草稿、译本、未来实施及同编号多版本分别记录，不自动认定语义冲突或现行效力。报告固定进入新RunId的`version-audit.json`，重复运行保留旧结果并改用新RunId。
+
+迁移映射使用[SourceRelocationMap.example.json](../../../rag/manifests/SourceRelocationMap.example.json)，完整覆盖输入sources，sourceId来自输入清单，expectedReviewedHashSha256绑定当前来源页字节。新原件必须在raw内，不能以normalized或assets充当原件目录；已有不同字节目标、同路径迁移、过期侧车、来源或页面哈希变化均阻断。newNormalizedMarkdown可省略，默认新原件目录下`normalized/<原派生稿文件名>`。新派生稿须为新路径；原件目标允许已有相同字节，其他已有派生目标拒绝覆盖。
+
+默认只生成`source-relocation-plan.json`，不复制文件。核对计划后，在同一RunId追加`-Apply -Reviewer <reviewer> -ApprovalNote '<explicit authorization>'`。工具重新核对完整输入快照，只写新raw目标和candidate/var；保留旧原件、旧normalized及reviewed，不删除旧目录。失败只回收本次创建且字节仍匹配的新文件，发生变化或部分写入的文件保留并记录failure.json，不覆盖第三方内容。旧证据不清空重跑。
+
+成功输出重新审计的normalization manifest、稳定ingest生成的metadata manifest与候选wiki、完整PromotionMap和正文/版本不变证明。候选仍是待补全的scaffold，不能把工具成功当成语义审核。按输出补全candidate，再使用同一manifest/wiki/PromotionMap运行review-package与promote-reviewed。映射中的expectedTargetHashSha256会阻止准备后发生变化的目标被Overwrite覆盖。
+
+旧文件清理在实际晋升、哈希和引用复验后单独执行，需已有用户授权及明确清单；该命令不执行删除、不改registry、不改历史记录、不上传真实知识。多次晋升后的全库封印检查可用`-PromotionRecord @('<record-one.json>','<record-two.json>')`显式提供原始事务或既有记录。工具保存各输入哈希，按当前原件与页面字节选择条目，陈旧记录不遮蔽已匹配条目；缺少当前匹配仍失败，不会生成批准证明。
 
 ## PDF 与摄取
 
@@ -186,6 +209,8 @@ Home 中不逐张列出 `normalized/assets/` 的生成图片；原始图片资�
 - 结构通过而语义未核对：保留 `semanticState` 与待核页码，不声明逐字正确。
 
 ## 查询模式与评测记录
+
+中文问题中的长标题不应挤掉末尾的查询意图。检索保留去重后不超过160个词项的完整问题；超长输入按完整词项序列均匀取样并保留首尾。该上限约束计算量，不表示已理解全部语义；版本问题仍须核对返回的版本字段、正文及适用边界。
 
 建设后已知用例的批量回归使用稳定入口：
 

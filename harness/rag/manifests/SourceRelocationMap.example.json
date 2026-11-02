@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "harness.sourceRelocationMap.v1",
+  "items": [
+    {
+      "sourceId": "sample-source-id-from-manifest",
+      "newSourceRef": "user/knowledge/raw/example-domain/documents/sample.pdf",
+      "newNormalizedMarkdown": "user/knowledge/raw/example-domain/documents/normalized/sample.md",
+      "expectedReviewedHashSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

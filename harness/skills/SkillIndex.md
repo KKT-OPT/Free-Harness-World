@@ -1,7 +1,7 @@
 ---
 documentName: harness/skills/SkillIndex.md
-version: v2.7.0-batch-construction-tools
-updatedAt: 2026-10-29
+version: v2.8.0-source-lifecycle-routes
+updatedAt: '2026-11-02'
 status: active
 purpose: 作为 Harness Skill 入口，路由 Skill policy、candidate、reviewed、archive、usage sidecar、Memory governance、Code Review、Code Implementation、Algorithm Performance Analysis 和现有 Skill 包，并定义根目录规范。
 scope:
@@ -39,7 +39,7 @@ dependsOn:
   - harness/architecture/HarnessEngineering.md
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
+  reviewedAt: '2026-11-02'
   decision: user-requested-batch-tools-validated-and-reviewed
 ---
 
@@ -93,3 +93,6 @@ review:
 3. `SKILL.md` frontmatter 只保存静态治理信息；动态使用统计进入 usage sidecar。
 4. Skill 不能保存项目事实、用户私有知识、raw logs、settings、auth 或私有路径。
 5. Reviewed Skill 是 Harness 长期资产，晋升后必须以限定路径纳入 Git 管理，不得作为 untracked 文件遗留。
+
+
+来源生命周期工具路由已同步到rag-knowledge-use与rag-structured-ingestion。后者仅修复候选格式及路由，仍为candidate，须独立review后方可晋升；通用规则见[来源版本与迁移策略](../rag/policies/SourceVersionAndRelocationPolicy.md)。

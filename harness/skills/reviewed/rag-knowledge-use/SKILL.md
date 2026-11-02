@@ -147,6 +147,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <HARNESS_ROOT>\harness\tools
 14. 运行 `govern-vault`，刷新 `Home.md` 单入口。
 15. 运行 `validate-knowledge-vault`，作为一键收口门禁。
 
+## 版本与原件迁移
+
+涉及版本日期、草稿、译本或来源位置变化时，读取[来源版本与迁移策略](../../../rag/policies/SourceVersionAndRelocationPolicy.md)。candidate门面的`audit-versions`只输出元数据和复查信号；`prepare-source-relocation`默认计划，显式Apply只复制新raw及准备候选，旧来源和reviewed保留。迁移候选继续补全、review-package、promote-reviewed，复验后按已授权清单单独清理；不把检索分数作为领域优先级，不改历史批准和失败记录。完整参数及模板统一见既有工具契约。
+
 ## 8. 验收清单
 
 处理 PDF 或修复旧转换结果时，先调用 candidate 稳定门面的 `normalize-pdf` 或 `audit-corpus`。原件保留不变；规范化副本留在 raw 的 `normalized/`，按物理页保留原图、提取方法和来源哈希。缺少可靠文本/OCR 时停止候选摄取；特殊公式字形应保留原图，不能直接按乱码丢弃。
@@ -191,7 +195,7 @@ PDF 来源页必须有可独立查询的条款正文和适用条件，不能只�
 | 检查项 | 规则 |
 |---|---|
 | 文档 | `harness/skills/reviewed/rag-knowledge-use/SKILL.md` |
-| 版本 | `v1.5.0-batch-construction-tools` |
+| 版本 | `v1.6.0-source-lifecycle` |
 | 最近复查 | 2026-10-29，按用户工具、脚本及相关文档沉淀要求形成窄范围candidate补丁，更新已有稳定命令路由；agent复查与双PowerShell回归见 `harness/reports/redacted/RagToolReliabilityReview.md`。 |
 | 状态 | `active` |
 | 资产状态 | reviewed |

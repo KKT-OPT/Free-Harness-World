@@ -139,6 +139,16 @@ class MetadataTests(RagFixture):
 
 
 class PromotionTests(RagFixture):
+    def test_bound_existing_target_cannot_be_replaced_after_review(self):
+        self.prepare(1)
+        target=self.root/self.items[0]['target']
+        write_text(target,'Previously reviewed target bytes.')
+        self.items[0]['expectedTargetHashSha256']=sha256_file(target)
+        self.write_map();self.review()
+        write_text(target,'Concurrent user edit must survive explicit overwrite.')
+        self.promote('--overwrite',success=False)
+        self.assertEqual(read_text(target),'Concurrent user edit must survive explicit overwrite.')
+
     def test_archive_is_source_centered_and_manifest_stays_resolvable(self):
         from rag_knowledge.commands import _archive_inactive_candidates
         self.prepare(1)

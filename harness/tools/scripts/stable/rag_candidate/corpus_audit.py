@@ -140,8 +140,12 @@ def audit_corpus(root: Path, manifest: dict, reviewed: Path | None = None, seal:
 def run_audit_corpus(args) -> dict:
     root = Path(args.root).resolve()
     manifest = json.loads(read_text(under(root, args.manifest)))
-    seal = json.loads(read_text(under(root, args.promotion_record))) if args.promotion_record else None
+    paths = args.promotion_record or []
+    if isinstance(paths, str):  # Preserve library callers and the former single-record surface.
+        paths = [paths]
+    seal, origins = supplied_seals(root, paths)
     result = audit_corpus(root, manifest, under(root, args.reviewed) if args.reviewed else None, seal, args.require_sealed)
+    result['promotionRecordInputs'] = origins
     if args.export_manifest:
         output = under(root, args.export_manifest, root / "var/rag")
         exported = {"schemaVersion": "harness.pdfNormalization.v1", "manifestId": output.parent.name,
@@ -156,3 +160,25 @@ def run_audit_corpus(args) -> dict:
     if result["issues"]:
         raise ValueError("corpus audit failed; inspect issues in the report")
     return result
+
+
+def supplied_seals(root: Path, paths: list[str]) -> tuple[dict, list[dict]]:
+    """Select supplied entries matching current bytes; never invent approval or scan logs."""
+    candidates, origins = {}, []
+    for value in paths:
+        path = under(root, value)
+        record = json.loads(read_text(path))
+        entries = record.get('entries', [])
+        if not isinstance(entries, list):
+            raise ValueError('promotion record entries must be a list')
+        origins.append({'path': rel(root,path), 'sha256': sha256_file(path), 'entryCount': len(entries)})
+        for entry in entries:
+            target = under(root, entry['target'], root/'user/knowledge/reviewed')
+            source = under(root, entry['sourceRef'], root/'user/knowledge/raw')
+            matches = (target.is_file() and source.is_file() and sha256_file(target)==entry.get('contentHashSha256')
+                       and sha256_file(source)==entry.get('sourceHashSha256'))
+            key = rel(root,target)
+            # An obsolete input must not hide a matching seal supplied earlier.
+            if key not in candidates or matches:
+                candidates[key] = {**entry, '_matchesCurrentBytes': matches, '_suppliedRecord': rel(root,path)}
+    return {'entries': list(candidates.values())}, origins

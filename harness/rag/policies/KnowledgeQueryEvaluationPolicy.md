@@ -1,7 +1,7 @@
 ---
 documentName: harness/rag/policies/KnowledgeQueryEvaluationPolicy.md
-version: v1.1.0-known-case-regression-boundary
-updatedAt: 2026-10-29
+version: v1.2.0-source-lifecycle
+updatedAt: '2026-11-02'
 status: active
 purpose: 定义知识库测试、正式混合查询与知识补强的来源边界和验收证据。
 scope: [rag-query, knowledge-evaluation, source-boundary]
@@ -13,13 +13,13 @@ relatedDocuments:
   - harness/skills/reviewed/rag-knowledge-use/SKILL.md
 outputTo: [harness/rag/policies/KnowledgeQueryEvaluationPolicy.md]
 owner: mixed
-reviewAfter: 2026-11-29
+reviewAfter: '2027-05-02'
 supersededBy: null
 dependsOn: [harness/tools/scripts/stable/rag_knowledge/evaluation.py]
 review:
   reviewedBy: agent
-  reviewedAt: 2026-10-29
-  decision: user-requested-batch-tool-consolidation-reviewed
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 # 知识查询与评测来源边界
 
@@ -69,3 +69,10 @@ reviewed 必须具有实际条款、完整条件、单位、数值边界及必�
 若测试断言本身误引原文，应保留原用例、失败输出、修正原因和对应正文证据，使用新RunId重验。没有修改知识也不能覆盖原失败记录；若修改过知识，则必须明确重新冻结。不能通过弱化断言、省略例外或把实质问题改成单纯来源发现来制造通过。
 
 来源前缀允许显式标注为draft、approval-draft或unnumbered-draft的占位编号（X/x/×）；这只表示原件声明的系列，不把报批稿转成正式编号，也不从文件名补造发布日期、实施日期和现行状态。
+
+
+## 来源治理与查询分阶段验收
+
+同一任务包含分类查询、原件迁移或删除时，答题证据与存储治理活动分别记录。raw和normalized只可用于相应构建或治理，不混作纯库答题证据；包含这些活动的整个聊天不能仅凭查询工作进程守卫声明整轮只读reviewed。迁移后重新冻结实际知识页、运行原题及受影响来源回归，原基线和旧路径证据保留。
+
+长题名可能挤掉末尾的版本、条件或数值问题；工具分词保留有界的整句意图，仍须用完整答案断言复验。来源命中而所需片段缺失仍算失败。实际条款或明确的版本说明优先于重复的通用提示；主题和引文行号应定位正文，避免落到目录中的同名标题。

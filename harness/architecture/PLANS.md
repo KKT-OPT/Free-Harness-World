@@ -1,7 +1,7 @@
 ---
 documentName: harness/architecture/PLANS.md
-version: v1.8.24-batch-construction-tools
-updatedAt: 2026-10-29
+version: v1.8.25-source-lifecycle-tools
+updatedAt: '2026-11-02'
 status: active
 purpose: 记录 Harness 目标架构落地阶段、重构计划、验收标准、H8 bootstrap foundation 结果、H9 真实项目验证分阶段计划、H9-4 Knowledge/RAG 和 Memory 收口完成结果，以及 H9-5 项目反向优化机制、汇总和 H10 门禁判定入口。
 scope:
@@ -74,7 +74,7 @@ relatedDocuments:
 outputTo:
   - harness/architecture/PLANS.md
 owner: mixed
-reviewAfter: 2026-11-11
+reviewAfter: '2027-05-02'
 supersededBy:
 dependsOn:
   - harness/architecture/HarnessEngineering.md
@@ -82,8 +82,8 @@ dependsOn:
   - harness/HarnessIndex.md
 review:
   reviewedBy: user
-  reviewedAt: 2026-10-28
-  decision: h9-5-engineering-feedback-promoted-after-validation
+  reviewedAt: '2026-11-02'
+  decision: user-authorized-knowledge-lifecycle-consolidation
 ---
 # Harness 架构落地计划
 
@@ -106,6 +106,8 @@ h9Precondition = java-maven-profile-and-e2e-main-commandline-validation-complete
 2026-10-29 RAG 审核收口：用户批准构建与评测来源边界并授权提交；稳定工具补齐查询模式、来源前缀、跨页条款和评测记录审计，双PowerShell各67项回归通过。纯库测试不得额外网页核验，正式混合使用单独归属外部证据；局部守卫不作整轮证明。规则见 `harness/rag/policies/KnowledgeQueryEvaluationPolicy.md`。本收口不改变H9-5整体验收和H10门禁。
 
 2026-10-29 RAG连续批次工具沉淀：新来源草稿准备、副本比较、冻结用例回归及哈希证据归档接入现有稳定门面，修复综合说明的物理页上下文和草稿占位编号筛选。双PowerShell各90项回归及51项已知用例通过；用例回归不替代独立整轮评测或全库门禁。原知识正文与无关工作区修改保持不变，未消除范围外历史全库问题。实现与复查见`harness/reports/redacted/RagToolReliabilityReview.md`；本增量不改变H9-5整体验收或H10门禁。
+
+2026-11-02来源生命周期工具沉淀：用户审核通过并授权更新与发布。新增只读audit-versions、默认计划且不删除/不晋升的prepare-source-relocation；补齐多记录封印选择、迁移候选的目标哈希绑定、旧式YAML覆盖同步，以及扫描空白页与长题名末尾问题保留。版本、冲突、清理和不可变历史证据统一进入来源生命周期策略及工具契约，领域知识仍留本地。Windows PowerShell与PowerShell 7各120项合成回归通过，三个相关Skill校验通过，现有知识库只读审计、全局门禁及受影响问题回归通过；具体语料证据不进入通用仓库。治理自检为passed、零错误零警告，保留符合隔离规则的信息项；发布工具同步UTF-8和Python源文件扫描，以严重度执行门禁，不隐藏信息。按既定agent-git分支发布，不合并main或创建release；本增量不改变H9-5整体验收与H10门禁。
 
 当前目标架构口径：
 
@@ -255,11 +257,11 @@ projectType = existing-java-project
 | API | `projects/lfms-decision/docs/project/api/Api.md` |
 | 架构说明 | `projects/lfms-decision/docs/project/architecture/Architecture.md` |
 | 仓库说明 | `projects/lfms-decision/docs/project/git/Repository.md` |
-| 源码布局 | `projects/lfms-decision/docs/project/SourceLayout.md` |
-| 测试策略 | `projects/lfms-decision/docs/project/TestStrategy.md` |
-| 验证说明 | `projects/lfms-decision/docs/project/Validation.md` |
-| 验收标准 | `projects/lfms-decision/docs/project/Acceptance.md` |
-| 敏感边界 | `projects/lfms-decision/docs/project/SensitiveBoundaries.md` |
+| 源码布局 | `projects/lfms-decision/docs/project/architecture/SourceLayout.md` |
+| 测试策略 | `projects/lfms-decision/docs/project/test/TestStrategy.md` |
+| 验证说明 | `projects/lfms-decision/docs/project/test/Validation.md` |
+| 验收标准 | `projects/lfms-decision/docs/project/governance/Acceptance.md` |
+| 敏感边界 | `projects/lfms-decision/docs/project/governance/SensitiveBoundaries.md` |
 | 语义词典 | `projects/lfms-decision/docs/project/dictionary/SemanticDictionary.md` |
 | 数据说明 | `projects/lfms-decision/docs/project/data/Data.md`，仅在项目确有数据模型或数据边界需要记录时落地。 |
 
