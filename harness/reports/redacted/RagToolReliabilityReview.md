@@ -1,6 +1,6 @@
 ---
 documentName: harness/reports/redacted/RagToolReliabilityReview.md
-version: v1.5.0-source-lifecycle
+version: v1.5.1-source-lifecycle-publication
 updatedAt: '2026-11-02'
 status: active
 purpose: 记录临时文档转换脚本与稳定 RAG 工具的审查、通用能力沉淀和既有知识库的合规边界。
@@ -149,7 +149,10 @@ Skill使用已有rag-knowledge-use的窄范围candidate补丁，更新工具路�
 本次稳定能力不需要把领域日期、标准号、原件清单或绝对路径复制进源码。领域优先级留在本地schema，跨来源语义结论由Agent审核；版本分组只提示复查。检索回归、局部守卫、完整知识库门禁和用户问题的语义判断分别记录。
 
 
-本次执行证据摘要：Windows PowerShell和PowerShell 7各120项合成回归通过，三个相关Skill格式校验通过；真实资料仅做本地只读封印与版本审计、全局门禁及已知问题回归。复查另修复了候选摄取Skill的旧frontmatter兼容性，治理属性保留正文且candidate状态不变。发布前敏感扫描覆盖Python源文件并显式UTF-8读取；治理门禁要求零错误、零警告，信息项逐项保留，不把受管项目独立仓库的正常隔离信息当作故障。
+本次执行证据摘要：Windows PowerShell和PowerShell 7各121项合成回归通过，三个相关Skill格式校验通过；真实资料仅做本地只读封印与版本审计、全局门禁及已知问题回归。复查另修复了候选摄取Skill的旧frontmatter兼容性，治理属性保留正文且candidate状态不变。发布前敏感扫描覆盖Python源文件并显式UTF-8读取；治理门禁要求零错误、零警告，信息项逐项保留，不把受管项目独立仓库的正常隔离信息当作故障。
 
 
 发布辅助扫描复查：将Python语法表达式与实际字面量分开，避免分词变量、字典动态读取和转义换行误报；真实字面量赋值、字典凭据、关键字实参、绝对路径及常见密钥格式仍阻断。新增正反例纳入RAG回归，不通过跳过Python扫描或隐藏原始失败发布。
+
+
+发布环境复查：可选Git环境变量的空值按未设置恢复，显式非空值原样保留；新增隔离合成仓库，在Windows PowerShell与PowerShell 7分别验证恢复行为，既不联网也不读取认证文件。发布失败的本地记录保留，已有提交不重写。

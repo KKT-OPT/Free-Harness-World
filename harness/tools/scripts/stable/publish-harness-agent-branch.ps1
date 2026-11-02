@@ -45,7 +45,7 @@ function Set-OptionalEnv {
         [string]$Name,
         [AllowNull()][string]$Value
     )
-    if ($null -eq $Value) {
+    if ([string]::IsNullOrEmpty($Value)) {
         Remove-Item -Path "Env:$Name" -ErrorAction SilentlyContinue
     } else {
         Set-Item -Path "Env:$Name" -Value $Value

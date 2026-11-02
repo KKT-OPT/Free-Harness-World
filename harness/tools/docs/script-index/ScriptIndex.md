@@ -1,6 +1,6 @@
 ---
 documentName: harness/tools/docs/script-index/ScriptIndex.md
-version: v1.33.0-source-lifecycle
+version: v1.33.1-source-lifecycle-publication
 updatedAt: '2026-11-02'
 status: active
 purpose: 按 stable、candidate、runtime、historical 和 external 分类索引 Harness 脚本，并记录稳定工具契约、项目生命周期证据门禁、code review workflow evidence 门禁、Java Javadoc 覆盖门禁、Java 数值字面量发现/分类门禁、Memory 流程状态和治理自检。
@@ -339,3 +339,6 @@ registry仍通过独立注册门禁校验，不在通用文本扫描中读取其
 
 
 发布器对Python源文件调用`scan-publish-content.py --path <staged-file>`：识别实际字符串路径及凭据赋值、字典和关键字实参，普通分词表达式不视为静态凭据。语法错误阻断扫描，不输出匹配值；扫描属于启发式检查，仍需人工审读补丁与Git边界。
+
+
+发布器调用Git后恢复临时环境：未设置或空的可选命令值应移除，显式非空值保持原样，避免不同PowerShell版本将空字符串解释为可执行命令。该行为使用隔离仓库验证，不修改用户认证配置。
